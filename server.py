@@ -5,7 +5,6 @@ from datetime import datetime, timedelta
 from functools import wraps
 import secrets, os, re, requests, traceback
 import google.generativeai as genai
-from anthropic import Anthropic
 
 app = Flask(__name__, static_folder='.')
 app.secret_key = os.environ.get('SECRET_KEY', 'aichat-company-secret-key-2026-stable')
@@ -364,8 +363,6 @@ def proxy_chat(user):
         # ── Claude (Anthropic - highest quality) ─────────────
         if claude_key:
             try:
-                client = Anthropic(api_key=claude_key)
-                
                 # Convert messages to Claude format
                 claude_messages = []
                 system_msg = ""
@@ -378,18 +375,31 @@ def proxy_chat(user):
                         if isinstance(content, str):
                             claude_messages.append({'role': role, 'content': content})
                 
-                response = client.messages.create(
-                    model="claude-3-5-sonnet-20241022",
-                    max_tokens=2048,
-                    system=system_msg if system_msg else "You are AI Chat Pro, a helpful AI assistant.",
-                    messages=claude_messages
+                response = requests.post(
+                    'https://api.anthropic.com/v1/messages',
+                    headers={
+                        'x-api-key': claude_key,
+                        'anthropic-version': '2023-06-01',
+                        'content-type': 'application/json'
+                    },
+                    json={
+                        'model': 'claude-3-5-sonnet-20241022',
+                        'max_tokens': 2048,
+                        'system': system_msg if system_msg else "You are AI Chat Pro, a helpful AI assistant.",
+                        'messages': claude_messages
+                    },
+                    timeout=60
                 )
                 
-                if response.content and len(response.content) > 0:
-                    text = response.content[0].text
-                    deduct()
-                    return jsonify({'choices': [{'message': {'role': 'assistant', 'content': text}}],
-                                    'credits_remaining': max(0, total - 1) if total >= 0 else -1})
+                if response.ok:
+                    result = response.json()
+                    if result.get('content') and len(result['content']) > 0:
+                        text = result['content'][0]['text']
+                        deduct()
+                        return jsonify({'choices': [{'message': {'role': 'assistant', 'content': text}}],
+                                        'credits_remaining': max(0, total - 1) if total >= 0 else -1})
+                else:
+                    app.logger.warning(f'Claude HTTP error: {response.status_code} - {response.text}')
             except Exception as e:
                 app.logger.warning(f'Claude error: {e}')
 
