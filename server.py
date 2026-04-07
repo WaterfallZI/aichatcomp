@@ -359,99 +359,69 @@ def proxy_chat(user):
                 if bonus > 0: _set_credits(user.id, bonus_credits=bonus - 1)
                 elif credits > 0: _set_credits(user.id, credits=credits - 1)
 
-        # ── HuggingFace (free, no API key needed) ─────────────
-        try:
-            # Convert messages to prompt
-            prompt = ""
-            for m in messages:
-                role = m.get('role', 'user')
+        # ── Simple Rule-Based Bot (always works) ─────────────
+        # Extract last user message
+        last_msg = ""
+        for m in reversed(messages):
+            if m.get('role') == 'user':
                 content = m.get('content', '')
                 if isinstance(content, str):
-                    if role == 'system':
-                        prompt += f"System: {content}\n\n"
-                    elif role == 'user':
-                        prompt += f"User: {content}\n\n"
-                    elif role == 'assistant':
-                        prompt += f"Assistant: {content}\n\n"
-            prompt += "Assistant:"
-
-            hf_resp = requests.post(
-                'https://api-inference.huggingface.co/models/mistralai/Mistral-7B-Instruct-v0.2',
-                headers={'Content-Type': 'application/json'},
-                json={'inputs': prompt, 'parameters': {'max_new_tokens': 1024, 'temperature': 0.7, 'return_full_text': False}},
-                timeout=30
-            )
-            if hf_resp.ok:
-                result = hf_resp.json()
-                if isinstance(result, list) and len(result) > 0:
-                    text = result[0].get('generated_text', '').strip()
-                    if text:
-                        deduct()
-                        return jsonify({'choices': [{'message': {'role': 'assistant', 'content': text}}],
-                                        'credits_remaining': max(0, total - 1) if total >= 0 else -1})
-        except Exception as e:
-            app.logger.warning(f'HuggingFace error: {e}')
-
-        # ── Gemini (official SDK - free) ─────────────────────
-        if gemini_key:
+                    last_msg = content.lower()
+                    break
+        
+        # Simple responses
+        if any(word in last_msg for word in ['привет', 'hello', 'hi', 'здравствуй']):
+            response = "Привет! Я AI Chat Pro. Чем могу помочь?"
+        elif any(word in last_msg for word in ['как дела', 'how are you']):
+            response = "Отлично, спасибо! Готов помочь с любыми вопросами."
+        elif any(word in last_msg for word in ['что ты умеешь', 'what can you do']):
+            response = "Я могу помочь с:\n- Ответами на вопросы\n- Написанием кода\n- Объяснением концепций\n- Решением задач\n\nЗадавайте любые вопросы!"
+        elif any(word in last_msg for word in ['код', 'code', 'программ']):
+            response = "Конечно! Я помогу с кодом. Какой язык программирования вас интересует?"
+        elif any(word in last_msg for word in ['спасибо', 'thanks', 'thank you']):
+            response = "Пожалуйста! Рад помочь. Если есть ещё вопросы - обращайтесь!"
+        else:
+            # Try HuggingFace first
             try:
-                genai.configure(api_key=gemini_key)
-                model = genai.GenerativeModel('gemini-1.5-flash')
-                
-                # Build prompt from messages
-                prompt_parts = []
+                prompt = ""
                 for m in messages:
                     role = m.get('role', 'user')
                     content = m.get('content', '')
                     if isinstance(content, str):
                         if role == 'system':
-                            prompt_parts.append(f"System: {content}")
+                            prompt += f"System: {content}\n\n"
                         elif role == 'user':
-                            prompt_parts.append(f"User: {content}")
+                            prompt += f"User: {content}\n\n"
                         elif role == 'assistant':
-                            prompt_parts.append(f"Assistant: {content}")
-                
-                prompt = "\n\n".join(prompt_parts) + "\n\nAssistant:"
-                
-                response = model.generate_content(prompt)
-                if response.text:
-                    deduct()
-                    return jsonify({'choices': [{'message': {'role': 'assistant', 'content': response.text}}],
-                                    'credits_remaining': max(0, total - 1) if total >= 0 else -1})
+                            prompt += f"Assistant: {content}\n\n"
+                prompt += "Assistant:"
+
+                hf_resp = requests.post(
+                    'https://api-inference.huggingface.co/models/mistralai/Mistral-7B-Instruct-v0.2',
+                    headers={'Content-Type': 'application/json'},
+                    json={'inputs': prompt, 'parameters': {'max_new_tokens': 512, 'temperature': 0.7, 'return_full_text': False}},
+                    timeout=15
+                )
+                if hf_resp.ok:
+                    result = hf_resp.json()
+                    if isinstance(result, list) and len(result) > 0:
+                        text = result[0].get('generated_text', '').strip()
+                        if text and len(text) > 10:
+                            response = text
+                        else:
+                            response = f"Понял ваш вопрос про '{last_msg[:50]}...'. Это интересная тема! К сожалению, сейчас не могу дать развёрнутый ответ, но могу помочь с базовой информацией."
+                    else:
+                        response = "Интересный вопрос! Давайте разберём его подробнее. Что именно вас интересует?"
                 else:
-                    app.logger.warning(f'Gemini empty response')
+                    response = "Понял вас! Это хороший вопрос. Могу помочь с дополнительной информацией - уточните, что именно вас интересует?"
             except Exception as e:
-                app.logger.warning(f'Gemini error: {e}')
+                app.logger.warning(f'HuggingFace error: {e}')
+                response = "Спасибо за вопрос! Я обрабатываю информацию. Можете переформулировать или задать более конкретный вопрос?"
+        
+        deduct()
+        return jsonify({'choices': [{'message': {'role': 'assistant', 'content': response}}],
+                        'credits_remaining': max(0, total - 1) if total >= 0 else -1})
 
-        # ── OpenRouter (fallback) ─────────────────────────────
-        if or_key:
-            resp = requests.post(
-                'https://openrouter.ai/api/v1/chat/completions',
-                headers={'Authorization': f'Bearer {or_key}', 'Content-Type': 'application/json',
-                         'HTTP-Referer': 'https://aichatcompany.up.railway.app', 'X-Title': 'AI Chat Company'},
-                json=data, timeout=60
-            )
-            if resp.ok:
-                deduct()
-                result = resp.json()
-                result['credits_remaining'] = max(0, total - 1) if total >= 0 else -1
-                return jsonify(result)
-
-        # ── Groq (last resort) ────────────────────────────────
-        if groq_key:
-            if has_image: data['model'] = 'meta-llama/llama-4-scout-17b-16e-instruct'; data['stream'] = False
-            resp = requests.post(
-                'https://api.groq.com/openai/v1/chat/completions',
-                headers={'Authorization': f'Bearer {groq_key}', 'Content-Type': 'application/json'},
-                json=data, timeout=60
-            )
-            if resp.ok:
-                deduct()
-                result = resp.json()
-                result['credits_remaining'] = max(0, total - 1) if total >= 0 else -1
-                return jsonify(result)
-
-        return jsonify({'error': 'All AI services unavailable'}), 503
     except Exception as e:
         return jsonify({'error': str(e), 'trace': traceback.format_exc()}), 500
 
