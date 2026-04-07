@@ -4,6 +4,7 @@ from database import db, User, ChatSession, ChatMessage, PLANS
 from datetime import datetime, timedelta
 from functools import wraps
 import secrets, os, re, requests, traceback
+import google.generativeai as genai
 
 app = Flask(__name__, static_folder='.')
 app.secret_key = os.environ.get('SECRET_KEY', 'aichat-company-secret-key-2026-stable')
@@ -391,59 +392,34 @@ def proxy_chat(user):
         except Exception as e:
             app.logger.warning(f'HuggingFace error: {e}')
 
-        # ── Gemini (if key available) ─────────────────────────
+        # ── Gemini (official SDK - free) ─────────────────────
         if gemini_key:
-            contents = []
-            system_text = ''
-            for m in messages:
-                role = m.get('role', 'user')
-                content = m.get('content', '')
-                if role == 'system':
-                    system_text = content if isinstance(content, str) else ''
-                    continue
-                g_role = 'user' if role == 'user' else 'model'
-                if isinstance(content, list):
-                    parts = []
-                    for c in content:
-                        if c.get('type') == 'text': parts.append({'text': c['text']})
-                        elif c.get('type') == 'image_url':
-                            url = c['image_url']['url']
-                            if url.startswith('data:'):
-                                mime_type = url.split(':')[1].split(';')[0]
-                                b64 = url.split(',', 1)[1]
-                                parts.append({'inline_data': {'mime_type': mime_type, 'data': b64}})
-                    contents.append({'role': g_role, 'parts': parts})
-                else:
-                    contents.append({'role': g_role, 'parts': [{'text': content}]})
-
-            payload = {'contents': contents, 'generationConfig': {'maxOutputTokens': 2048, 'temperature': 0.8}}
-            if system_text:
-                payload['system_instruction'] = {'parts': [{'text': system_text}]}
-
-            g_model = 'gemini-1.5-flash'
             try:
-                resp = requests.post(
-                    f'https://generativelanguage.googleapis.com/v1beta/models/{g_model}:generateContent?key={gemini_key}',
-                    headers={'Content-Type': 'application/json'},
-                    json=payload, timeout=60
-                )
-                if resp.ok:
-                    result = resp.json()
-                    candidates = result.get('candidates', [])
-                    if candidates and candidates[0].get('content'):
-                        parts = candidates[0]['content'].get('parts', [])
-                        if parts and parts[0].get('text'):
-                            text = parts[0]['text']
-                            deduct()
-                            return jsonify({'choices': [{'message': {'role': 'assistant', 'content': text}}],
-                                            'credits_remaining': max(0, total - 1) if total >= 0 else -1})
-                    # Check for safety blocks
-                    if candidates and candidates[0].get('finishReason') == 'SAFETY':
-                        app.logger.warning(f'Gemini safety block: {result}')
-                    else:
-                        app.logger.warning(f'Gemini empty response: {result}')
+                genai.configure(api_key=gemini_key)
+                model = genai.GenerativeModel('gemini-1.5-flash')
+                
+                # Build prompt from messages
+                prompt_parts = []
+                for m in messages:
+                    role = m.get('role', 'user')
+                    content = m.get('content', '')
+                    if isinstance(content, str):
+                        if role == 'system':
+                            prompt_parts.append(f"System: {content}")
+                        elif role == 'user':
+                            prompt_parts.append(f"User: {content}")
+                        elif role == 'assistant':
+                            prompt_parts.append(f"Assistant: {content}")
+                
+                prompt = "\n\n".join(prompt_parts) + "\n\nAssistant:"
+                
+                response = model.generate_content(prompt)
+                if response.text:
+                    deduct()
+                    return jsonify({'choices': [{'message': {'role': 'assistant', 'content': response.text}}],
+                                    'credits_remaining': max(0, total - 1) if total >= 0 else -1})
                 else:
-                    app.logger.warning(f'Gemini HTTP error: {resp.status_code} - {resp.text}')
+                    app.logger.warning(f'Gemini empty response')
             except Exception as e:
                 app.logger.warning(f'Gemini error: {e}')
 
