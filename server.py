@@ -344,8 +344,6 @@ def proxy_chat(user):
     gemini_key = os.environ.get('GEMINI_KEY', '')
     or_key     = os.environ.get('OPENROUTER_KEY', '')
     groq_key   = os.environ.get('GROQ_API') or os.environ.get('GROQ_KEY', '')
-    if not gemini_key and not or_key and not groq_key:
-        return jsonify({'error': 'Service not configured'}), 503
 
     try:
         data     = request.get_json(silent=True) or {}
@@ -360,7 +358,40 @@ def proxy_chat(user):
                 if bonus > 0: _set_credits(user.id, bonus_credits=bonus - 1)
                 elif credits > 0: _set_credits(user.id, credits=credits - 1)
 
-        # ── Gemini (primary) ──────────────────────────────────
+        # ── HuggingFace (free, no API key needed) ─────────────
+        try:
+            # Convert messages to prompt
+            prompt = ""
+            for m in messages:
+                role = m.get('role', 'user')
+                content = m.get('content', '')
+                if isinstance(content, str):
+                    if role == 'system':
+                        prompt += f"System: {content}\n\n"
+                    elif role == 'user':
+                        prompt += f"User: {content}\n\n"
+                    elif role == 'assistant':
+                        prompt += f"Assistant: {content}\n\n"
+            prompt += "Assistant:"
+
+            hf_resp = requests.post(
+                'https://api-inference.huggingface.co/models/mistralai/Mistral-7B-Instruct-v0.2',
+                headers={'Content-Type': 'application/json'},
+                json={'inputs': prompt, 'parameters': {'max_new_tokens': 1024, 'temperature': 0.7, 'return_full_text': False}},
+                timeout=30
+            )
+            if hf_resp.ok:
+                result = hf_resp.json()
+                if isinstance(result, list) and len(result) > 0:
+                    text = result[0].get('generated_text', '').strip()
+                    if text:
+                        deduct()
+                        return jsonify({'choices': [{'message': {'role': 'assistant', 'content': text}}],
+                                        'credits_remaining': max(0, total - 1) if total >= 0 else -1})
+        except Exception as e:
+            app.logger.warning(f'HuggingFace error: {e}')
+
+        # ── Gemini (if key available) ─────────────────────────
         if gemini_key:
             contents = []
             system_text = ''
