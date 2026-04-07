@@ -5,6 +5,7 @@ from datetime import datetime, timedelta
 from functools import wraps
 import secrets, os, re, requests, traceback
 import google.generativeai as genai
+from anthropic import Anthropic
 
 app = Flask(__name__, static_folder='.')
 app.secret_key = os.environ.get('SECRET_KEY', 'aichat-company-secret-key-2026-stable')
@@ -342,6 +343,7 @@ def proxy_chat(user):
     if plan != 'ultra' and total <= 0:
         return jsonify({'error': 'no_credits', 'message': 'No credits left.'}), 402
 
+    claude_key = os.environ.get('ANTHROPIC_KEY', '')
     gemini_key = os.environ.get('GEMINI_KEY', '')
     or_key     = os.environ.get('OPENROUTER_KEY', '')
     groq_key   = os.environ.get('GROQ_API') or os.environ.get('GROQ_KEY', '')
@@ -358,6 +360,38 @@ def proxy_chat(user):
             if plan != 'ultra':
                 if bonus > 0: _set_credits(user.id, bonus_credits=bonus - 1)
                 elif credits > 0: _set_credits(user.id, credits=credits - 1)
+
+        # ── Claude (Anthropic - highest quality) ─────────────
+        if claude_key:
+            try:
+                client = Anthropic(api_key=claude_key)
+                
+                # Convert messages to Claude format
+                claude_messages = []
+                system_msg = ""
+                for m in messages:
+                    role = m.get('role', 'user')
+                    content = m.get('content', '')
+                    if role == 'system':
+                        system_msg = content if isinstance(content, str) else ''
+                    elif role in ['user', 'assistant']:
+                        if isinstance(content, str):
+                            claude_messages.append({'role': role, 'content': content})
+                
+                response = client.messages.create(
+                    model="claude-3-5-sonnet-20241022",
+                    max_tokens=2048,
+                    system=system_msg if system_msg else "You are AI Chat Pro, a helpful AI assistant.",
+                    messages=claude_messages
+                )
+                
+                if response.content and len(response.content) > 0:
+                    text = response.content[0].text
+                    deduct()
+                    return jsonify({'choices': [{'message': {'role': 'assistant', 'content': text}}],
+                                    'credits_remaining': max(0, total - 1) if total >= 0 else -1})
+            except Exception as e:
+                app.logger.warning(f'Claude error: {e}')
 
         # ── Simple Rule-Based Bot (always works) ─────────────
         # Extract last user message
