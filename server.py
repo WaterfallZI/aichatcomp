@@ -405,10 +405,10 @@ def proxy_chat(user):
                                         'credits_remaining': max(0, total - 1) if total >= 0 else -1})
                     else:
                         app.logger.warning(f'Gemini empty response: {result}')
+                else:
+                    app.logger.warning(f'Gemini HTTP error: {resp.status_code} - {resp.text}')
             except Exception as e:
                 app.logger.warning(f'Gemini error: {e}')
-                return jsonify({'choices': [{'message': {'role': 'assistant', 'content': text}}],
-                                'credits_remaining': max(0, total - 1) if total >= 0 else -1})
 
         # ── OpenRouter (fallback) ─────────────────────────────
         if or_key:
