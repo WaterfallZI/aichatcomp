@@ -1,0 +1,208 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Подтверждение входа — AI Chat Pro</title>
+<link rel="stylesheet" href="style.css">
+<style>
+body { background: var(--bg2); display: flex; align-items: center; justify-content: center; min-height: 100vh; padding: 20px; }
+.confirm-card {
+  background: var(--bg);
+  border: 1px solid var(--border);
+  border-radius: 20px;
+  padding: 40px 36px;
+  max-width: 420px;
+  width: 100%;
+  box-shadow: 0 8px 40px rgba(0,0,0,0.1);
+  text-align: center;
+}
+.app-icon {
+  width: 64px; height: 64px;
+  background: #1a1a1a;
+  border-radius: 16px;
+  display: flex; align-items: center; justify-content: center;
+  margin: 0 auto 20px;
+  box-shadow: 0 4px 16px rgba(0,0,0,0.15);
+}
+.confirm-title { font-size: 1.3em; font-weight: 700; margin-bottom: 8px; color: var(--text); }
+.confirm-sub { font-size: 0.9em; color: var(--text3); margin-bottom: 8px; line-height: 1.6; }
+.user-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  background: var(--bg2);
+  border: 1px solid var(--border);
+  border-radius: 99px;
+  padding: 8px 16px;
+  margin: 16px 0 24px;
+  font-size: 0.88em;
+  font-weight: 600;
+  color: var(--text);
+}
+.user-badge-av {
+  width: 24px; height: 24px;
+  background: linear-gradient(135deg, #10a37f, #1a7f64);
+  border-radius: 50%;
+  display: flex; align-items: center; justify-content: center;
+  color: #fff; font-size: 0.7em; font-weight: 700;
+}
+.btn-confirm {
+  width: 100%;
+  padding: 13px;
+  background: #1a1a1a;
+  border: none;
+  border-radius: 12px;
+  color: #fff;
+  font-size: 0.95em;
+  font-weight: 700;
+  cursor: pointer;
+  font-family: inherit;
+  transition: all 0.2s;
+  margin-bottom: 10px;
+}
+.btn-confirm:hover { background: #333; transform: translateY(-1px); }
+.btn-deny {
+  width: 100%;
+  padding: 12px;
+  background: transparent;
+  border: 1.5px solid var(--border);
+  border-radius: 12px;
+  color: var(--text2);
+  font-size: 0.9em;
+  font-weight: 600;
+  cursor: pointer;
+  font-family: inherit;
+  transition: all 0.2s;
+}
+.btn-deny:hover { background: var(--bg2); }
+.security-note {
+  margin-top: 20px;
+  font-size: 0.75em;
+  color: var(--text3);
+  line-height: 1.5;
+}
+.not-logged { display: none; }
+.success-state { display: none; text-align: center; padding: 20px 0; }
+.success-icon { font-size: 3em; margin-bottom: 12px; }
+</style>
+</head>
+<body>
+
+<div class="confirm-card">
+
+  <!-- Not logged in -->
+  <div id="notLogged" class="not-logged">
+    <div class="app-icon">
+      <svg width="28" height="28" viewBox="0 0 24 24" fill="none">
+        <path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5" stroke="#fff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+      </svg>
+    </div>
+    <div class="confirm-title">Войдите сначала</div>
+    <p class="confirm-sub">Чтобы авторизовать AI Chat Pro Desktop, нужно войти в аккаунт.</p>
+    <a href="/login.html" class="btn-confirm" style="display:block;text-decoration:none;margin-top:20px">Войти в аккаунт</a>
+  </div>
+
+  <!-- Confirm -->
+  <div id="confirmView">
+    <div class="app-icon">
+      <svg width="28" height="28" viewBox="0 0 24 24" fill="none">
+        <path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5" stroke="#fff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+      </svg>
+    </div>
+    <div class="confirm-title">Это вы?</div>
+    <p class="confirm-sub">Приложение <strong>AI Chat Pro Desktop</strong> запрашивает доступ к вашему аккаунту.</p>
+
+    <div class="user-badge">
+      <div class="user-badge-av" id="confirmAv">A</div>
+      <span id="confirmName">Загрузка...</span>
+    </div>
+
+    <button class="btn-confirm" onclick="confirm()">✓ Да, это я — разрешить</button>
+    <button class="btn-deny" onclick="deny()">Нет, отклонить</button>
+
+    <p class="security-note">
+      🔒 Это безопасно. Приложение получит доступ только к вашему профилю.<br>
+      Если вы не запрашивали вход — нажмите «Отклонить».
+    </p>
+  </div>
+
+  <!-- Success -->
+  <div class="success-state" id="successView">
+    <div class="success-icon">✅</div>
+    <div class="confirm-title">Вход подтверждён!</div>
+    <p class="confirm-sub">Вернитесь в приложение AI Chat Pro.<br>Это окно можно закрыть.</p>
+  </div>
+
+  <!-- Denied -->
+  <div class="success-state" id="deniedView">
+    <div class="success-icon">🚫</div>
+    <div class="confirm-title">Вход отклонён</div>
+    <p class="confirm-sub">Запрос на вход был отклонён.<br>Это окно можно закрыть.</p>
+  </div>
+
+</div>
+
+<script>
+const params = new URLSearchParams(window.location.search);
+const state  = params.get('state');
+const app    = params.get('app') || 'ai-chat-pro';
+
+let currentUser = null;
+
+async function init() {
+  // Check if logged in
+  try {
+    const res = await fetch('/api/auth/me', { credentials: 'include' });
+    if (!res.ok) {
+      // Not logged in — redirect to login with return URL
+      document.getElementById('confirmView').style.display = 'none';
+      document.getElementById('notLogged').style.display = 'block';
+      // Store state for after login
+      sessionStorage.setItem('desktop_auth_state', state);
+      sessionStorage.setItem('desktop_auth_app', app);
+      return;
+    }
+    currentUser = await res.json();
+    document.getElementById('confirmName').textContent = currentUser.username || currentUser.email;
+    document.getElementById('confirmAv').textContent = (currentUser.username || currentUser.email || 'A')[0].toUpperCase();
+  } catch (e) {
+    document.getElementById('confirmView').style.display = 'none';
+    document.getElementById('notLogged').style.display = 'block';
+  }
+}
+
+async function confirm() {
+  if (!currentUser || !state) return;
+
+  const tokenData = JSON.stringify({
+    user: currentUser,
+    state: state,
+    ts: Date.now()
+  });
+  const encoded = btoa(tokenData);
+
+  // Write to localStorage — desktop app polls this
+  try {
+    localStorage.setItem('desktop_auth_token', encoded);
+    localStorage.setItem('desktop_auth_state', state);
+  } catch(_) {}
+
+  document.getElementById('confirmView').style.display = 'none';
+  document.getElementById('successView').style.display = 'block';
+  setTimeout(() => window.close(), 3000);
+}
+
+function deny() {
+  try {
+    localStorage.setItem('desktop_auth_denied', state);
+  } catch(_) {}
+  document.getElementById('confirmView').style.display = 'none';
+  document.getElementById('deniedView').style.display = 'block';
+  setTimeout(() => window.close(), 2000);
+}
+
+init();
+</script>
+</body>
+</html>

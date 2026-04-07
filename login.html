@@ -1,0 +1,364 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sign in — AI Chat Company</title>
+    <style>
+*, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
+body {
+    font-family: ui-sans-serif, system-ui, -apple-system, 'Segoe UI', sans-serif;
+    background: #f7f7f8;
+    min-height: 100vh;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 20px;
+}
+
+.auth-card {
+    background: #fff;
+    border: 1px solid #e5e5e5;
+    border-radius: 16px;
+    padding: 40px 36px;
+    width: 100%;
+    max-width: 400px;
+    box-shadow: 0 4px 24px rgba(0,0,0,0.08);
+}
+
+.auth-logo {
+    display: flex; align-items: center; justify-content: center;
+    gap: 10px; margin-bottom: 28px;
+}
+.auth-logo-mark {
+    width: 36px; height: 36px; background: #0d0d0d;
+    border-radius: 10px; display: flex; align-items: center; justify-content: center;
+}
+.auth-logo-mark svg { width: 22px; height: 22px; }
+.auth-logo-text { font-size: 1.05em; font-weight: 700; color: #0d0d0d; }
+
+.auth-title { font-size: 1.4em; font-weight: 700; text-align: center; margin-bottom: 6px; color: #0d0d0d; }
+.auth-sub { font-size: 0.88em; color: #6e6e80; text-align: center; margin-bottom: 28px; }
+
+/* Nomchat button */
+.btn-nomchat {
+    width: 100%; padding: 12px 16px;
+    background: #0a0a0f; color: #fff;
+    border: none; border-radius: 10px;
+    font-size: 0.92em; font-weight: 600;
+    cursor: pointer; font-family: inherit;
+    display: flex; align-items: center; justify-content: center; gap: 10px;
+    transition: all 0.2s; margin-bottom: 20px;
+}
+.btn-nomchat:hover { background: #1a1a2e; transform: translateY(-1px); box-shadow: 0 4px 16px rgba(0,0,0,0.2); }
+.nc-badge { background: linear-gradient(135deg,#5b6ef5,#06b6d4); color:#fff; font-size:0.6em; font-weight:900; padding:2px 6px; border-radius:4px; }
+
+.divider {
+    display: flex; align-items: center; gap: 12px;
+    margin-bottom: 20px;
+}
+.divider::before, .divider::after { content: ''; flex: 1; height: 1px; background: #e5e5e5; }
+.divider span { font-size: 0.78em; color: #aaa; white-space: nowrap; }
+
+/* Form */
+.form-group { margin-bottom: 14px; }
+.form-label { display: block; font-size: 0.82em; font-weight: 600; color: #353740; margin-bottom: 6px; }
+.form-input {
+    width: 100%; padding: 11px 14px;
+    background: #fff; border: 1px solid #d9d9e3;
+    border-radius: 8px; color: #0d0d0d;
+    font-size: 0.92em; font-family: inherit; outline: none;
+    transition: border-color 0.2s;
+}
+.form-input:focus { border-color: #0d0d0d; }
+.form-input.error { border-color: #ef4444; }
+.form-input::placeholder { color: #aaa; }
+
+.password-wrap { position: relative; }
+.password-toggle {
+    position: absolute; right: 12px; top: 50%; transform: translateY(-50%);
+    background: none; border: none; cursor: pointer; color: #aaa;
+    font-size: 0.9em; padding: 4px;
+}
+
+.form-error { font-size: 0.78em; color: #ef4444; margin-top: 4px; display: none; }
+.form-error.show { display: block; }
+
+.btn-submit {
+    width: 100%; padding: 12px;
+    background: #0d0d0d; color: #fff;
+    border: none; border-radius: 10px;
+    font-size: 0.95em; font-weight: 600;
+    cursor: pointer; font-family: inherit;
+    transition: all 0.2s; margin-top: 4px;
+}
+.btn-submit:hover { background: #1a1a1a; }
+.btn-submit:disabled { opacity: 0.5; cursor: not-allowed; }
+
+.auth-footer { text-align: center; margin-top: 20px; font-size: 0.85em; color: #6e6e80; }
+.auth-footer a { color: #0d0d0d; font-weight: 600; text-decoration: none; }
+.auth-footer a:hover { text-decoration: underline; }
+
+/* Password strength */
+.strength-bar { height: 3px; border-radius: 99px; background: #e5e5e5; margin-top: 6px; overflow: hidden; }
+.strength-fill { height: 100%; border-radius: 99px; transition: all 0.3s; width: 0; }
+.strength-fill.weak   { background: #ef4444; width: 33%; }
+.strength-fill.medium { background: #f59e0b; width: 66%; }
+.strength-fill.strong { background: #10b981; width: 100%; }
+
+/* Loading spinner */
+.spinner { display: inline-block; width: 16px; height: 16px; border: 2px solid rgba(255,255,255,0.3); border-top-color: #fff; border-radius: 50%; animation: spin 0.7s linear infinite; vertical-align: middle; margin-right: 6px; }
+@keyframes spin { to { transform: rotate(360deg); } }
+
+/* Alert */
+.alert { padding: 12px 16px; border-radius: 8px; font-size: 0.85em; margin-bottom: 16px; display: none; }
+.alert.show { display: block; }
+.alert-error { background: #fef2f2; border: 1px solid #fecaca; color: #991b1b; }
+.alert-success { background: #f0fdf4; border: 1px solid #bbf7d0; color: #166534; }
+    </style>
+</head>
+<body>
+
+<div class="auth-card">
+    <div class="auth-logo">
+        <div class="auth-logo-mark">
+            <svg viewBox="0 0 20 20" fill="none">
+                <path d="M10 2L3 6L10 10L17 6L10 2Z" stroke="white" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+                <path d="M3 14L10 18L17 14" stroke="white" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+                <path d="M3 10L10 14L17 10" stroke="white" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+            </svg>
+        </div>
+        <span class="auth-logo-text">AI Chat Company</span>
+    </div>
+
+    <div id="alert" class="alert"></div>
+
+    <!-- Login view -->
+    <div id="view-login">
+        <h1 class="auth-title">Welcome back</h1>
+        <p class="auth-sub">Sign in to your account</p>
+
+        <button class="btn-nomchat" onclick="loginWithNomchat()">
+            <span style="font-size:1.1em">💬</span>
+            Continue with <span class="nc-badge">NOMCHAT ID</span>
+        </button>
+
+        <div class="divider"><span>or continue with email</span></div>
+
+        <div class="form-group">
+            <label class="form-label">Email</label>
+            <input class="form-input" id="login-email" type="email" placeholder="you@example.com" autocomplete="email">
+        </div>
+        <div class="form-group">
+            <label class="form-label">Password</label>
+            <div class="password-wrap">
+                <input class="form-input" id="login-password" type="password" placeholder="••••••••" autocomplete="current-password">
+                <button class="password-toggle" onclick="togglePwd('login-password', this)" type="button">👁</button>
+            </div>
+        </div>
+
+        <button class="btn-submit" id="login-btn" onclick="doLogin()">Sign in</button>
+
+        <div class="auth-footer">
+            Don't have an account? <a href="#" onclick="switchView('register')">Sign up</a>
+        </div>
+    </div>
+
+    <!-- Register view -->
+    <div id="view-register" style="display:none">
+        <h1 class="auth-title">Create account</h1>
+        <p class="auth-sub">Join AI Chat Company</p>
+
+        <button class="btn-nomchat" onclick="loginWithNomchat()">
+            <span style="font-size:1.1em">💬</span>
+            Sign up with <span class="nc-badge">NOMCHAT ID</span>
+        </button>
+
+        <div class="divider"><span>or sign up with email</span></div>
+
+        <div class="form-group">
+            <label class="form-label">Username</label>
+            <input class="form-input" id="reg-username" type="text" placeholder="Your name" autocomplete="username">
+            <div class="form-error" id="reg-username-err"></div>
+        </div>
+        <div class="form-group">
+            <label class="form-label">Email</label>
+            <input class="form-input" id="reg-email" type="email" placeholder="you@example.com" autocomplete="email">
+            <div class="form-error" id="reg-email-err"></div>
+        </div>
+        <div class="form-group">
+            <label class="form-label">Password</label>
+            <div class="password-wrap">
+                <input class="form-input" id="reg-password" type="password" placeholder="Min. 6 characters" autocomplete="new-password" oninput="checkStrength(this.value)">
+                <button class="password-toggle" onclick="togglePwd('reg-password', this)" type="button">👁</button>
+            </div>
+            <div class="strength-bar"><div class="strength-fill" id="strength-fill"></div></div>
+            <div class="form-error" id="reg-password-err"></div>
+        </div>
+
+        <button class="btn-submit" id="reg-btn" onclick="doRegister()">Create account</button>
+
+        <div class="auth-footer">
+            Already have an account? <a href="#" onclick="switchView('login')">Sign in</a>
+        </div>
+    </div>
+</div>
+
+<script>
+const API = '';
+const NOMCHAT_URL = 'https://nomchat-id.up.railway.app';
+
+// Check if already logged in
+(async () => {
+    try {
+        const res = await fetch(`${API}/api/auth/me`, { credentials: 'include' });
+        if (res.ok) window.location.href = '/profile.html';
+    } catch (_) {}
+})();
+
+function switchView(view) {
+    document.getElementById('view-login').style.display    = view === 'login'    ? 'block' : 'none';
+    document.getElementById('view-register').style.display = view === 'register' ? 'block' : 'none';
+    hideAlert();
+}
+
+function showAlert(msg, type = 'error') {
+    const el = document.getElementById('alert');
+    el.textContent = msg;
+    el.className = `alert alert-${type} show`;
+}
+function hideAlert() {
+    document.getElementById('alert').className = 'alert';
+}
+
+function togglePwd(id, btn) {
+    const inp = document.getElementById(id);
+    inp.type = inp.type === 'password' ? 'text' : 'password';
+    btn.textContent = inp.type === 'password' ? '👁' : '🙈';
+}
+
+function checkStrength(pwd) {
+    const fill = document.getElementById('strength-fill');
+    if (!pwd) { fill.className = 'strength-fill'; return; }
+    let score = 0;
+    if (pwd.length >= 6) score++;
+    if (pwd.length >= 10) score++;
+    if (/[0-9]/.test(pwd)) score++;
+    if (/[^a-zA-Z0-9]/.test(pwd)) score++;
+    fill.className = 'strength-fill ' + (score <= 1 ? 'weak' : score <= 3 ? 'medium' : 'strong');
+}
+
+async function doLogin() {
+    const email    = document.getElementById('login-email').value.trim();
+    const password = document.getElementById('login-password').value;
+    const btn      = document.getElementById('login-btn');
+    if (!email || !password) { showAlert('Please fill in all fields'); return; }
+
+    btn.disabled = true;
+    btn.innerHTML = '<span class="spinner"></span>Signing in...';
+    hideAlert();
+
+    try {
+        const res  = await fetch(`${API}/api/auth/login`, {
+            method: 'POST', credentials: 'include',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ email, password })
+        });
+        const data = await res.json();
+        if (res.ok) {
+            window.location.href = '/profile.html';
+        } else {
+            showAlert(data.error === 'banned' ? 'Your account has been banned.' : (data.error || 'Invalid email or password'));
+        }
+    } catch (_) { showAlert('Connection error. Please try again.'); }
+
+    btn.disabled = false;
+    btn.textContent = 'Sign in';
+}
+
+async function doRegister() {
+    const username = document.getElementById('reg-username').value.trim();
+    const email    = document.getElementById('reg-email').value.trim();
+    const password = document.getElementById('reg-password').value;
+    const btn      = document.getElementById('reg-btn');
+
+    // Clear errors
+    ['reg-username-err','reg-email-err','reg-password-err'].forEach(id => {
+        document.getElementById(id).className = 'form-error';
+    });
+    hideAlert();
+
+    let valid = true;
+    if (!username || username.length < 2) {
+        document.getElementById('reg-username-err').textContent = 'Username must be at least 2 characters';
+        document.getElementById('reg-username-err').className = 'form-error show';
+        valid = false;
+    }
+    if (!email || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+        document.getElementById('reg-email-err').textContent = 'Enter a valid email address';
+        document.getElementById('reg-email-err').className = 'form-error show';
+        valid = false;
+    }
+    if (!password || password.length < 6) {
+        document.getElementById('reg-password-err').textContent = 'Password must be at least 6 characters';
+        document.getElementById('reg-password-err').className = 'form-error show';
+        valid = false;
+    }
+    if (!valid) return;
+
+    btn.disabled = true;
+    btn.innerHTML = '<span class="spinner"></span>Creating account...';
+
+    try {
+        const res  = await fetch(`${API}/api/auth/register`, {
+            method: 'POST', credentials: 'include',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ username, email, password })
+        });
+        const data = await res.json();
+        if (res.ok) {
+            window.location.href = '/profile.html';
+        } else {
+            showAlert(data.error || 'Registration failed');
+        }
+    } catch (_) { showAlert('Connection error. Please try again.'); }
+
+    btn.disabled = false;
+    btn.textContent = 'Create account';
+}
+
+// Nomchat OAuth
+function loginWithNomchat() {
+    const popup = window.open(
+        `${NOMCHAT_URL}/oauth.html?app_id=ai-chat-pro&app_name=AI+Chat+Pro`,
+        'nomchat_auth', 'width=480,height=640,scrollbars=yes'
+    );
+    if (!popup) { showAlert('Please allow popups for Nomchat ID login'); return; }
+
+    window.addEventListener('message', async (e) => {
+        if (e.data?.type === 'NOMCHAT_AUTH_SUCCESS') {
+            try {
+                const res  = await fetch(`${API}/api/auth/nomchat`, {
+                    method: 'POST', credentials: 'include',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ token: e.data.token })
+                });
+                const data = await res.json();
+                if (res.ok) window.location.href = '/profile.html';
+                else showAlert(data.error || 'Nomchat login failed');
+            } catch (_) { showAlert('Connection error'); }
+        } else if (e.data?.type === 'NOMCHAT_AUTH_CANCEL') {
+            // user cancelled
+        }
+    }, { once: true });
+}
+
+// Enter key support
+document.addEventListener('keydown', e => {
+    if (e.key !== 'Enter') return;
+    if (document.getElementById('view-login').style.display !== 'none') doLogin();
+    else doRegister();
+});
+</script>
+</body>
+</html>

@@ -1,0 +1,56 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>404 — AI Chat Company</title>
+<link rel="stylesheet" href="style.css">
+<style>
+body { display:flex; align-items:center; justify-content:center; min-height:100vh; background:var(--bg2); }
+.err-card {
+  text-align:center; max-width:480px; padding:60px 40px;
+  background:var(--bg); border:1px solid var(--border);
+  border-radius:20px; box-shadow:0 8px 32px rgba(0,0,0,0.08);
+}
+.err-code {
+  font-size:6em; font-weight:900; line-height:1;
+  background:linear-gradient(135deg,#10a37f,#1a7f64);
+  -webkit-background-clip:text; -webkit-text-fill-color:transparent;
+  background-clip:text; margin-bottom:16px;
+}
+.err-title { font-size:1.4em; font-weight:700; color:var(--text); margin-bottom:10px; }
+.err-sub { font-size:0.9em; color:var(--text3); margin-bottom:32px; line-height:1.6; }
+.err-path {
+  display:inline-block; padding:6px 14px;
+  background:var(--bg2); border:1px solid var(--border);
+  border-radius:8px; font-family:monospace; font-size:0.85em;
+  color:var(--text2); margin-bottom:32px;
+}
+.btn-home {
+  display:inline-flex; align-items:center; gap:8px;
+  padding:12px 24px; background:#0d0d0d; color:#fff;
+  border-radius:10px; text-decoration:none;
+  font-size:0.9em; font-weight:600; transition:all 0.2s;
+}
+.btn-home:hover { background:#333; transform:translateY(-1px); }
+</style>
+</head>
+<body>
+<div class="err-card">
+  <div class="err-code">404</div>
+  <h1 class="err-title">Page not found</h1>
+  <p class="err-sub">The page you're looking for doesn't exist or has been moved.</p>
+  <div class="err-path" id="errPath">/unknown</div><br>
+  <a href="/" class="btn-home">
+    <svg width="16" height="16" viewBox="0 0 24 24" fill="none">
+      <path d="M3 12L12 3l9 9M5 10v9a1 1 0 0 0 1 1h4v-5h4v5h4a1 1 0 0 0 1-1v-9"
+        stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+    </svg>
+    Back to home
+  </a>
+</div>
+<script>
+document.getElementById('errPath').textContent = window.location.pathname;
+</script>
+</body>
+</html>

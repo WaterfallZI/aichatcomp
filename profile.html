@@ -1,0 +1,581 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Profile — AI Chat Company</title>
+    <link rel="stylesheet" href="style.css">
+    <style>
+        body { background: var(--bg2); }
+
+        .profile-layout {
+            max-width: 900px; margin: 0 auto;
+            padding: 80px 24px 60px;
+            display: grid;
+            grid-template-columns: 280px 1fr;
+            gap: 24px;
+            align-items: start;
+        }
+
+        /* ── Sidebar card ── */
+        .profile-sidebar {
+            background: var(--bg);
+            border: 1px solid var(--border);
+            border-radius: 16px;
+            overflow: hidden;
+            position: sticky; top: 80px;
+        }
+        .profile-cover {
+            height: 80px;
+            background: linear-gradient(135deg, #10a37f, #1a7f64);
+        }
+        .profile-avatar-wrap {
+            padding: 0 20px;
+            margin-top: -28px;
+            margin-bottom: 16px;
+        }
+        .profile-avatar {
+            width: 56px; height: 56px; border-radius: 50%;
+            background: var(--bg3);
+            border: 3px solid var(--bg);
+            display: flex; align-items: center; justify-content: center;
+            font-size: 1.6em;
+        }
+        .profile-info { padding: 0 20px 20px; }
+        .profile-name { font-size: 1.1em; font-weight: 700; margin-bottom: 2px; }
+        .profile-email { font-size: 0.82em; color: var(--text3); margin-bottom: 12px; }
+        .profile-badges { display: flex; gap: 6px; flex-wrap: wrap; margin-bottom: 16px; }
+        .badge { padding: 3px 10px; border-radius: 99px; font-size: 0.72em; font-weight: 700; }
+        .badge-nomchat { background: #eff6ff; color: #1d4ed8; border: 1px solid #bfdbfe; }
+        .badge-free { background: #f0fdf4; color: #166534; border: 1px solid #bbf7d0; }
+
+        .profile-nav { border-top: 1px solid var(--border); }
+        .profile-nav-item {
+            display: flex; align-items: center; gap: 10px;
+            padding: 12px 20px; font-size: 0.88em; font-weight: 500;
+            color: var(--text2); cursor: pointer; transition: all 0.15s;
+            border: none; background: none; width: 100%; text-align: left;
+            font-family: inherit;
+        }
+        .profile-nav-item:hover { background: var(--bg2); color: var(--text); }
+        .profile-nav-item.active { background: var(--bg2); color: var(--text); font-weight: 600; }
+        .profile-nav-item .nav-icon { font-size: 1em; width: 20px; text-align: center; }
+
+        /* ── Main content ── */
+        .profile-main { display: flex; flex-direction: column; gap: 16px; }
+
+        .profile-card {
+            background: var(--bg);
+            border: 1px solid var(--border);
+            border-radius: 16px;
+            padding: 24px;
+        }
+        .card-title {
+            font-size: 0.82em; font-weight: 700; color: var(--text3);
+            text-transform: uppercase; letter-spacing: 0.5px;
+            margin-bottom: 20px;
+        }
+
+        /* ── Nomchat connect ── */
+        .nomchat-connect-box {
+            display: flex; align-items: center; gap: 16px;
+            padding: 16px; border-radius: 12px;
+            border: 1px solid var(--border); background: var(--bg2);
+        }
+        .nomchat-connect-icon {
+            width: 44px; height: 44px; border-radius: 12px;
+            background: #0a0a0f;
+            display: flex; align-items: center; justify-content: center;
+            font-size: 1.3em; flex-shrink: 0;
+        }
+        .nomchat-connect-info { flex: 1; }
+        .nomchat-connect-name { font-weight: 700; font-size: 0.95em; margin-bottom: 2px; }
+        .nomchat-connect-status { font-size: 0.78em; }
+        .nomchat-connect-status.connected { color: #10b981; }
+        .nomchat-connect-status.disconnected { color: var(--text3); }
+        .btn-connect-nomchat {
+            padding: 8px 16px; border-radius: 8px;
+            background: #0a0a0f; color: #fff;
+            font-size: 0.82em; font-weight: 700;
+            border: none; cursor: pointer; font-family: inherit;
+            transition: all 0.2s; white-space: nowrap;
+        }
+        .btn-connect-nomchat:hover { background: #1a1a2e; }
+        .btn-disconnect {
+            padding: 8px 16px; border-radius: 8px;
+            background: transparent; color: var(--danger);
+            font-size: 0.82em; font-weight: 700;
+            border: 1px solid #fecaca; cursor: pointer; font-family: inherit;
+            transition: all 0.2s;
+        }
+        .btn-disconnect:hover { background: #fef2f2; }
+
+        /* ── Sync info ── */
+        .sync-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+        .sync-item {
+            padding: 14px; border-radius: 10px;
+            background: var(--bg2); border: 1px solid var(--border);
+        }
+        .sync-item-label { font-size: 0.75em; color: var(--text3); font-weight: 600; margin-bottom: 4px; }
+        .sync-item-value { font-size: 0.92em; font-weight: 600; }
+
+        /* ── Stats ── */
+        .stats-row { display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; }
+        .stat-box { text-align: center; padding: 16px; background: var(--bg2); border-radius: 10px; border: 1px solid var(--border); }
+        .stat-box-num { font-size: 1.8em; font-weight: 700; color: var(--accent); }
+        .stat-box-lbl { font-size: 0.75em; color: var(--text3); margin-top: 2px; }
+
+        /* ── Plan cards ── */
+        .plan-card {
+            border: 2px solid var(--border); border-radius: 12px;
+            padding: 16px 12px; text-align: center; cursor: pointer;
+            transition: all 0.15s;
+        }
+        .plan-card:hover { border-color: currentColor; transform: translateY(-2px); box-shadow: 0 4px 16px rgba(0,0,0,0.08); }
+        .plan-card-name { font-size: 1em; font-weight: 800; margin-bottom: 6px; }
+        .plan-card-price { font-size: 1.5em; font-weight: 800; color: var(--text); margin-bottom: 4px; }
+        .plan-card-price span { font-size: 0.45em; color: var(--text3); font-weight: 400; }
+        .plan-card-credits { font-size: 0.75em; color: var(--text3); margin-bottom: 10px; }
+        .plan-card-btn { width: 100%; padding: 7px; border: none; border-radius: 7px; color: #fff; font-size: 0.82em; font-weight: 700; cursor: pointer; font-family: inherit; transition: opacity 0.15s; }
+        .plan-card-btn:hover { opacity: 0.85; }
+        .plan-card.active-plan { border-width: 2px; }
+
+        /* ── Danger zone ── */
+        .danger-actions { display: flex; gap: 10px; flex-wrap: wrap; }
+        .btn-danger-outline {
+            padding: 9px 18px; border-radius: 8px;
+            background: transparent; color: var(--danger);
+            font-size: 0.85em; font-weight: 600;
+            border: 1px solid #fecaca; cursor: pointer; font-family: inherit;
+            transition: all 0.2s;
+        }
+        .btn-danger-outline:hover { background: #fef2f2; }
+        .btn-logout {
+            padding: 9px 18px; border-radius: 8px;
+            background: var(--bg2); color: var(--text2);
+            font-size: 0.85em; font-weight: 600;
+            border: 1px solid var(--border); cursor: pointer; font-family: inherit;
+            transition: all 0.2s;
+        }
+        .btn-logout:hover { background: var(--bg3); }
+
+        /* ── Edit form ── */
+        .form-group { margin-bottom: 16px; }
+        .form-label { display: block; font-size: 0.82em; font-weight: 600; color: var(--text2); margin-bottom: 6px; }
+        .form-input {
+            width: 100%; padding: 10px 14px;
+            background: var(--bg); border: 1px solid var(--border);
+            border-radius: 8px; color: var(--text); font-size: 0.92em;
+            font-family: inherit; outline: none; transition: border-color 0.2s;
+        }
+        .form-input:focus { border-color: #aaa; }
+        .btn-save {
+            padding: 10px 20px; border-radius: 8px;
+            background: var(--text); color: #fff;
+            font-size: 0.88em; font-weight: 600;
+            border: none; cursor: pointer; font-family: inherit;
+            transition: all 0.2s;
+        }
+        .btn-save:hover { background: #1a1a1a; }
+
+        /* ── Toast ── */
+        .toast {
+            position: fixed; bottom: 24px; right: 24px;
+            padding: 12px 20px; border-radius: 10px;
+            font-size: 0.88em; font-weight: 600; z-index: 9999;
+            animation: toastIn 0.3s ease;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.15);
+        }
+        .toast-ok { background: #0d0d0d; color: #fff; }
+        .toast-err { background: var(--danger); color: #fff; }
+        @keyframes toastIn { from{opacity:0;transform:translateY(12px)} to{opacity:1;transform:translateY(0)} }
+
+        @media (max-width: 700px) {
+            .profile-layout { grid-template-columns: 1fr; }
+            .profile-sidebar { position: static; }
+        }
+    </style>
+</head>
+<body>
+
+<header class="header">
+    <div class="header-inner">
+        <a href="/" class="logo">
+            <div class="logo-mark">
+                <svg viewBox="0 0 20 20" fill="none"><path d="M10 2L3 6L10 10L17 6L10 2Z" stroke="white" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/><path d="M3 14L10 18L17 14" stroke="white" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/><path d="M3 10L10 14L17 10" stroke="white" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
+            </div>
+            <span class="logo-text">AI Chat Company</span>
+        </a>
+        <div style="margin-left:auto">
+            <a href="/" class="btn-login">← Back</a>
+        </div>
+    </div>
+</header>
+
+<div class="profile-layout">
+
+    <!-- Sidebar -->
+    <aside class="profile-sidebar">
+        <div class="profile-cover"></div>
+        <div class="profile-avatar-wrap">
+            <div class="profile-avatar" id="p-avatar">👤</div>
+        </div>
+        <div class="profile-info">
+            <div class="profile-name" id="p-name">Loading...</div>
+            <div class="profile-email" id="p-email">—</div>
+            <div class="profile-badges" id="p-badges">
+                <span class="badge badge-free">Free</span>
+            </div>
+        </div>
+        <nav class="profile-nav">
+            <button class="profile-nav-item active" onclick="showTab('overview', this)"><span class="nav-icon">👤</span>Overview</button>
+            <button class="profile-nav-item" onclick="showTab('nomchat', this)"><span class="nav-icon">💬</span>Nomchat ID</button>
+            <button class="profile-nav-item" onclick="showTab('settings', this)"><span class="nav-icon">⚙️</span>Settings</button>
+            <button class="profile-nav-item" onclick="showTab('danger', this)"><span class="nav-icon">⚠️</span>Account</button>
+        </nav>
+    </aside>
+
+    <!-- Main -->
+    <main class="profile-main">
+
+        <!-- Overview -->
+        <div id="tab-overview">
+            <div class="profile-card">
+                <div class="card-title">Usage stats</div>
+                <div class="stats-row">
+                    <div class="stat-box"><div class="stat-box-num" id="stat-chats">0</div><div class="stat-box-lbl">Chats</div></div>
+                    <div class="stat-box"><div class="stat-box-num" id="stat-msgs">0</div><div class="stat-box-lbl">Messages</div></div>
+                    <div class="stat-box"><div class="stat-box-num" id="stat-days">0</div><div class="stat-box-lbl">Days active</div></div>
+                </div>
+            </div>
+            <div class="profile-card">
+                <div class="card-title">Credits</div>
+                <div style="display:flex;gap:12px;margin-bottom:14px;flex-wrap:wrap">
+                    <div style="flex:1;min-width:120px;background:var(--bg2);border:1px solid var(--border);border-radius:10px;padding:14px;text-align:center">
+                        <div style="font-size:0.72em;color:var(--text3);font-weight:600;text-transform:uppercase;letter-spacing:.5px;margin-bottom:4px">Бонусные</div>
+                        <div style="font-size:1.8em;font-weight:800;color:#f59e0b" id="bonus-num">—</div>
+                    </div>
+                    <div style="flex:1;min-width:120px;background:var(--bg2);border:1px solid var(--border);border-radius:10px;padding:14px;text-align:center">
+                        <div style="font-size:0.72em;color:var(--text3);font-weight:600;text-transform:uppercase;letter-spacing:.5px;margin-bottom:4px">Основные</div>
+                        <div style="font-size:1.8em;font-weight:800" id="credits-num">—</div>
+                    </div>
+                    <div style="flex:1;min-width:120px;background:var(--bg2);border:1px solid var(--border);border-radius:10px;padding:14px;text-align:center">
+                        <div style="font-size:0.72em;color:var(--text3);font-weight:600;text-transform:uppercase;letter-spacing:.5px;margin-bottom:4px">Всего</div>
+                        <div style="font-size:1.8em;font-weight:800;color:#10a37f" id="total-num">—</div>
+                    </div>
+                </div>
+                <div style="height:6px;background:var(--bg3);border-radius:99px;overflow:hidden;margin-bottom:6px">
+                    <div id="credits-bar" style="height:100%;border-radius:99px;background:#10a37f;transition:width 0.4s;width:0"></div>
+                </div>
+                <div style="font-size:0.78em;color:var(--text3)">Бонусные кредиты тратятся первыми · 1 кредит = 1 сообщение</div>
+            </div>
+            <div class="profile-card">
+                <div class="card-title">Текущий план</div>
+                <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:12px;margin-bottom:20px">
+                    <div>
+                        <div style="font-size:1.15em;font-weight:800;margin-bottom:4px" id="plan-name">Free</div>
+                        <div style="font-size:0.85em;color:var(--text3)" id="plan-desc">50 кредитов + 300 бонусных при регистрации</div>
+                    </div>
+                    <span id="plan-badge" class="badge badge-free" style="font-size:0.82em;padding:6px 14px">Active</span>
+                </div>
+                <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:10px">
+                    <div class="plan-card" onclick="upgradePlan('pro')" data-plan="pro">
+                        <div class="plan-card-name" style="color:#3b82f6">Pro</div>
+                        <div class="plan-card-price">$9<span>/мес</span></div>
+                        <div class="plan-card-credits">1 000 кредитов</div>
+                        <button class="plan-card-btn" style="background:#3b82f6">Выбрать</button>
+                    </div>
+                    <div class="plan-card" onclick="upgradePlan('max')" data-plan="max">
+                        <div class="plan-card-name" style="color:#8b5cf6">Max</div>
+                        <div class="plan-card-price">$29<span>/мес</span></div>
+                        <div class="plan-card-credits">5 000 кредитов</div>
+                        <button class="plan-card-btn" style="background:#8b5cf6">Выбрать</button>
+                    </div>
+                    <div class="plan-card" onclick="upgradePlan('ultra')" data-plan="ultra">
+                        <div class="plan-card-name" style="color:#f59e0b">Ultra</div>
+                        <div class="plan-card-price">$79<span>/мес</span></div>
+                        <div class="plan-card-credits">∞ безлимит</div>
+                        <button class="plan-card-btn" style="background:#f59e0b">Выбрать</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Nomchat ID -->
+        <div id="tab-nomchat" style="display:none">
+            <div class="profile-card">
+                <div class="card-title">Nomchat ID connection</div>
+                <div class="nomchat-connect-box" id="nomchat-box">
+                    <div class="nomchat-connect-icon">💬</div>
+                    <div class="nomchat-connect-info">
+                        <div class="nomchat-connect-name">Nomchat ID</div>
+                        <div class="nomchat-connect-status disconnected" id="nomchat-status">Not connected</div>
+                    </div>
+                    <button class="btn-connect-nomchat" id="nomchat-btn" onclick="connectNomchat()">Connect</button>
+                </div>
+            </div>
+
+            <div class="profile-card" id="sync-card" style="display:none">
+                <div class="card-title">Synced data</div>
+                <div class="sync-grid" id="sync-grid"></div>
+            </div>
+        </div>
+
+        <!-- Settings -->
+        <div id="tab-settings" style="display:none">
+            <div class="profile-card">
+                <div class="card-title">Display name</div>
+                <div class="form-group">
+                    <label class="form-label">Name</label>
+                    <input class="form-input" id="setting-name" placeholder="Your name">
+                </div>
+                <button class="btn-save" onclick="saveName()">Save changes</button>
+            </div>
+        </div>
+
+        <!-- Danger -->
+        <div id="tab-danger" style="display:none">
+            <div class="profile-card">
+                <div class="card-title">Session</div>
+                <div class="danger-actions">
+                    <button class="btn-logout" onclick="logout()">Sign out</button>
+                </div>
+            </div>
+            <div class="profile-card">
+                <div class="card-title" style="color:var(--danger)">Danger zone</div>
+                <p style="font-size:0.88em;color:var(--text3);margin-bottom:16px">These actions are permanent and cannot be undone.</p>
+                <div class="danger-actions">
+                    <button class="btn-danger-outline" onclick="clearData()">Clear all chat history</button>
+                    <button class="btn-danger-outline" onclick="deleteAccount()">Delete account</button>
+                </div>
+            </div>
+        </div>
+
+    </main>
+</div>
+
+<script>
+const NOMCHAT_URL = 'https://nomchat-id.up.railway.app';
+let user = null;
+let nomchatUser = null;
+
+// ── Init ──────────────────────────────────────────────────────
+async function init() {
+    try {
+        const res = await fetch('/api/auth/me', { credentials: 'include' });
+        if (!res.ok) { window.location.href = '/login.html'; return; }
+        user = await res.json();
+    } catch (_) { window.location.href = '/login.html'; return; }
+
+    document.getElementById('p-name').textContent  = user.username || 'User';
+    document.getElementById('p-email').textContent = user.email || '—';
+    document.getElementById('p-avatar').textContent = user.nomchat_avatar || '👤';
+    document.getElementById('setting-name').value  = user.username || '';
+
+    // Stats from localStorage (chat history)
+    const chats = JSON.parse(localStorage.getItem('allChats') || '{}');
+    const msgs  = Object.values(chats).reduce((a, c) => a + (c.messages?.length || 0), 0);
+    document.getElementById('stat-chats').textContent = Object.keys(chats).length;
+    document.getElementById('stat-msgs').textContent  = msgs;
+    const days = user.created_at ? Math.max(1, Math.floor((Date.now() - new Date(user.created_at)) / 86400000)) : 1;
+    document.getElementById('stat-days').textContent  = days;
+
+    // Credits
+    const credits      = user.credits ?? 0;
+    const bonus        = user.bonus_credits ?? 0;
+    const total        = user.total_credits === -1 ? '∞' : (user.total_credits ?? credits + bonus);
+    const planMax      = user.plan === 'ultra' ? -1 : user.plan === 'max' ? 5000 : user.plan === 'pro' ? 1000 : 350;
+
+    document.getElementById('credits-num').textContent = credits;
+    document.getElementById('bonus-num').textContent   = bonus;
+    document.getElementById('total-num').textContent   = total;
+
+    const credBar = document.getElementById('credits-bar');
+    if (credBar && planMax > 0) {
+        const totalNum = (user.total_credits >= 0) ? user.total_credits : 0;
+        const pct = Math.max(0, Math.min(100, (totalNum / planMax) * 100));
+        credBar.style.width = pct + '%';
+        credBar.style.background = totalNum <= 10 ? '#ef4444' : totalNum <= 50 ? '#f59e0b' : '#10a37f';
+    } else if (credBar && planMax === -1) {
+        credBar.style.width = '100%';
+    }
+
+    // Plan
+    const planLabels = { free:'Free', pro:'Pro', max:'Max', ultra:'Ultra' };
+    const planDescs  = {
+        free:  '50 кредитов + 300 бонусных при регистрации',
+        pro:   '1 000 кредитов в месяц · $9/мес',
+        max:   '5 000 кредитов в месяц · $29/мес',
+        ultra: 'Безлимитные кредиты · $79/мес',
+    };
+    const planColors = { free:'#10a37f', pro:'#3b82f6', max:'#8b5cf6', ultra:'#f59e0b' };
+    const plan = user.plan || 'free';
+    document.getElementById('plan-name').textContent = planLabels[plan] || plan;
+    document.getElementById('plan-desc').textContent = planDescs[plan] || '';
+    document.getElementById('plan-badge').textContent = planLabels[plan] || plan;
+    document.getElementById('plan-badge').style.background = planColors[plan] + '22';
+    document.getElementById('plan-badge').style.color = planColors[plan];
+    document.getElementById('plan-badge').style.border = `1px solid ${planColors[plan]}44`;
+    // Highlight active plan card
+    document.querySelectorAll('.plan-card').forEach(c => {
+        if (c.dataset.plan === plan) { c.style.borderColor = planColors[plan]; c.classList.add('active-plan'); }
+    });
+
+    // Nomchat badge
+    if (user.nomchat_id) {
+        const badges = document.getElementById('p-badges');
+        const b = document.createElement('span');
+        b.className = 'badge badge-nomchat';
+        b.textContent = '💬 Nomchat ID';
+        badges.prepend(b);
+        renderNomchatConnected();
+    }
+}
+
+// ── Tabs ──────────────────────────────────────────────────────
+function showTab(name, el) {
+    ['overview','nomchat','settings','danger'].forEach(t => {
+        document.getElementById('tab-' + t).style.display = t === name ? 'contents' : 'none';
+    });
+    document.querySelectorAll('.profile-nav-item').forEach(b => b.classList.remove('active'));
+    el.classList.add('active');
+}
+
+// ── Plan upgrade ──────────────────────────────────────────────
+async function upgradePlan(planId) {
+    const names = { pro:'Pro', max:'Max', ultra:'Ultra' };
+    // Try Stripe checkout
+    const res = await fetch('/api/stripe/checkout', {
+        method: 'POST', credentials: 'include',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ plan: planId })
+    });
+    if (res.ok) {
+        const d = await res.json();
+        if (d.url) { window.location.href = d.url; return; }
+    }
+    // Fallback: demo if Stripe not configured
+    const e = await res.json().catch(() => ({}));
+    if (e.error?.includes('not configured') || e.error?.includes('Price not configured')) {
+        if (!confirm(`Активировать план ${names[planId]}? (демо — без реальной оплаты)`)) return;
+        const r2 = await fetch('/api/plan/upgrade', {
+            method: 'POST', credentials: 'include',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ plan: planId })
+        });
+        if (r2.ok) { toast(`План ${names[planId]} активирован!`, 'ok'); setTimeout(() => location.reload(), 1200); }
+        else { const e2 = await r2.json().catch(() => ({})); toast(e2.error || 'Ошибка', 'err'); }
+    } else {
+        toast(e.error || 'Ошибка оплаты', 'err');
+    }
+}
+
+// ── Nomchat connect ───────────────────────────────────────────
+function connectNomchat() {
+    const popup = window.open(
+        `${NOMCHAT_URL}/oauth.html?app_id=ai-chat-pro&app_name=AI+Chat+Pro`,
+        'nomchat_auth', 'width=480,height=640,scrollbars=yes'
+    );
+    if (!popup) { toast('Allow popups to connect Nomchat ID', 'err'); return; }
+
+    window.addEventListener('message', async (e) => {
+        if (e.data?.type === 'NOMCHAT_AUTH_SUCCESS') {
+            try {
+                const res = await fetch(`${NOMCHAT_URL}/api/auth/token/verify`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ token: e.data.token, app_id: 'ai-chat-pro' })
+                });
+                const data = await res.json();
+                if (data.success) {
+                    nomchatUser = data.user;
+                    localStorage.setItem('nomchat_user', JSON.stringify(nomchatUser));
+                    // Sync name if not set
+                    if (!user.name && nomchatUser.username) {
+                        user.name = nomchatUser.username;
+                        localStorage.setItem('acc_session', JSON.stringify(user));
+                        document.getElementById('p-name').textContent = user.name;
+                    }
+                    renderNomchatConnected();
+                    toast('Nomchat ID connected!', 'ok');
+                }
+            } catch (_) { toast('Connection failed', 'err'); }
+        }
+    }, { once: true });
+}
+
+function renderNomchatConnected() {
+    if (!user?.nomchat_id) return;
+    document.getElementById('nomchat-status').textContent = `Connected as ${user.nomchat_username}`;
+    document.getElementById('nomchat-status').className = 'nomchat-connect-status connected';
+    document.getElementById('nomchat-btn').textContent = 'Disconnect';
+    document.getElementById('nomchat-btn').className = 'btn-disconnect';
+    document.getElementById('nomchat-btn').onclick = disconnectNomchat;
+    document.getElementById('sync-card').style.display = 'block';
+    document.getElementById('sync-grid').innerHTML = `
+        <div class="sync-item"><div class="sync-item-label">Username</div><div class="sync-item-value">${user.nomchat_username}</div></div>
+        <div class="sync-item"><div class="sync-item-label">Email</div><div class="sync-item-value">${user.email}</div></div>
+        <div class="sync-item"><div class="sync-item-label">Avatar</div><div class="sync-item-value" style="font-size:1.4em">${user.nomchat_avatar || '💬'}</div></div>
+        <div class="sync-item"><div class="sync-item-label">Nomchat ID</div><div class="sync-item-value">#${user.nomchat_id}</div></div>
+    `;
+}
+
+function disconnectNomchat() {
+    if (!confirm('Disconnect Nomchat ID?')) return;
+    localStorage.removeItem('nomchat_user');
+    nomchatUser = null;
+    document.getElementById('nomchat-status').textContent = 'Not connected';
+    document.getElementById('nomchat-status').className = 'nomchat-connect-status disconnected';
+    document.getElementById('nomchat-btn').textContent = 'Connect';
+    document.getElementById('nomchat-btn').className = 'btn-connect-nomchat';
+    document.getElementById('nomchat-btn').onclick = connectNomchat;
+    document.getElementById('sync-card').style.display = 'none';
+    document.querySelector('.badge-nomchat')?.remove();
+    toast('Nomchat ID disconnected', 'ok');
+}
+
+async function saveName() {
+    const name = document.getElementById('setting-name').value.trim();
+    if (!name) return;
+    const res = await fetch('/api/user/update', {
+        method: 'POST', credentials: 'include',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ username: name })
+    });
+    if (res.ok) {
+        user = await res.json();
+        document.getElementById('p-name').textContent = user.username;
+        toast('Saved!', 'ok');
+    }
+}
+
+// ── Account ───────────────────────────────────────────────────
+async function logout() {
+    await fetch('/api/auth/logout', { method: 'POST', credentials: 'include' });
+    window.location.href = '/login.html';
+}
+
+async function deleteAccount() {
+    if (!confirm('Delete your account permanently?')) return;
+    await fetch('/api/user/delete', { method: 'DELETE', credentials: 'include' });
+    window.location.href = '/';
+}
+
+function clearData() {
+    if (!confirm('Clear all local chat history?')) return;
+    localStorage.removeItem('allChats');
+    toast('Chat history cleared', 'ok');
+}
+
+// ── Toast ─────────────────────────────────────────────────────
+function toast(msg, type) {
+    const t = document.createElement('div');
+    t.className = `toast toast-${type}`;
+    t.textContent = msg;
+    document.body.appendChild(t);
+    setTimeout(() => { t.style.opacity='0'; t.style.transition='opacity 0.3s'; setTimeout(()=>t.remove(),300); }, 2500);
+}
+
+init();</script>
+</body>
+</html>
