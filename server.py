@@ -369,17 +369,21 @@ def proxy_chat(user):
                     last_msg = content.lower()
                     break
         
-        # Simple responses
-        if any(word in last_msg for word in ['привет', 'hello', 'hi', 'здравствуй']):
-            response = "Привет! Я AI Chat Pro. Чем могу помочь?"
-        elif any(word in last_msg for word in ['как дела', 'how are you']):
-            response = "Отлично, спасибо! Готов помочь с любыми вопросами."
-        elif any(word in last_msg for word in ['что ты умеешь', 'what can you do']):
-            response = "Я могу помочь с:\n- Ответами на вопросы\n- Написанием кода\n- Объяснением концепций\n- Решением задач\n\nЗадавайте любые вопросы!"
-        elif any(word in last_msg for word in ['код', 'code', 'программ']):
-            response = "Конечно! Я помогу с кодом. Какой язык программирования вас интересует?"
-        elif any(word in last_msg for word in ['спасибо', 'thanks', 'thank you']):
-            response = "Пожалуйста! Рад помочь. Если есть ещё вопросы - обращайтесь!"
+        # Simple responses with better matching
+        if any(word in last_msg for word in ['привет', 'hello', 'hi', 'здравствуй', 'добрый день', 'hey']):
+            response = "Привет! Я AI Chat Pro, созданный AI Chat Company. Чем могу помочь? 🤖"
+        elif any(word in last_msg for word in ['как дела', 'how are you', 'как ты']):
+            response = "Отлично, спасибо! Готов помочь с любыми вопросами. Что вас интересует?"
+        elif any(word in last_msg for word in ['что ты умеешь', 'what can you do', 'твои возможности', 'помощь']):
+            response = "Я могу помочь с:\n\n✅ Ответами на вопросы\n✅ Написанием и объяснением кода\n✅ Решением задач\n✅ Переводом текста\n✅ Генерацией идей\n\nЗадавайте любые вопросы!"
+        elif any(word in last_msg for word in ['код', 'code', 'программ', 'python', 'javascript', 'java']):
+            response = "Конечно! Я помогу с кодом. Какой язык программирования вас интересует? (Python, JavaScript, Java, C++, и другие)"
+        elif any(word in last_msg for word in ['спасибо', 'thanks', 'thank you', 'благодарю']):
+            response = "Пожалуйста! Рад помочь. Если есть ещё вопросы - обращайтесь! 😊"
+        elif any(word in last_msg for word in ['кто ты', 'who are you', 'что ты такое']):
+            response = "Я AI Chat Pro — AI-ассистент от AI Chat Company. Использую модель Mistral 7B для ответов на ваши вопросы. Создан чтобы помогать с информацией, кодом и решением задач!"
+        elif any(word in last_msg for word in ['пока', 'bye', 'goodbye', 'до свидания']):
+            response = "До встречи! Возвращайтесь, если понадобится помощь. Удачи! 👋"
         else:
             # Try HuggingFace first
             try:
