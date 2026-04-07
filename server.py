@@ -389,7 +389,7 @@ def proxy_chat(user):
             if system_text:
                 payload['system_instruction'] = {'parts': [{'text': system_text}]}
 
-            g_model = 'gemini-2.0-flash-exp'
+            g_model = 'gemini-1.5-flash'
             try:
                 resp = requests.post(
                     f'https://generativelanguage.googleapis.com/v1beta/models/{g_model}:generateContent?key={gemini_key}',
@@ -398,11 +398,17 @@ def proxy_chat(user):
                 )
                 if resp.ok:
                     result = resp.json()
-                    text = result.get('candidates', [{}])[0].get('content', {}).get('parts', [{}])[0].get('text', '')
-                    if text:
-                        deduct()
-                        return jsonify({'choices': [{'message': {'role': 'assistant', 'content': text}}],
-                                        'credits_remaining': max(0, total - 1) if total >= 0 else -1})
+                    candidates = result.get('candidates', [])
+                    if candidates and candidates[0].get('content'):
+                        parts = candidates[0]['content'].get('parts', [])
+                        if parts and parts[0].get('text'):
+                            text = parts[0]['text']
+                            deduct()
+                            return jsonify({'choices': [{'message': {'role': 'assistant', 'content': text}}],
+                                            'credits_remaining': max(0, total - 1) if total >= 0 else -1})
+                    # Check for safety blocks
+                    if candidates and candidates[0].get('finishReason') == 'SAFETY':
+                        app.logger.warning(f'Gemini safety block: {result}')
                     else:
                         app.logger.warning(f'Gemini empty response: {result}')
                 else:
