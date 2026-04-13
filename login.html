@@ -54,6 +54,17 @@
       </span>
     </button>
 
+    <!-- Danya Captcha -->
+    <div id="danya-captcha" style="margin-top:20px;background:rgba(0,0,0,.04);border:1.5px solid var(--border);border-radius:12px;padding:16px;display:none">
+      <div style="font-size:11px;font-weight:800;color:var(--text3);letter-spacing:1px;text-transform:uppercase;margin-bottom:10px;display:flex;align-items:center;gap:6px">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
+        Danya Captcha
+      </div>
+      <div style="font-size:15px;font-weight:700;color:var(--text);margin-bottom:10px" id="captcha-question"></div>
+      <input type="number" id="captcha-answer" placeholder="Your answer" style="width:100%;padding:10px 14px;border:1.5px solid var(--border);border-radius:8px;font-size:14px;outline:none;font-family:inherit;transition:border-color .2s" onfocus="this.style.borderColor='var(--c)'" onblur="this.style.borderColor='var(--border)'">
+      <div id="captcha-error" style="font-size:12px;color:#ef4444;margin-top:6px;display:none">Wrong answer. Try again.</div>
+    </div>
+
     <div class="login-credits-note" style="margin-top:24px;">
       🎁 New accounts get <strong>50 free credits</strong> + <strong>300 bonus credits</strong> instantly
     </div>
@@ -85,7 +96,40 @@ function showAlert(msg, type = 'error') {
   el.style.display = 'flex';
 }
 
+// ── Danya Captcha ──────────────────────────────────────────────────────
+let _captchaAnswer = 0;
+let _captchaVerified = false;
+
+function initCaptcha() {
+  const a = Math.floor(Math.random() * 10) + 1;
+  const b = Math.floor(Math.random() * 10) + 1;
+  const ops = ['+', '-', '×'];
+  const op = ops[Math.floor(Math.random() * ops.length)];
+  _captchaAnswer = op === '+' ? a + b : op === '-' ? a - b : a * b;
+  document.getElementById('captcha-question').textContent = `What is ${a} ${op} ${b}?`;
+  document.getElementById('captcha-answer').value = '';
+  document.getElementById('captcha-error').style.display = 'none';
+  document.getElementById('danya-captcha').style.display = 'block';
+  _captchaVerified = false;
+}
+
+function verifyCaptcha() {
+  const val = parseInt(document.getElementById('captcha-answer').value);
+  if (val === _captchaAnswer) {
+    _captchaVerified = true;
+    document.getElementById('captcha-error').style.display = 'none';
+    return true;
+  }
+  document.getElementById('captcha-error').style.display = 'block';
+  initCaptcha();
+  return false;
+}
+
+// Show captcha on page load
+window.addEventListener('DOMContentLoaded', initCaptcha);
+
 async function nomchatLogin() {
+  if (!_captchaVerified && !verifyCaptcha()) return;
   const NOMCHAT_URL = 'https://nomchat-id.up.railway.app';
   const popup = window.open(
     `${NOMCHAT_URL}/oauth.html?app_id=ai-chat-pro&redirect=${encodeURIComponent(window.location.origin + '/login.html')}`,
