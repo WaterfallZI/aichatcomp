@@ -190,17 +190,10 @@
       <span class="topbar-title" id="chat-title">New conversation</span>
       <span class="agent-indicator" id="agent-indicator">🤖 AI Assistant</span>
       <select class="model-sel" id="model-sel" title="Select AI model">
-        <option value="meta-llama/llama-3.3-70b-instruct">Llama 3.3 70B</option>
-        <option value="meta-llama/llama-3.1-8b-instruct">Llama 3.1 8B (fast)</option>
-        <option value="mistralai/mixtral-8x7b-instruct">Mixtral 8x7B</option>
-        <option value="google/gemma-2-9b-it">Gemma 2 9B</option>
-        <option value="meta-llama/llama-4-scout">Llama 4 Scout</option>
-        <option value="anthropic/claude-3-haiku">Claude 3 Haiku</option>
-        <option value="openai/gpt-4o-mini">GPT-4o Mini</option>
-        <option value="deepseek/deepseek-chat">DeepSeek Chat</option>
-        <option value="deepseek/deepseek-r1:free" style="color:#f59e0b">✦ Danya AI</option>
-        <option value="google/gemini-2.0-flash-exp:free" style="color:#f59e0b">✦ Danya AI 2.0</option>
-        <option value="google/gemini-2.5-pro-exp-03-25:free" style="color:#f59e0b">✦ Danya AI 2.0 Turbo</option>
+        <option value="deepseek-chat">DeepSeek Chat</option>
+        <option value="deepseek-reasoner">✦ Danya AI (DeepSeek R1)</option>
+        <option value="deepseek-chat">✦ Danya AI 2.0</option>
+        <option value="deepseek-coder">✦ Danya AI 2.0 Turbo (Coder)</option>
       </select>
       <button class="icon-btn" onclick="clearChat()" title="Clear chat">🗑️</button>
       <button class="icon-btn" onclick="openPromptModal()" title="Custom prompt" style="font-size:16px">⚙️</button>
@@ -279,7 +272,7 @@
 'use strict';
 
 // ── Constants ──────────────────────────────────────────────────────────
-const GROQ_API = 'https://openrouter.ai/api/v1/chat/completions';
+const GROQ_API = 'https://api.deepseek.com/v1/chat/completions';
 const CHATS_KEY = 'aichat_chats';
 const ACTIVE_KEY = 'aichat_active';
 

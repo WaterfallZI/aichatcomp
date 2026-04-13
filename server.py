@@ -43,7 +43,7 @@ CORS(app, supports_credentials=True,
 db = SQLAlchemy(app)
 
 # в”Ђв”Ђ Constants в”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђ
-GROQ_URL    = 'https://openrouter.ai/api/v1/chat/completions'
+GROQ_URL    = 'https://api.deepseek.com/v1/chat/completions'
 NOMCHAT_URL = os.environ.get('NOMCHAT_URL', 'https://nomchat-id.up.railway.app')
 OPERATOR_EMAIL = os.environ.get('OPERATOR_EMAIL', 'ai@com.ru')
 
@@ -295,7 +295,7 @@ def logout():
 # в”Ђв”Ђ Config: Groq Key в”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђ
 @app.route('/api/config/groq-key')
 def get_groq_key():
-    key = os.environ.get('OPENROUTER_KEY', '')
+    key = os.environ.get('DEEPSEEK_KEY', '')
     if not key:
         return jsonify({'error': 'Groq not configured'}), 503
     return jsonify({'key': key})
@@ -307,7 +307,7 @@ def chat(user):
     if not user.has_credits():
         return jsonify({'error': 'no_credits', 'message': 'No credits remaining.'}), 402
 
-    groq_key = os.environ.get('OPENROUTER_KEY', '')
+    groq_key = os.environ.get('DEEPSEEK_KEY', '')
     if not groq_key:
         return jsonify({'error': 'AI service not configured'}), 503
 
@@ -318,17 +318,12 @@ def chat(user):
 
     # Validate model
     ALLOWED_MODELS = {
-        'meta-llama/llama-3.3-70b-instruct',
-        'meta-llama/llama-3.1-8b-instruct',
-        'mistralai/mixtral-8x7b-instruct',
-        'google/gemma-2-9b-it',
-        'meta-llama/llama-4-scout',
-        'anthropic/claude-3-haiku',
-        'openai/gpt-4o-mini',
-        'deepseek/deepseek-chat',
+        'deepseek-chat',
+        'deepseek-reasoner',
+        'deepseek-coder',
     }
     if model not in ALLOWED_MODELS:
-        model = 'meta-llama/llama-3.3-70b-instruct'
+        model = 'deepseek-chat'
 
     # Filter messages вЂ” only string content for Groq
     clean_msgs = []
@@ -652,7 +647,7 @@ def preview_url(user):
 # в”Ђв”Ђ Health check в”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђ
 @app.route('/api/health')
 def health():
-    groq_key = os.environ.get('OPENROUTER_KEY', '')
+    groq_key = os.environ.get('DEEPSEEK_KEY', '')
     return jsonify({
         'status': 'ok',
         'groq': bool(groq_key),

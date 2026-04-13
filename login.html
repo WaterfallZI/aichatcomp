@@ -2,8 +2,9 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8">
-<link rel="icon" type="image/svg+xml" href="/icon.svg"><meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Sign In — AI Chat Company</title>
+<link rel="icon" type="image/svg+xml" href="/icon.svg">
 <link rel="stylesheet" href="style.css">
 </head>
 <body>
@@ -30,8 +31,7 @@
 </header>
 
 <main class="login-page">
-  <div class="login-card" style="max-width:400px; text-align:center;">
-
+  <div class="login-card">
     <div class="login-logo">
       <div class="login-logo-mark">
         <svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2.5" stroke-linecap="round" width="22" height="22">
@@ -43,128 +43,193 @@
 
     <div id="login-alert" style="display:none; margin-bottom:16px;"></div>
 
-    <div class="login-title">Welcome</div>
-    <p class="login-subtitle" style="margin-bottom:32px;">Sign in with your Nomchat ID to access AI Chat Company. Your chats, credits and settings are saved to your account.</p>
+    <!-- Tabs -->
+    <div class="login-tabs" role="tablist">
+      <button class="login-tab active" id="tab-signin" onclick="switchTab('signin')">Sign in</button>
+      <button class="login-tab" id="tab-register" onclick="switchTab('register')">Register</button>
+    </div>
 
-    <button class="nomchat-login-btn" onclick="nomchatLogin()" style="width:100%; padding:16px; font-size:15px; justify-content:center;">
-      <span class="nomchat-login-btn-icon">🔑</span>
-      <span class="nomchat-login-btn-text">
-        <span class="nomchat-login-btn-label">Continue with</span>
-        <span class="nomchat-login-btn-brand">NOMCHAT ID</span>
-      </span>
-    </button>
-
-    <!-- Danya Captcha -->
-    <div id="danya-captcha" style="margin-top:20px;background:rgba(0,0,0,.04);border:1.5px solid var(--border);border-radius:12px;padding:16px;display:none">
-      <div style="font-size:11px;font-weight:800;color:var(--text3);letter-spacing:1px;text-transform:uppercase;margin-bottom:10px;display:flex;align-items:center;gap:6px">
-        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
-        Danya Captcha
+    <!-- Sign In -->
+    <form id="signin-form" class="login-form" onsubmit="handleSignin(event)" novalidate>
+      <div class="login-title">Welcome back</div>
+      <p class="login-subtitle">Sign in to your account</p>
+      <div class="form-group">
+        <label class="form-label">Email</label>
+        <input class="form-input" type="email" id="si-email" placeholder="you@example.com" autocomplete="email" required>
       </div>
-      <div style="font-size:15px;font-weight:700;color:var(--text);margin-bottom:10px" id="captcha-question"></div>
-      <input type="number" id="captcha-answer" placeholder="Your answer" style="width:100%;padding:10px 14px;border:1.5px solid var(--border);border-radius:8px;font-size:14px;outline:none;font-family:inherit;transition:border-color .2s" onfocus="this.style.borderColor='var(--c)'" onblur="this.style.borderColor='var(--border)'">
-      <div id="captcha-error" style="font-size:12px;color:#ef4444;margin-top:6px;display:none">Wrong answer. Try again.</div>
-    </div>
+      <div class="form-group">
+        <label class="form-label">Password</label>
+        <input class="form-input" type="password" id="si-password" placeholder="Your password" autocomplete="current-password" required>
+      </div>
+      <!-- Danya Captcha -->
+      <div class="form-group" id="si-captcha-wrap">
+        <label class="form-label" style="display:flex;align-items:center;gap:6px">
+          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
+          Danya Captcha — <span id="si-captcha-q" style="color:var(--c);font-weight:800"></span>
+        </label>
+        <input class="form-input" type="number" id="si-captcha-a" placeholder="Answer">
+      </div>
+      <button type="submit" class="login-submit-btn" id="si-btn">Sign in</button>
+      <p class="login-footer">Don't have an account? <a href="#" onclick="switchTab('register');return false">Register</a></p>
+    </form>
 
-    <div class="login-credits-note" style="margin-top:24px;">
-      🎁 New accounts get <strong>50 free credits</strong> + <strong>300 bonus credits</strong> instantly
-    </div>
-
-    <p style="margin-top:20px; font-size:12px; color:var(--text3); line-height:1.6;">
-      Don't have a Nomchat ID?
-      <a href="https://nomchat-id.up.railway.app" target="_blank" style="color:var(--c); font-weight:600;">Create one free →</a>
-    </p>
+    <!-- Register -->
+    <form id="register-form" class="login-form" style="display:none" onsubmit="handleRegister(event)" novalidate>
+      <div class="login-title">Create account</div>
+      <p class="login-subtitle">Get 350 free credits on signup</p>
+      <div class="form-group">
+        <label class="form-label">Username</label>
+        <input class="form-input" type="text" id="reg-username" placeholder="Your name" autocomplete="username" required>
+      </div>
+      <div class="form-group">
+        <label class="form-label">Email</label>
+        <input class="form-input" type="email" id="reg-email" placeholder="you@example.com" autocomplete="email" required>
+      </div>
+      <div class="form-group">
+        <label class="form-label">Password</label>
+        <input class="form-input" type="password" id="reg-password" placeholder="Min 6 characters" autocomplete="new-password" required>
+      </div>
+      <!-- Danya Captcha -->
+      <div class="form-group" id="reg-captcha-wrap">
+        <label class="form-label" style="display:flex;align-items:center;gap:6px">
+          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
+          Danya Captcha — <span id="reg-captcha-q" style="color:var(--c);font-weight:800"></span>
+        </label>
+        <input class="form-input" type="number" id="reg-captcha-a" placeholder="Answer">
+      </div>
+      <button type="submit" class="login-submit-btn" id="reg-btn">Create account</button>
+      <div class="login-credits-note">🎁 <strong>350 free credits</strong> on signup</div>
+      <p class="login-footer">Already have an account? <a href="#" onclick="switchTab('signin');return false">Sign in</a></p>
+    </form>
   </div>
 </main>
 
 <script>
-window.addEventListener('scroll', () => {
-  document.getElementById('header')?.classList.toggle('scrolled', window.scrollY > 10);
-}, { passive: true });
+'use strict';
 
-// Already logged in? Redirect
-(async () => {
-  try {
-    const r = await fetch('/api/auth/me', { credentials: 'include' });
-    if (r.ok) window.location.href = '/chat.html';
-  } catch(e) {}
-})();
+// ── Captcha ────────────────────────────────────────────────────────────
+const captchas = {};
 
-function showAlert(msg, type = 'error') {
-  const el = document.getElementById('login-alert');
-  el.className = `login-alert ${type}`;
-  el.textContent = (type === 'error' ? '⚠️ ' : '✅ ') + msg;
-  el.style.display = 'flex';
-}
-
-// ── Danya Captcha ──────────────────────────────────────────────────────
-let _captchaAnswer = 0;
-let _captchaVerified = false;
-
-function initCaptcha() {
-  const a = Math.floor(Math.random() * 10) + 1;
-  const b = Math.floor(Math.random() * 10) + 1;
+function genCaptcha(prefix) {
+  const a = Math.floor(Math.random() * 12) + 1;
+  const b = Math.floor(Math.random() * 12) + 1;
   const ops = ['+', '-', '×'];
   const op = ops[Math.floor(Math.random() * ops.length)];
-  _captchaAnswer = op === '+' ? a + b : op === '-' ? a - b : a * b;
-  document.getElementById('captcha-question').textContent = `What is ${a} ${op} ${b}?`;
-  document.getElementById('captcha-answer').value = '';
-  document.getElementById('captcha-error').style.display = 'none';
-  document.getElementById('danya-captcha').style.display = 'block';
-  _captchaVerified = false;
+  const ans = op === '+' ? a + b : op === '-' ? a - b : a * b;
+  captchas[prefix] = ans;
+  document.getElementById(prefix + '-captcha-q').textContent = `${a} ${op} ${b} = ?`;
 }
 
-function verifyCaptcha() {
-  const val = parseInt(document.getElementById('captcha-answer').value);
-  if (val === _captchaAnswer) {
-    _captchaVerified = true;
-    document.getElementById('captcha-error').style.display = 'none';
-    return true;
-  }
-  document.getElementById('captcha-error').style.display = 'block';
-  initCaptcha();
+function checkCaptcha(prefix) {
+  const val = parseInt(document.getElementById(prefix + '-captcha-a').value);
+  if (val === captchas[prefix]) return true;
+  showAlert('Wrong captcha answer. Try again.', 'error');
+  genCaptcha(prefix);
+  document.getElementById(prefix + '-captcha-a').value = '';
   return false;
 }
 
-// Show captcha on page load
-window.addEventListener('DOMContentLoaded', initCaptcha);
-
-async function nomchatLogin() {
-  if (!_captchaVerified && !verifyCaptcha()) return;
-  const NOMCHAT_URL = 'https://nomchat-id.up.railway.app';
-  const popup = window.open(
-    `${NOMCHAT_URL}/oauth.html?app_id=ai-chat-pro&redirect=${encodeURIComponent(window.location.origin + '/login.html')}`,
-    'nomchat-oauth', 'width=480,height=640,scrollbars=yes'
-  );
-
-  if (!popup) { showAlert('Popup blocked. Please allow popups for this site.'); return; }
-
-  const handler = async (e) => {
-    if (e.origin !== NOMCHAT_URL) return;
-    const { token, error } = e.data || {};
-    if (error) { showAlert(error); window.removeEventListener('message', handler); return; }
-    if (token) {
-      window.removeEventListener('message', handler);
-      popup.close();
-      try {
-        const r = await fetch('/api/auth/nomchat', {
-          method: 'POST', credentials: 'include',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ token })
-        });
-        const d = await r.json();
-        if (r.ok) {
-          showAlert('Signed in! Redirecting...', 'success');
-          setTimeout(() => window.location.href = '/chat.html', 800);
-        } else {
-          showAlert(d.error || 'Authentication failed.');
-        }
-      } catch(e) { showAlert('Network error.'); }
-    }
-  };
-
-  window.addEventListener('message', handler);
-  const check = setInterval(() => { if (popup.closed) { clearInterval(check); window.removeEventListener('message', handler); } }, 500);
+// ── Tabs ───────────────────────────────────────────────────────────────
+function switchTab(tab) {
+  clearAlert();
+  document.getElementById('signin-form').style.display = tab === 'signin' ? 'flex' : 'none';
+  document.getElementById('register-form').style.display = tab === 'register' ? 'flex' : 'none';
+  document.getElementById('tab-signin').classList.toggle('active', tab === 'signin');
+  document.getElementById('tab-register').classList.toggle('active', tab === 'register');
 }
+
+// ── Alert ──────────────────────────────────────────────────────────────
+function showAlert(msg, type = 'error') {
+  const el = document.getElementById('login-alert');
+  el.className = 'login-alert ' + type;
+  el.textContent = (type === 'error' ? '⚠️ ' : '✅ ') + msg;
+  el.style.display = 'flex';
+}
+function clearAlert() {
+  document.getElementById('login-alert').style.display = 'none';
+}
+
+// ── Sign In ────────────────────────────────────────────────────────────
+async function handleSignin(e) {
+  e.preventDefault();
+  clearAlert();
+  if (!checkCaptcha('si')) return;
+
+  const email = document.getElementById('si-email').value.trim();
+  const password = document.getElementById('si-password').value;
+  if (!email || !password) { showAlert('Fill in all fields'); return; }
+
+  const btn = document.getElementById('si-btn');
+  btn.disabled = true; btn.textContent = 'Signing in...';
+
+  try {
+    const r = await fetch('/api/auth/login', {
+      method: 'POST', credentials: 'include',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ email, password })
+    });
+    const d = await r.json();
+    if (r.ok) {
+      showAlert('Signed in! Redirecting...', 'success');
+      setTimeout(() => location.href = '/chat.html', 700);
+    } else {
+      showAlert(d.error || 'Invalid email or password');
+      genCaptcha('si');
+      document.getElementById('si-captcha-a').value = '';
+    }
+  } catch { showAlert('Network error. Try again.'); }
+  finally { btn.disabled = false; btn.textContent = 'Sign in'; }
+}
+
+// ── Register ───────────────────────────────────────────────────────────
+async function handleRegister(e) {
+  e.preventDefault();
+  clearAlert();
+  if (!checkCaptcha('reg')) return;
+
+  const username = document.getElementById('reg-username').value.trim();
+  const email = document.getElementById('reg-email').value.trim();
+  const password = document.getElementById('reg-password').value;
+  if (!username || !email || !password) { showAlert('Fill in all fields'); return; }
+  if (password.length < 6) { showAlert('Password must be at least 6 characters'); return; }
+
+  const btn = document.getElementById('reg-btn');
+  btn.disabled = true; btn.textContent = 'Creating...';
+
+  try {
+    const r = await fetch('/api/auth/register', {
+      method: 'POST', credentials: 'include',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ username, email, password })
+    });
+    const d = await r.json();
+    if (r.ok) {
+      showAlert('Account created! Redirecting...', 'success');
+      setTimeout(() => location.href = '/chat.html', 700);
+    } else {
+      showAlert(d.error || 'Registration failed');
+      genCaptcha('reg');
+      document.getElementById('reg-captcha-a').value = '';
+    }
+  } catch { showAlert('Network error. Try again.'); }
+  finally { btn.disabled = false; btn.textContent = 'Create account'; }
+}
+
+// ── Init ───────────────────────────────────────────────────────────────
+window.addEventListener('scroll', () => {
+  document.getElementById('header')?.classList.toggle('scrolled', window.scrollY > 10);
+});
+
+genCaptcha('si');
+genCaptcha('reg');
+
+// Redirect if already logged in
+(async () => {
+  try {
+    const r = await fetch('/api/auth/me', { credentials: 'include' });
+    if (r.ok) location.href = '/chat.html';
+  } catch {}
+})();
 </script>
 </body>
 </html>
