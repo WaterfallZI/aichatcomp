@@ -1,0 +1,585 @@
+﻿<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<link rel="icon" type="image/svg+xml" href="/icon.svg"><meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Features — AI Chat Company</title>
+<link rel="stylesheet" href="style.css">
+<meta name="description" content="Explore AI Chat Company features: image generation, voice assistant, AI agents, and website preview.">
+</head>
+<body>
+<div class="grid-bg"></div>
+<div class="noise-overlay"></div>
+<div class="glow-orb glow-orb-1"></div>
+<div class="glow-orb glow-orb-2"></div>
+<div class="glow-orb glow-orb-3"></div>
+
+<!-- Header -->
+<header class="header" id="header">
+  <div class="header-inner">
+    <a href="/" class="logo">
+      <div class="logo-mark">
+        <svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2.5" stroke-linecap="round">
+          <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/>
+        </svg>
+      </div>
+      <span class="logo-text">AI Chat Co.</span>
+    </a>
+    <nav class="nav">
+      <a href="/" class="nav-link">Home</a>
+      <a href="/features.html" class="nav-link active">Features</a>
+    </nav>
+    <div class="header-actions" id="header-actions">
+      <a href="/login.html" class="btn-login">Sign in</a>
+      <a href="/login.html" class="btn-signup">Get started free</a>
+    </div>
+    <button class="mobile-menu-btn" id="mobile-menu-btn" aria-label="Menu" aria-expanded="false">
+      <span></span><span></span><span></span>
+    </button>
+  </div>
+</header>
+
+<!-- Mobile nav -->
+<nav class="mobile-nav" id="mobile-nav">
+  <a href="/" class="nav-link">Home</a>
+  <a href="/features.html" class="nav-link active">Features</a>
+  <div class="mobile-nav-actions">
+    <a href="/login.html" class="btn-login">Sign in</a>
+    <a href="/login.html" class="btn-signup">Get started</a>
+  </div>
+</nav>
+
+<!-- Features Page -->
+<div class="features-page">
+
+  <!-- Hero -->
+  <section class="features-hero reveal">
+    <div class="features-hero-eyebrow">
+      <span>✨</span> All Features
+    </div>
+    <h1>Explore AI Features</h1>
+    <p>From intelligent conversations to image generation, voice interaction, and smart agents — everything you need in one platform.</p>
+  </section>
+
+  <!-- Features Grid -->
+  <div class="features-grid-full">
+
+    <!-- Image Generation -->
+    <section class="feature-section reveal" id="image-gen">
+      <div class="feature-section-text">
+        <div class="feature-section-badge pill-purple">🎨 Image Generation</div>
+        <h2 class="feature-section-title">Create stunning images with AI</h2>
+        <p class="feature-section-desc">Describe what you want and watch AI bring it to life. Generate photorealistic images, artwork, illustrations, and more in seconds.</p>
+        <div class="feature-cost-badge">⚡ 5 credits per image</div>
+        <ul style="margin-top:16px; list-style:none; display:flex; flex-direction:column; gap:8px;">
+          <li style="font-size:14px; color:var(--text3); display:flex; gap:8px; align-items:center;"><span style="color:var(--c); font-weight:900;">✓</span> Photorealistic & artistic styles</li>
+          <li style="font-size:14px; color:var(--text3); display:flex; gap:8px; align-items:center;"><span style="color:var(--c); font-weight:900;">✓</span> Multiple aspect ratios</li>
+          <li style="font-size:14px; color:var(--text3); display:flex; gap:8px; align-items:center;"><span style="color:var(--c); font-weight:900;">✓</span> Download in high resolution</li>
+        </ul>
+      </div>
+      <div class="feature-demo">
+        <div class="feature-demo-title">Try it live</div>
+        <div class="image-gen-demo">
+          <div class="image-gen-prompt">
+            <input type="text" id="img-prompt" placeholder="A fox holding a water gun in a cyberpunk city..." value="A majestic fox in a neon-lit cyberpunk city, digital art">
+            <button class="image-gen-btn" id="img-gen-btn" onclick="generateImage()">Generate</button>
+          </div>
+          <div class="image-result" id="img-result">
+            <div class="image-result-placeholder">
+              <div class="image-result-placeholder-icon">🖼️</div>
+              <span>Your image will appear here</span>
+            </div>
+          </div>
+          <div id="img-error" style="display:none; margin-top:10px; font-size:12px; color:#ef4444;"></div>
+        </div>
+      </div>
+    </section>
+
+    <div class="section-divider"></div>
+
+    <!-- Voice Assistant -->
+    <section class="feature-section reverse reveal" id="voice">
+      <div class="feature-section-text">
+        <div class="feature-section-badge pill-blue">🎙️ Voice Assistant</div>
+        <h2 class="feature-section-title">Talk to AI naturally</h2>
+        <p class="feature-section-desc">Use your voice to interact with AI. Speak your question, get a transcription, and receive an intelligent response — all hands-free.</p>
+        <div class="feature-cost-badge">⚡ 2 credits per transcription</div>
+        <ul style="margin-top:16px; list-style:none; display:flex; flex-direction:column; gap:8px;">
+          <li style="font-size:14px; color:var(--text3); display:flex; gap:8px; align-items:center;"><span style="color:var(--c); font-weight:900;">✓</span> Real-time speech recognition</li>
+          <li style="font-size:14px; color:var(--text3); display:flex; gap:8px; align-items:center;"><span style="color:var(--c); font-weight:900;">✓</span> 50+ languages supported</li>
+          <li style="font-size:14px; color:var(--text3); display:flex; gap:8px; align-items:center;"><span style="color:var(--c); font-weight:900;">✓</span> AI response with text-to-speech</li>
+        </ul>
+      </div>
+      <div class="feature-demo">
+        <div class="feature-demo-title">Try it live</div>
+        <div class="voice-demo">
+          <div style="text-align:center; margin-bottom:16px;">
+            <button class="voice-record-btn" id="voice-btn" onclick="toggleRecording()">🎙️</button>
+            <p id="voice-status" style="font-size:13px; color:var(--text3); margin-top:8px;">Click to start recording</p>
+          </div>
+          <div class="voice-transcript" id="voice-transcript">Your speech will appear here...</div>
+          <div class="voice-response" id="voice-response"></div>
+          <div id="voice-error" style="display:none; margin-top:10px; font-size:12px; color:#ef4444;"></div>
+        </div>
+      </div>
+    </section>
+
+    <div class="section-divider"></div>
+
+    <!-- AI Agents -->
+    <section class="feature-section reveal" id="agents">
+      <div class="feature-section-text">
+        <div class="feature-section-badge pill-green">🤖 AI Agents</div>
+        <h2 class="feature-section-title">Specialized AI for every task</h2>
+        <p class="feature-section-desc">Choose from purpose-built AI agents, each optimized for specific tasks. Get expert-level assistance whether you're coding, writing, analyzing, or learning.</p>
+        <a href="/chat.html" class="btn-primary" style="margin-top:20px; display:inline-flex;">Start chatting →</a>
+      </div>
+      <div class="feature-demo">
+        <div class="feature-demo-title">Choose your agent</div>
+        <div class="agents-grid">
+          <div class="agent-card" onclick="openAgent('coder')">
+            <div class="agent-icon">💻</div>
+            <div class="agent-info">
+              <div class="agent-name">Coder</div>
+              <div class="agent-desc">Write, debug & explain code</div>
+            </div>
+          </div>
+          <div class="agent-card" onclick="openAgent('writer')">
+            <div class="agent-icon">✍️</div>
+            <div class="agent-info">
+              <div class="agent-name">Writer</div>
+              <div class="agent-desc">Create & edit content</div>
+            </div>
+          </div>
+          <div class="agent-card" onclick="openAgent('analyst')">
+            <div class="agent-icon">📊</div>
+            <div class="agent-info">
+              <div class="agent-name">Analyst</div>
+              <div class="agent-desc">Analyze data & insights</div>
+            </div>
+          </div>
+          <div class="agent-card" onclick="openAgent('teacher')">
+            <div class="agent-icon">👨‍🏫</div>
+            <div class="agent-info">
+              <div class="agent-name">Teacher</div>
+              <div class="agent-desc">Learn anything, step by step</div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <div class="section-divider"></div>
+
+    <!-- Website Preview -->
+    <section class="feature-section reverse reveal" id="preview">
+      <div class="feature-section-text">
+        <div class="feature-section-badge" style="background:rgba(251,191,36,0.1); border:1px solid rgba(251,191,36,0.25); color:#d97706;">🌐 Website Preview</div>
+        <h2 class="feature-section-title">Preview any website instantly</h2>
+        <p class="feature-section-desc">Enter any URL and get an instant screenshot preview. Perfect for sharing links, checking designs, or analyzing competitor sites.</p>
+        <div class="feature-cost-badge">⚡ 1 credit per preview</div>
+        <ul style="margin-top:16px; list-style:none; display:flex; flex-direction:column; gap:8px;">
+          <li style="font-size:14px; color:var(--text3); display:flex; gap:8px; align-items:center;"><span style="color:var(--c); font-weight:900;">✓</span> Full-page screenshots</li>
+          <li style="font-size:14px; color:var(--text3); display:flex; gap:8px; align-items:center;"><span style="color:var(--c); font-weight:900;">✓</span> Mobile & desktop views</li>
+          <li style="font-size:14px; color:var(--text3); display:flex; gap:8px; align-items:center;"><span style="color:var(--c); font-weight:900;">✓</span> Instant loading</li>
+        </ul>
+      </div>
+      <div class="feature-demo">
+        <div class="feature-demo-title">Try it live</div>
+        <div class="preview-demo">
+          <div class="preview-url-row">
+            <input type="url" class="preview-url-input" id="preview-url" placeholder="https://example.com" value="https://example.com">
+            <button class="preview-btn" id="preview-btn" onclick="previewWebsite()">Preview</button>
+          </div>
+          <div class="preview-result" id="preview-result">
+            <div class="preview-result-placeholder">
+              <div style="font-size:32px; opacity:0.4;">🌐</div>
+              <span style="font-size:13px; color:var(--text3);">Screenshot will appear here</span>
+            </div>
+          </div>
+          <div id="preview-error" style="display:none; margin-top:10px; font-size:12px; color:#ef4444;"></div>
+        </div>
+      </div>
+    </section>
+
+  </div>
+</div>
+
+<!-- CTA -->
+<section class="cta-section reveal">
+  <div class="cta-inner">
+    <h2 class="cta-title">Ready to explore <em>all features</em>?</h2>
+    <p class="cta-sub">Create a free account and get 50 credits to try everything — no credit card required.</p>
+    <div class="cta-actions">
+      <a href="/login.html" class="btn-primary">Start for free →</a>
+      <a href="/chat.html" class="btn-ghost">Open Chat</a>
+    </div>
+  </div>
+</section>
+
+<!-- Footer -->
+<footer class="footer">
+  <div class="footer-inner">
+    <div class="footer-brand">
+      <a href="/" class="logo">
+        <div class="logo-mark">
+          <svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2.5" stroke-linecap="round">
+            <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/>
+          </svg>
+        </div>
+        <span class="logo-text">AI Chat Co.</span>
+      </a>
+      <p>Powerful AI chat platform with multiple models, image generation, voice, and more.</p>
+    </div>
+    <div class="footer-col">
+      <h4>Product</h4>
+      <ul>
+        <li><a href="/">Home</a></li>
+        <li><a href="/features.html">Features</a></li>
+        <li><a href="/chat.html">Chat</a></li>
+      </ul>
+    </div>
+    <div class="footer-col">
+      <h4>Account</h4>
+      <ul>
+        <li><a href="/login.html">Sign in</a></li>
+        <li><a href="/login.html">Register</a></li>
+      </ul>
+    </div>
+    <div class="footer-col">
+      <h4>Legal</h4>
+      <ul>
+        <li><a href="#">Privacy</a></li>
+        <li><a href="#">Terms</a></li>
+      </ul>
+    </div>
+  </div>
+  <div class="footer-bottom">
+    <p>© 2025 AI Chat Company. All rights reserved.</p>
+  </div>
+</footer>
+
+<!-- Color Picker -->
+<div class="color-picker">
+  <button class="color-picker-toggle" title="Change theme color">🎨</button>
+  <div class="color-picker-panel">
+    <div class="color-picker-label">Theme Color</div>
+    <div class="color-swatches"></div>
+  </div>
+</div>
+
+<script>
+'use strict';
+
+// ── Auth Check ─────────────────────────────────────────────────────────
+(async () => {
+  try {
+    const res = await fetch('/api/auth/me', { credentials: 'include' });
+    if (!res.ok) return;
+    const user = await res.json();
+    const actions = document.getElementById('header-actions');
+    if (actions) {
+      const total = user.total_credits === -1 ? '∞' : user.total_credits;
+      actions.innerHTML = `
+        <div class="header-credits"><span>⚡</span><span>${total} credits</span></div>
+        <a href="/chat.html" class="btn-signup">Open Chat →</a>`;
+    }
+  } catch (e) {}
+})();
+
+// ── Header scroll ──────────────────────────────────────────────────────
+window.addEventListener('scroll', () => {
+  document.getElementById('header')?.classList.toggle('scrolled', window.scrollY > 10);
+}, { passive: true });
+
+// ── Scroll Reveal ──────────────────────────────────────────────────────
+const revealObs = new IntersectionObserver((entries) => {
+  entries.forEach(e => { if (e.isIntersecting) { e.target.classList.add('visible'); revealObs.unobserve(e.target); } });
+}, { threshold: 0.1, rootMargin: '0px 0px -40px 0px' });
+document.querySelectorAll('.reveal').forEach(el => revealObs.observe(el));
+
+// ── Mobile Menu ────────────────────────────────────────────────────────
+const mBtn = document.getElementById('mobile-menu-btn');
+const mNav = document.getElementById('mobile-nav');
+mBtn?.addEventListener('click', () => {
+  const open = mNav.classList.toggle('open');
+  mBtn.classList.toggle('open', open);
+});
+
+// ── Color Picker ───────────────────────────────────────────────────────
+const COLORS = [
+  { c:'#10a37f', c2:'#1a7f64', rgb:'16,163,127' },
+  { c:'#3b82f6', c2:'#2563eb', rgb:'59,130,246' },
+  { c:'#7c3aed', c2:'#6d28d9', rgb:'124,58,237' },
+  { c:'#f43f5e', c2:'#e11d48', rgb:'244,63,94' },
+  { c:'#f97316', c2:'#ea580c', rgb:'249,115,22' },
+  { c:'#06b6d4', c2:'#0891b2', rgb:'6,182,212' },
+  { c:'#6366f1', c2:'#4f46e5', rgb:'99,102,241' },
+  { c:'#ec4899', c2:'#db2777', rgb:'236,72,153' },
+  { c:'#14b8a6', c2:'#0d9488', rgb:'20,184,166' },
+  { c:'#f59e0b', c2:'#d97706', rgb:'245,158,11' },
+];
+const swatchesEl = document.querySelector('.color-swatches');
+if (swatchesEl) {
+  swatchesEl.innerHTML = COLORS.map((c,i) => `<button class="swatch" data-i="${i}" style="background:${c.c}"></button>`).join('');
+  swatchesEl.querySelectorAll('.swatch').forEach(sw => {
+    sw.addEventListener('click', () => {
+      const c = COLORS[sw.dataset.i];
+      document.documentElement.style.setProperty('--c', c.c);
+      document.documentElement.style.setProperty('--c2', c.c2);
+      document.documentElement.style.setProperty('--c-rgb', c.rgb);
+      swatchesEl.querySelectorAll('.swatch').forEach(s => s.classList.remove('active'));
+      sw.classList.add('active');
+      localStorage.setItem('aichat_color', sw.dataset.i);
+    });
+  });
+  const saved = localStorage.getItem('aichat_color');
+  if (saved) {
+    const c = COLORS[saved];
+    if (c) {
+      document.documentElement.style.setProperty('--c', c.c);
+      document.documentElement.style.setProperty('--c2', c.c2);
+      document.documentElement.style.setProperty('--c-rgb', c.rgb);
+      swatchesEl.querySelector(`[data-i="${saved}"]`)?.classList.add('active');
+    }
+  } else {
+    swatchesEl.querySelector('[data-i="0"]')?.classList.add('active');
+  }
+}
+const pickerToggle = document.querySelector('.color-picker-toggle');
+const pickerPanel = document.querySelector('.color-picker-panel');
+pickerToggle?.addEventListener('click', (e) => { e.stopPropagation(); pickerPanel?.classList.toggle('open'); });
+document.addEventListener('click', (e) => { if (!e.target.closest('.color-picker')) pickerPanel?.classList.remove('open'); });
+
+// ── Image Generation ───────────────────────────────────────────────────
+async function generateImage() {
+  const prompt = document.getElementById('img-prompt')?.value.trim();
+  const btn = document.getElementById('img-gen-btn');
+  const result = document.getElementById('img-result');
+  const errEl = document.getElementById('img-error');
+
+  if (!prompt) return;
+  if (errEl) errEl.style.display = 'none';
+
+  btn.disabled = true;
+  btn.textContent = '⏳ Generating...';
+  result.innerHTML = `<div style="display:flex;flex-direction:column;align-items:center;gap:12px;color:var(--text3);">
+    <div class="loading-spinner dark"></div>
+    <span style="font-size:13px;">Creating your image...</span>
+  </div>`;
+
+  try {
+    const res = await fetch('/api/image/generate', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      credentials: 'include',
+      body: JSON.stringify({ prompt })
+    });
+
+    if (!res.ok) {
+      const err = await res.json().catch(() => ({}));
+      if (err.error === 'Unauthorized') {
+        result.innerHTML = `<div class="image-result-placeholder"><div class="image-result-placeholder-icon">🔐</div><span>Sign in to generate images</span></div>`;
+        if (errEl) { errEl.textContent = 'Please sign in to use image generation.'; errEl.style.display = 'block'; }
+        return;
+      }
+      throw new Error(err.error || `Error ${res.status}`);
+    }
+
+    const data = await res.json();
+    if (data.url) {
+      result.innerHTML = `<img src="${data.url}" alt="${prompt}" style="width:100%;height:100%;object-fit:cover;">`;
+    } else {
+      throw new Error('No image URL returned');
+    }
+  } catch (err) {
+    result.innerHTML = `<div class="image-result-placeholder"><div class="image-result-placeholder-icon">❌</div><span>Generation failed</span></div>`;
+    if (errEl) { errEl.textContent = err.message || 'Image generation failed. Please try again.'; errEl.style.display = 'block'; }
+  } finally {
+    btn.disabled = false;
+    btn.textContent = 'Generate';
+  }
+}
+
+document.getElementById('img-prompt')?.addEventListener('keydown', (e) => {
+  if (e.key === 'Enter') generateImage();
+});
+
+// ── Voice Assistant ────────────────────────────────────────────────────
+let mediaRecorder = null;
+let audioChunks = [];
+let isRecording = false;
+
+async function toggleRecording() {
+  if (isRecording) {
+    stopRecording();
+  } else {
+    await startRecording();
+  }
+}
+
+async function startRecording() {
+  const errEl = document.getElementById('voice-error');
+  if (errEl) errEl.style.display = 'none';
+
+  try {
+    const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+    audioChunks = [];
+    mediaRecorder = new MediaRecorder(stream);
+
+    mediaRecorder.ondataavailable = (e) => { if (e.data.size > 0) audioChunks.push(e.data); };
+    mediaRecorder.onstop = async () => {
+      stream.getTracks().forEach(t => t.stop());
+      await processAudio();
+    };
+
+    mediaRecorder.start();
+    isRecording = true;
+
+    const btn = document.getElementById('voice-btn');
+    const status = document.getElementById('voice-status');
+    if (btn) btn.classList.add('recording');
+    if (status) status.textContent = '🔴 Recording... Click to stop';
+
+  } catch (err) {
+    if (errEl) { errEl.textContent = 'Microphone access denied. Please allow microphone permissions.'; errEl.style.display = 'block'; }
+  }
+}
+
+function stopRecording() {
+  if (mediaRecorder && isRecording) {
+    mediaRecorder.stop();
+    isRecording = false;
+    const btn = document.getElementById('voice-btn');
+    const status = document.getElementById('voice-status');
+    if (btn) btn.classList.remove('recording');
+    if (status) status.textContent = '⏳ Processing...';
+  }
+}
+
+async function processAudio() {
+  const transcript = document.getElementById('voice-transcript');
+  const response = document.getElementById('voice-response');
+  const errEl = document.getElementById('voice-error');
+  const status = document.getElementById('voice-status');
+
+  try {
+    const blob = new Blob(audioChunks, { type: 'audio/webm' });
+    const formData = new FormData();
+    formData.append('audio', blob, 'recording.webm');
+
+    const res = await fetch('/api/voice/transcribe', {
+      method: 'POST',
+      credentials: 'include',
+      body: formData
+    });
+
+    if (!res.ok) {
+      const err = await res.json().catch(() => ({}));
+      if (err.error === 'Unauthorized') {
+        if (transcript) transcript.textContent = 'Please sign in to use voice features.';
+        if (status) status.textContent = 'Sign in required';
+        return;
+      }
+      throw new Error(err.error || 'Transcription failed');
+    }
+
+    const data = await res.json();
+    const text = data.text || 'Could not transcribe audio.';
+    if (transcript) transcript.textContent = text;
+
+    // Get AI response
+    if (response && data.text) {
+      response.style.display = 'block';
+      response.textContent = '⏳ Getting AI response...';
+
+      const aiRes = await fetch('/api/chat', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        credentials: 'include',
+        body: JSON.stringify({
+          messages: [
+            { role: 'system', content: 'You are a helpful voice assistant. Be concise and conversational.' },
+            { role: 'user', content: text }
+          ]
+        })
+      });
+
+      if (aiRes.ok) {
+        const aiData = await aiRes.json();
+        const reply = aiData.choices?.[0]?.message?.content || 'No response.';
+        response.textContent = reply;
+      }
+    }
+
+    if (status) status.textContent = 'Click to record again';
+
+  } catch (err) {
+    if (errEl) { errEl.textContent = err.message || 'Voice processing failed.'; errEl.style.display = 'block'; }
+    if (status) status.textContent = 'Click to start recording';
+  }
+}
+
+// ── AI Agents ──────────────────────────────────────────────────────────
+function openAgent(agentKey) {
+  // Store agent preference and open chat
+  localStorage.setItem('aichat_agent', agentKey);
+  window.location.href = '/chat.html';
+}
+
+// ── Website Preview ────────────────────────────────────────────────────
+async function previewWebsite() {
+  const urlInput = document.getElementById('preview-url');
+  const btn = document.getElementById('preview-btn');
+  const result = document.getElementById('preview-result');
+  const errEl = document.getElementById('preview-error');
+
+  const url = urlInput?.value.trim();
+  if (!url) return;
+  if (errEl) errEl.style.display = 'none';
+
+  btn.disabled = true;
+  btn.textContent = '⏳ Loading...';
+  result.innerHTML = `<div style="display:flex;flex-direction:column;align-items:center;gap:12px;color:var(--text3);">
+    <div class="loading-spinner dark"></div>
+    <span style="font-size:13px;">Capturing screenshot...</span>
+  </div>`;
+
+  try {
+    const res = await fetch('/api/preview/url', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      credentials: 'include',
+      body: JSON.stringify({ url })
+    });
+
+    if (!res.ok) {
+      const err = await res.json().catch(() => ({}));
+      if (err.error === 'Unauthorized') {
+        result.innerHTML = `<div class="preview-result-placeholder"><div style="font-size:32px;opacity:0.4;">🔐</div><span style="font-size:13px;color:var(--text3);">Sign in to preview websites</span></div>`;
+        return;
+      }
+      throw new Error(err.error || `Error ${res.status}`);
+    }
+
+    const data = await res.json();
+    if (data.screenshot) {
+      result.innerHTML = `<img src="${data.screenshot}" alt="Preview of ${url}" style="width:100%;height:100%;object-fit:cover;">`;
+    } else {
+      throw new Error('No screenshot returned');
+    }
+  } catch (err) {
+    result.innerHTML = `<div class="preview-result-placeholder"><div style="font-size:32px;opacity:0.4;">❌</div><span style="font-size:13px;color:var(--text3);">Preview failed</span></div>`;
+    if (errEl) { errEl.textContent = err.message || 'Preview failed. Please try again.'; errEl.style.display = 'block'; }
+  } finally {
+    btn.disabled = false;
+    btn.textContent = 'Preview';
+  }
+}
+
+document.getElementById('preview-url')?.addEventListener('keydown', (e) => {
+  if (e.key === 'Enter') previewWebsite();
+});
+</script>
+</body>
+</html>

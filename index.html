@@ -1,1057 +1,1730 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>AI Chat Company</title>
-    <link rel="stylesheet" href="style.css">
+<meta charset="UTF-8">
+<link rel="icon" type="image/svg+xml" href="/icon.svg"><meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>AI Chat Company — AI that actually understands you</title>
+<link rel="stylesheet" href="style.css">
+<link rel="stylesheet" href="index.css">
+<style>
+/* ═══════════════════════════════════════════════════════════
+   ROOT & RESET
+═══════════════════════════════════════════════════════════ */
+:root {
+  --c: #10a37f;
+  --c2: #1a7f64;
+  --c-rgb: 16, 163, 127;
+  --bg: #ffffff;
+  --text: #0d0d0d;
+  --text2: #353740;
+  --text3: #6e6e80;
+  --border: #e5e5e5;
+}
+*, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
+html { scroll-behavior: smooth; }
+body {
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+  background: var(--bg);
+  color: var(--text);
+  overflow-x: hidden;
+  min-height: 100vh;
+  position: relative;
+}
+
+/* ═══════════════════════════════════════════════════════════
+   ANIMATED GRID BACKGROUND
+═══════════════════════════════════════════════════════════ */
+.grid-bg {
+  position: fixed;
+  inset: 0;
+  z-index: 0;
+  pointer-events: none;
+  background-image:
+    linear-gradient(rgba(0,0,0,0.04) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(0,0,0,0.04) 1px, transparent 1px);
+  background-size: 40px 40px;
+  animation: gridShift 20s linear infinite;
+}
+@keyframes gridShift {
+  0%   { background-position: 0 0, 0 0; }
+  100% { background-position: 40px 40px, 40px 40px; }
+}
+
+/* ═══════════════════════════════════════════════════════════
+   NOISE TEXTURE OVERLAY
+═══════════════════════════════════════════════════════════ */
+.noise-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 1;
+  pointer-events: none;
+  opacity: 0.025;
+  background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)'/%3E%3C/svg%3E");
+  background-size: 128px 128px;
+}
+
+/* ═══════════════════════════════════════════════════════════
+   RADIAL GLOW ORBS
+═══════════════════════════════════════════════════════════ */
+.glow-orb {
+  position: fixed;
+  border-radius: 50%;
+  pointer-events: none;
+  z-index: 0;
+  filter: blur(80px);
+  animation: orbFloat 12s ease-in-out infinite;
+}
+.glow-orb-1 {
+  width: 500px; height: 500px;
+  background: radial-gradient(circle, rgba(var(--c-rgb), 0.12) 0%, transparent 70%);
+  top: -150px; left: -100px;
+  animation-delay: 0s;
+}
+.glow-orb-2 {
+  width: 400px; height: 400px;
+  background: radial-gradient(circle, rgba(var(--c-rgb), 0.08) 0%, transparent 70%);
+  top: 40%; right: -100px;
+  animation-delay: -4s;
+}
+.glow-orb-3 {
+  width: 350px; height: 350px;
+  background: radial-gradient(circle, rgba(var(--c-rgb), 0.07) 0%, transparent 70%);
+  bottom: 10%; left: 15%;
+  animation-delay: -8s;
+}
+@keyframes orbFloat {
+  0%,100% { transform: translate(0,0) scale(1); }
+  33%      { transform: translate(20px,-30px) scale(1.04); }
+  66%      { transform: translate(-15px,15px) scale(0.97); }
+}
+
+/* ═══════════════════════════════════════════════════════════
+   GLASS MORPHISM HEADER
+═══════════════════════════════════════════════════════════ */
+.header {
+  position: fixed; top: 0; left: 0; right: 0; z-index: 200;
+  height: 64px; padding: 0 32px;
+  background: rgba(255,255,255,0.72);
+  backdrop-filter: blur(20px) saturate(180%);
+  -webkit-backdrop-filter: blur(20px) saturate(180%);
+  border-bottom: 1px solid rgba(0,0,0,0.06);
+  transition: background 0.3s, box-shadow 0.3s;
+}
+.header.scrolled {
+  background: rgba(255,255,255,0.92);
+  box-shadow: 0 1px 0 rgba(0,0,0,0.08), 0 8px 32px rgba(0,0,0,0.07);
+}
+.header-inner {
+  max-width: 1200px; margin: 0 auto; height: 100%;
+  display: flex; align-items: center; gap: 28px;
+}
+.logo {
+  display: flex; align-items: center; gap: 10px;
+  text-decoration: none; flex-shrink: 0;
+}
+.logo-mark {
+  width: 34px; height: 34px;
+  background: var(--c);
+  border-radius: 9px;
+  display: flex; align-items: center; justify-content: center;
+  box-shadow: 0 2px 12px rgba(var(--c-rgb), 0.35);
+  transition: box-shadow 0.2s;
+}
+.logo-mark:hover { box-shadow: 0 4px 20px rgba(var(--c-rgb), 0.5); }
+.logo-mark svg { width: 20px; height: 20px; }
+.logo-text { font-size: 15px; font-weight: 800; color: var(--text); letter-spacing: -0.3px; }
+.nav { display: flex; gap: 2px; flex: 1; justify-content: center; }
+.nav-link {
+  padding: 7px 15px; border-radius: 8px;
+  color: var(--text3); font-size: 14px; font-weight: 500;
+  text-decoration: none; transition: all 0.15s;
+}
+.nav-link:hover { color: var(--text); background: rgba(0,0,0,0.04); }
+.header-actions { display: flex; gap: 8px; align-items: center; }
+.btn-login {
+  padding: 8px 18px; border-radius: 8px;
+  background: transparent; border: 1px solid var(--border);
+  color: var(--text2); font-size: 14px; font-weight: 600;
+  text-decoration: none; transition: all 0.15s; cursor: pointer;
+}
+.btn-login:hover { background: rgba(0,0,0,0.04); border-color: #bbb; }
+.btn-signup {
+  padding: 8px 18px; border-radius: 8px;
+  background: var(--c); color: #fff;
+  font-size: 14px; font-weight: 700;
+  text-decoration: none; transition: all 0.2s;
+  box-shadow: 0 2px 8px rgba(var(--c-rgb), 0.3);
+}
+.btn-signup:hover {
+  background: var(--c2);
+  box-shadow: 0 4px 16px rgba(var(--c-rgb), 0.45);
+  transform: translateY(-1px);
+}
+
+/* ═══════════════════════════════════════════════════════════
+   HERO SECTION
+═══════════════════════════════════════════════════════════ */
+.hero {
+  position: relative; z-index: 2;
+  min-height: 100vh;
+  display: flex; align-items: center;
+  padding: 80px 32px 60px;
+}
+.hero-inner {
+  max-width: 1200px; margin: 0 auto; width: 100%;
+  display: grid; grid-template-columns: 1fr 440px;
+  gap: 60px; align-items: center;
+}
+.hero-left { position: relative; z-index: 2; }
+.hero-eyebrow {
+  display: inline-flex; align-items: center; gap: 8px;
+  background: rgba(var(--c-rgb), 0.1);
+  border: 1px solid rgba(var(--c-rgb), 0.25);
+  border-radius: 99px; padding: 6px 14px;
+  font-size: 12px; font-weight: 700;
+  color: var(--c); letter-spacing: 0.3px;
+  margin-bottom: 24px;
+}
+.hero-eyebrow-dot {
+  width: 7px; height: 7px;
+  background: var(--c); border-radius: 50%;
+  box-shadow: 0 0 6px var(--c);
+  animation: eyebrowPulse 2s ease-in-out infinite;
+}
+@keyframes eyebrowPulse {
+  0%,100% { opacity: 1; transform: scale(1); }
+  50%      { opacity: 0.5; transform: scale(1.5); }
+}
+.hero-title {
+  font-size: clamp(2.6em, 5vw, 4em);
+  font-weight: 900; line-height: 1.1;
+  letter-spacing: -2px; margin-bottom: 20px;
+  color: var(--text);
+}
+.hero-title em {
+  font-style: normal;
+  background: linear-gradient(135deg, var(--c) 0%, var(--c2) 40%, #0d9488 70%, var(--c) 100%);
+  background-size: 200% 200%;
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+  animation: gradMove 4s ease infinite;
+}
+@keyframes gradMove {
+  0%   { background-position: 0% 50%; }
+  50%  { background-position: 100% 50%; }
+  100% { background-position: 0% 50%; }
+}
+.hero-sub {
+  font-size: 17px; color: var(--text3);
+  line-height: 1.7; margin-bottom: 36px;
+  max-width: 500px;
+}
+.hero-actions {
+  display: flex; gap: 12px; flex-wrap: wrap;
+  margin-bottom: 32px;
+}
+.btn-primary {
+  padding: 13px 28px; border-radius: 10px;
+  background: var(--c); color: #fff;
+  font-size: 15px; font-weight: 700;
+  text-decoration: none; border: none; cursor: pointer;
+  display: inline-flex; align-items: center; gap: 8px;
+  box-shadow: 0 2px 12px rgba(var(--c-rgb), 0.35);
+  transition: all 0.25s cubic-bezier(0.4,0,0.2,1);
+  font-family: inherit;
+}
+.btn-primary:hover {
+  background: var(--c2);
+  box-shadow: 0 6px 24px rgba(var(--c-rgb), 0.5);
+  transform: translateY(-2px);
+}
+.btn-nomchat-hero {
+  padding: 13px 24px; border-radius: 10px;
+  background: #0a0a0f; color: #fff;
+  font-size: 15px; font-weight: 700;
+  text-decoration: none; border: none; cursor: pointer;
+  display: inline-flex; align-items: center; gap: 10px;
+  box-shadow: 0 2px 12px rgba(0,0,0,0.2);
+  transition: all 0.25s cubic-bezier(0.4,0,0.2,1);
+}
+.btn-nomchat-hero:hover {
+  background: #1a1a2e;
+  box-shadow: 0 6px 24px rgba(0,0,0,0.35);
+  transform: translateY(-2px);
+}
+.btn-nomchat-hero-icon { font-size: 18px; }
+.btn-nomchat-hero-text { display: flex; flex-direction: column; align-items: flex-start; line-height: 1.2; }
+.btn-nomchat-hero-label { font-size: 10px; opacity: 0.6; font-weight: 400; }
+.btn-nomchat-hero-brand { font-size: 13px; font-weight: 900; letter-spacing: 0.5px; }
+.hero-stats {
+  display: flex; gap: 32px; flex-wrap: wrap;
+}
+.hero-stat { display: flex; flex-direction: column; gap: 2px; }
+.hero-stat-num {
+  font-size: 22px; font-weight: 900;
+  color: var(--c); letter-spacing: -0.5px;
+}
+.hero-stat-label { font-size: 12px; color: var(--text3); font-weight: 500; }
+.hero-right {
+  position: relative; z-index: 2;
+  display: flex; justify-content: center; align-items: center;
+}
+
+/* ═══════════════════════════════════════════════════════════
+   CSS FOX CHARACTER
+═══════════════════════════════════════════════════════════ */
+.fox-wrap {
+  position: relative;
+  width: 340px; height: 420px;
+  cursor: pointer;
+  perspective: 800px;
+}
+.fox-3d {
+  width: 100%; height: 100%;
+  display: flex; align-items: center; justify-content: center;
+  transform-style: preserve-3d;
+  transition: transform 0.4s cubic-bezier(0.4,0,0.2,1);
+}
+.fox-wrap:hover .fox-3d {
+  transform: scale(1.06) rotateY(-10deg) rotateX(2deg);
+}
+.fox-body-wrap {
+  position: relative;
+  display: flex; flex-direction: column; align-items: center;
+  filter: drop-shadow(0 24px 48px rgba(var(--c-rgb), 0.2))
+          drop-shadow(0 8px 16px rgba(0,0,0,0.15));
+}
+
+/* Head */
+.fox-head {
+  position: relative;
+  width: 148px; height: 136px;
+  background: linear-gradient(145deg, #ff9a4a 0%, #ff6b1a 60%, #e05500 100%);
+  border-radius: 52% 52% 46% 46%;
+  box-shadow: inset 0 -8px 20px rgba(0,0,0,0.15), inset 0 4px 12px rgba(255,200,100,0.3);
+  z-index: 3;
+}
+.fox-ear {
+  position: absolute;
+  width: 38px; height: 48px;
+  background: linear-gradient(145deg, #ff9a4a, #ff6b1a);
+  border-radius: 50% 50% 0 0;
+  top: -22px;
+  box-shadow: inset 0 4px 8px rgba(255,200,100,0.2);
+}
+.fox-ear.left  { left: 16px;  transform: rotate(-18deg); }
+.fox-ear.right { right: 16px; transform: rotate(18deg); }
+.fox-ear::after {
+  content: '';
+  position: absolute;
+  width: 20px; height: 28px;
+  background: linear-gradient(145deg, #ffb380, #ff9060);
+  border-radius: 50% 50% 0 0;
+  top: 7px; left: 9px;
+}
+.fox-face {
+  position: absolute; inset: 0;
+  display: flex; flex-direction: column;
+  align-items: center; padding-top: 32px; gap: 6px;
+}
+.fox-eyes-row { display: flex; gap: 22px; }
+.fox-eye {
+  width: 30px; height: 30px;
+  background: #fff;
+  border-radius: 50%;
+  display: flex; align-items: center; justify-content: center;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.2), inset 0 1px 3px rgba(0,0,0,0.1);
+  overflow: hidden;
+}
+.fox-pupil {
+  width: 16px; height: 16px;
+  background: radial-gradient(circle at 35% 35%, #3a3a5c, #1a1a2e);
+  border-radius: 50%;
+  transition: transform 0.2s ease;
+  position: relative;
+}
+.fox-pupil::after {
+  content: '';
+  position: absolute;
+  width: 5px; height: 5px;
+  background: rgba(255,255,255,0.8);
+  border-radius: 50%;
+  top: 2px; left: 3px;
+}
+.fox-wrap:hover .fox-pupil { transform: translate(3px, 3px); }
+.fox-nose {
+  width: 18px; height: 12px;
+  background: radial-gradient(circle, #cc4400, #aa3300);
+  border-radius: 50%;
+  box-shadow: 0 2px 4px rgba(0,0,0,0.2);
+}
+.fox-mouth {
+  width: 32px; height: 16px;
+  border: 3px solid #cc4400;
+  border-top: none;
+  border-radius: 0 0 22px 22px;
+}
+.fox-cheek {
+  position: absolute;
+  width: 22px; height: 14px;
+  background: rgba(255,120,80,0.35);
+  border-radius: 50%;
+  bottom: 28px;
+}
+.fox-cheek.left  { left: 14px; }
+.fox-cheek.right { right: 14px; }
+
+/* Torso */
+.fox-torso {
+  position: relative;
+  width: 124px; height: 116px;
+  background: linear-gradient(145deg, #ff9a4a 0%, #e05a00 70%, #cc4400 100%);
+  border-radius: 22px 22px 32px 32px;
+  margin-top: -12px; z-index: 2;
+  box-shadow: inset 0 -10px 24px rgba(0,0,0,0.2), inset 0 4px 12px rgba(255,200,100,0.2);
+}
+.fox-belly {
+  position: absolute;
+  width: 72px; height: 70px;
+  background: linear-gradient(145deg, #ffe0c0, #ffd0a0);
+  border-radius: 50%;
+  bottom: 8px; left: 50%; transform: translateX(-50%);
+  box-shadow: inset 0 2px 8px rgba(0,0,0,0.08);
+}
+
+/* Arms */
+.fox-arm {
+  position: absolute;
+  width: 38px; height: 86px;
+  background: linear-gradient(145deg, #ff9a4a, #e05a00);
+  border-radius: 19px;
+  top: 8px;
+  box-shadow: inset 0 -6px 12px rgba(0,0,0,0.15);
+  transform-origin: top center;
+  transition: transform 0.3s cubic-bezier(0.4,0,0.2,1);
+}
+.fox-arm.left  { left: -32px; transform: rotate(22deg); }
+.fox-arm.right { right: -32px; transform: rotate(-22deg); }
+.fox-wrap:hover .fox-arm.right { transform: rotate(-35deg); }
+
+/* Water gun on left arm */
+.fox-gun-wrap {
+  position: absolute;
+  bottom: -4px; left: -8px;
+  transform: rotate(-10deg);
+}
+.fox-gun-body {
+  width: 48px; height: 30px;
+  background: linear-gradient(145deg, #4a90e2, #1d4ed8);
+  border-radius: 8px;
+  box-shadow: 0 3px 10px rgba(29,78,216,0.4), inset 0 2px 6px rgba(255,255,255,0.15);
+  position: relative;
+}
+.fox-gun-barrel {
+  position: absolute;
+  width: 54px; height: 13px;
+  background: linear-gradient(145deg, #60a5fa, #2563eb);
+  border-radius: 6px;
+  top: 8px; left: 40px;
+  box-shadow: 0 2px 6px rgba(37,99,235,0.4);
+}
+.fox-gun-barrel::after {
+  content: '';
+  position: absolute;
+  width: 6px; height: 13px;
+  background: #93c5fd;
+  border-radius: 0 4px 4px 0;
+  right: 0; top: 0;
+}
+.fox-gun-tank {
+  position: absolute;
+  width: 30px; height: 40px;
+  background: linear-gradient(145deg, #93c5fd, #3b82f6);
+  border-radius: 8px;
+  top: -24px; left: 8px;
+  border: 2px solid #60a5fa;
+  box-shadow: 0 2px 8px rgba(59,130,246,0.3), inset 0 2px 6px rgba(255,255,255,0.2);
+}
+.fox-gun-handle {
+  position: absolute;
+  width: 16px; height: 22px;
+  background: linear-gradient(145deg, #1d4ed8, #1e3a8a);
+  border-radius: 4px 4px 8px 8px;
+  bottom: -18px; left: 14px;
+}
+.fox-wrap:hover .fox-arm.left { transform: rotate(35deg); }
+
+/* Tail */
+.fox-tail {
+  position: absolute;
+  right: -58px; bottom: -8px;
+  width: 70px; height: 22px;
+  background: linear-gradient(90deg, #e05a00, #ff9a4a);
+  border-radius: 0 24px 24px 0;
+  transform: rotate(-18deg);
+  transform-origin: left center;
+  box-shadow: inset 0 -4px 8px rgba(0,0,0,0.15);
+}
+.fox-tail::after {
+  content: '';
+  position: absolute;
+  right: -10px; top: -12px;
+  width: 30px; height: 44px;
+  background: radial-gradient(circle, #ffcc80, #ff9a4a);
+  border-radius: 50%;
+  box-shadow: inset 0 2px 8px rgba(255,200,100,0.3);
+}
+.fox-tail-tip {
+  position: absolute;
+  right: -14px; top: -16px;
+  width: 26px; height: 26px;
+  background: #fff5e0;
+  border-radius: 50%;
+}
+
+/* Legs */
+.fox-legs {
+  display: flex; gap: 22px;
+  margin-top: -8px; z-index: 1;
+}
+.fox-leg {
+  width: 38px; height: 54px;
+  background: linear-gradient(145deg, #e05a00, #cc4400);
+  border-radius: 12px 12px 18px 18px;
+  box-shadow: inset 0 -6px 12px rgba(0,0,0,0.2);
+  position: relative;
+}
+.fox-leg::after {
+  content: '';
+  position: absolute;
+  bottom: -6px; left: 4px;
+  width: 30px; height: 12px;
+  background: #aa3300;
+  border-radius: 0 0 10px 10px;
+}
+
+/* Water drops */
+.fox-water-drops {
+  position: absolute;
+  top: 38%; left: 72%;
+  pointer-events: none;
+  z-index: 10;
+}
+.water-drop {
+  position: absolute;
+  width: 8px; height: 12px;
+  background: linear-gradient(180deg, #93c5fd, #3b82f6);
+  border-radius: 50% 50% 60% 60%;
+  opacity: 0;
+  animation: waterFly 1s ease-out forwards;
+}
+@keyframes waterFly {
+  0%   { opacity: 1; transform: translate(0,0) scale(1); }
+  80%  { opacity: 0.6; }
+  100% { opacity: 0; transform: translate(var(--tx), var(--ty)) scale(0.3); }
+}
+
+/* Fox tooltip */
+.fox-tooltip {
+  position: absolute;
+  top: 30px; right: -230px;
+  width: 210px;
+  background: rgba(255,255,255,0.95);
+  backdrop-filter: blur(12px);
+  border: 1px solid rgba(0,0,0,0.08);
+  border-radius: 16px; padding: 18px;
+  box-shadow: 0 12px 40px rgba(0,0,0,0.12);
+  opacity: 0; pointer-events: none;
+  transition: all 0.3s cubic-bezier(0.4,0,0.2,1);
+  transform: translateX(-12px);
+  z-index: 20;
+}
+.fox-wrap:hover .fox-tooltip {
+  opacity: 1; pointer-events: all;
+  transform: translateX(0);
+}
+.fox-tooltip::before {
+  content: '';
+  position: absolute;
+  left: -8px; top: 24px;
+  width: 16px; height: 16px;
+  background: rgba(255,255,255,0.95);
+  border-left: 1px solid rgba(0,0,0,0.08);
+  border-bottom: 1px solid rgba(0,0,0,0.08);
+  transform: rotate(45deg);
+}
+.fox-tooltip-badge {
+  display: inline-flex; align-items: center; gap: 6px;
+  background: rgba(var(--c-rgb), 0.1);
+  border: 1px solid rgba(var(--c-rgb), 0.2);
+  border-radius: 99px; padding: 3px 10px;
+  font-size: 10px; font-weight: 700; color: var(--c);
+  margin-bottom: 10px; letter-spacing: 0.5px;
+}
+.fox-tooltip-title {
+  font-weight: 800; font-size: 14px;
+  color: #0d0d0d; margin-bottom: 8px;
+  line-height: 1.3;
+}
+.fox-tooltip-text {
+  font-size: 12px; color: #6e6e80;
+  line-height: 1.6; margin-bottom: 12px;
+}
+.fox-tooltip-link {
+  font-size: 12px; font-weight: 700;
+  color: var(--c); text-decoration: none;
+  display: inline-flex; align-items: center; gap: 4px;
+}
+.fox-tooltip-link:hover { text-decoration: underline; }
+
+/* ═══════════════════════════════════════════════════════════
+   DEMO CHAT SECTION
+═══════════════════════════════════════════════════════════ */
+.demo-section {
+  position: relative; z-index: 2;
+  padding: 100px 32px;
+}
+.section-inner { max-width: 860px; margin: 0 auto; }
+.section-eyebrow-wrap { text-align: center; margin-bottom: 48px; }
+.section-eyebrow-pill {
+  display: inline-block;
+  padding: 6px 16px; border-radius: 99px;
+  font-size: 11px; font-weight: 800;
+  letter-spacing: 1.5px; text-transform: uppercase;
+  margin-bottom: 16px;
+}
+.pill-green {
+  background: rgba(var(--c-rgb), 0.1);
+  border: 1px solid rgba(var(--c-rgb), 0.25);
+  color: var(--c);
+}
+.pill-blue {
+  background: rgba(59,130,246,0.1);
+  border: 1px solid rgba(59,130,246,0.25);
+  color: #3b82f6;
+}
+.pill-purple {
+  background: rgba(124,58,237,0.1);
+  border: 1px solid rgba(124,58,237,0.25);
+  color: #7c3aed;
+}
+.section-title-lg {
+  font-size: clamp(1.9em, 4vw, 2.8em);
+  font-weight: 900; letter-spacing: -1px;
+  color: var(--text); line-height: 1.15;
+}
+.demo-window {
+  background: rgba(255,255,255,0.92);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  border: 1px solid rgba(0,0,0,0.08);
+  border-radius: 20px; overflow: hidden;
+  box-shadow: 0 24px 80px rgba(0,0,0,0.12), 0 8px 24px rgba(0,0,0,0.06);
+  transition: box-shadow 0.3s;
+}
+.demo-window:hover {
+  box-shadow: 0 32px 96px rgba(0,0,0,0.16), 0 12px 32px rgba(0,0,0,0.08);
+}
+.demo-topbar {
+  display: flex; align-items: center; gap: 12px;
+  padding: 14px 20px;
+  background: rgba(247,247,248,0.95);
+  border-bottom: 1px solid rgba(0,0,0,0.06);
+}
+.demo-dots { display: flex; gap: 6px; }
+.demo-dots span {
+  width: 12px; height: 12px; border-radius: 50%;
+  display: block;
+}
+.demo-dots span:nth-child(1) { background: #ff5f57; }
+.demo-dots span:nth-child(2) { background: #febc2e; }
+.demo-dots span:nth-child(3) { background: #28c840; }
+.demo-topbar-title {
+  font-size: 13px; font-weight: 700;
+  color: var(--text3); flex: 1; text-align: center;
+}
+.demo-model-sel {
+  background: #fff; border: 1px solid var(--border);
+  border-radius: 8px; padding: 5px 10px;
+  color: var(--text2); font-size: 12px;
+  outline: none; cursor: pointer;
+  font-family: inherit;
+  transition: border-color 0.2s;
+}
+.demo-model-sel:focus { border-color: var(--c); }
+.demo-messages {
+  height: 340px; overflow-y: auto;
+  padding: 20px; display: flex;
+  flex-direction: column; gap: 16px;
+}
+.demo-messages::-webkit-scrollbar { width: 4px; }
+.demo-messages::-webkit-scrollbar-thumb { background: #e5e5e5; border-radius: 99px; }
+.demo-msg {
+  display: flex; gap: 12px; align-items: flex-start;
+  animation: msgIn 0.3s ease;
+}
+@keyframes msgIn {
+  from { opacity: 0; transform: translateY(8px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+.demo-msg.user { flex-direction: row-reverse; }
+.demo-av {
+  width: 30px; height: 30px; border-radius: 50%;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 11px; font-weight: 800; flex-shrink: 0;
+}
+.demo-av.ai-av { background: var(--c); color: #fff; }
+.demo-av.user-av { background: #0a0a0f; color: #fff; }
+.demo-bubble {
+  max-width: 78%; padding: 11px 15px;
+  border-radius: 14px; font-size: 14px;
+  line-height: 1.6; color: var(--text2);
+}
+.demo-msg.ai .demo-bubble {
+  background: #f7f7f8;
+  border: 1px solid var(--border);
+  border-top-left-radius: 4px;
+}
+.demo-msg.user .demo-bubble {
+  background: var(--c); color: #fff;
+  border-top-right-radius: 4px;
+}
+.demo-typing-dots {
+  display: flex; gap: 4px; padding: 4px 0;
+  align-items: center;
+}
+.demo-typing-dots span {
+  width: 6px; height: 6px;
+  background: #aaa; border-radius: 50%;
+  animation: typingDot 1.2s ease-in-out infinite;
+}
+.demo-typing-dots span:nth-child(2) { animation-delay: 0.2s; }
+.demo-typing-dots span:nth-child(3) { animation-delay: 0.4s; }
+@keyframes typingDot {
+  0%,60%,100% { transform: translateY(0); opacity: 0.4; }
+  30%          { transform: translateY(-6px); opacity: 1; }
+}
+.demo-input-row {
+  display: flex; gap: 10px; padding: 14px 20px;
+  border-top: 1px solid rgba(0,0,0,0.06);
+  background: rgba(255,255,255,0.95);
+}
+.demo-input-row input {
+  flex: 1; border: 1px solid var(--border);
+  border-radius: 10px; padding: 11px 16px;
+  font-size: 14px; color: var(--text);
+  outline: none; font-family: inherit;
+  background: #fff;
+  transition: border-color 0.2s, box-shadow 0.2s;
+}
+.demo-input-row input:focus {
+  border-color: var(--c);
+  box-shadow: 0 0 0 3px rgba(var(--c-rgb), 0.1);
+}
+.demo-send-btn {
+  width: 42px; height: 42px;
+  background: var(--c); border: none;
+  border-radius: 10px; color: #fff;
+  font-size: 18px; cursor: pointer;
+  display: flex; align-items: center; justify-content: center;
+  box-shadow: 0 2px 8px rgba(var(--c-rgb), 0.35);
+  transition: all 0.2s; flex-shrink: 0;
+}
+.demo-send-btn:hover {
+  background: var(--c2);
+  box-shadow: 0 4px 16px rgba(var(--c-rgb), 0.5);
+  transform: scale(1.05);
+}
+.demo-send-btn:disabled {
+  background: #e5e5e5; color: #aaa;
+  cursor: not-allowed; box-shadow: none; transform: none;
+}
+
+/* ═══════════════════════════════════════════════════════════
+   FEATURES SECTION
+═══════════════════════════════════════════════════════════ */
+.features-section {
+  position: relative; z-index: 2;
+  padding: 100px 32px;
+}
+.features-section::before {
+  content: '';
+  position: absolute; top: 50%; left: 50%;
+  transform: translate(-50%, -50%);
+  width: 700px; height: 400px;
+  background: radial-gradient(ellipse, rgba(var(--c-rgb), 0.06) 0%, transparent 70%);
+  pointer-events: none; filter: blur(40px);
+}
+.features-inner { max-width: 1100px; margin: 0 auto; }
+.features-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 20px;
+}
+.feature-card {
+  background: rgba(255,255,255,0.75);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+  border: 1px solid rgba(0,0,0,0.07);
+  border-radius: 16px; padding: 28px;
+  transition: all 0.35s cubic-bezier(0.4,0,0.2,1);
+  position: relative; overflow: hidden;
+}
+.feature-card::before {
+  content: '';
+  position: absolute; inset: 0;
+  background: linear-gradient(135deg, rgba(var(--c-rgb), 0.04) 0%, transparent 60%);
+  opacity: 0; transition: opacity 0.3s;
+}
+.feature-card:hover {
+  box-shadow: 0 12px 40px rgba(0,0,0,0.1), 0 4px 12px rgba(0,0,0,0.06);
+  transform: translateY(-5px);
+  border-color: rgba(var(--c-rgb), 0.2);
+}
+.feature-card:hover::before { opacity: 1; }
+.feature-icon {
+  font-size: 32px; margin-bottom: 14px;
+  display: block;
+}
+.feature-card h3 {
+  font-size: 16px; font-weight: 800;
+  color: var(--text); margin-bottom: 8px;
+}
+.feature-card p {
+  font-size: 14px; color: var(--text3);
+  line-height: 1.6; margin: 0;
+}
+.feature-tag {
+  display: inline-block; margin-top: 12px;
+  padding: 3px 10px; border-radius: 99px;
+  font-size: 11px; font-weight: 700;
+  background: rgba(var(--c-rgb), 0.1);
+  color: var(--c); letter-spacing: 0.3px;
+}
+
+/* ═══════════════════════════════════════════════════════════
+   NOMCHAT ID SECTION
+═══════════════════════════════════════════════════════════ */
+.nomchat-section {
+  position: relative; z-index: 2;
+  padding: 100px 32px;
+}
+.nomchat-section::before {
+  content: '';
+  position: absolute; top: 50%; right: 0;
+  transform: translateY(-50%);
+  width: 500px; height: 500px;
+  background: radial-gradient(circle, rgba(var(--c-rgb), 0.07) 0%, transparent 70%);
+  pointer-events: none; filter: blur(60px);
+}
+.nomchat-inner {
+  max-width: 1000px; margin: 0 auto;
+  display: grid; grid-template-columns: 1fr 1fr;
+  gap: 72px; align-items: center;
+}
+.nomchat-text h2 {
+  font-size: clamp(1.8em, 3.5vw, 2.6em);
+  font-weight: 900; letter-spacing: -1px;
+  color: var(--text); margin-bottom: 16px;
+  line-height: 1.15;
+}
+.nomchat-text p {
+  color: var(--text3); line-height: 1.7;
+  font-size: 16px; margin-bottom: 28px;
+}
+.nomchat-perks { display: flex; flex-direction: column; gap: 12px; margin-bottom: 32px; }
+.perk { display: flex; align-items: center; gap: 12px; font-size: 15px; color: var(--text2); }
+.perk-check {
+  width: 22px; height: 22px; border-radius: 50%;
+  background: rgba(var(--c-rgb), 0.12);
+  color: var(--c); display: flex; align-items: center;
+  justify-content: center; font-size: 11px; font-weight: 900;
+  flex-shrink: 0;
+}
+.nomchat-visual {
+  background: #0a0a0f;
+  border-radius: 20px; padding: 28px;
+  box-shadow: 0 24px 64px rgba(0,0,0,0.3), 0 8px 24px rgba(0,0,0,0.2);
+  transition: transform 0.3s, box-shadow 0.3s;
+  border: 1px solid rgba(255,255,255,0.06);
+}
+.nomchat-visual:hover {
+  transform: translateY(-4px) rotate(-0.5deg);
+  box-shadow: 0 32px 80px rgba(0,0,0,0.35);
+}
+.nc-logo-row {
+  display: flex; align-items: center; gap: 10px;
+  margin-bottom: 24px;
+}
+.nc-logo-icon { font-size: 22px; }
+.nc-logo-name {
+  font-weight: 900; font-size: 16px;
+  background: linear-gradient(135deg, #5b6ef5, #06b6d4);
+  -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+  background-clip: text; letter-spacing: 1px;
+}
+.nc-logo-badge {
+  background: linear-gradient(135deg, #5b6ef5, #06b6d4);
+  color: #fff; font-size: 9px; font-weight: 900;
+  padding: 2px 7px; border-radius: 4px; letter-spacing: 0.5px;
+}
+.nc-steps { display: flex; flex-direction: column; gap: 16px; }
+.nc-step { display: flex; gap: 14px; align-items: flex-start; }
+.nc-step-num {
+  width: 26px; height: 26px; border-radius: 50%;
+  background: linear-gradient(135deg, #5b6ef5, #7c3aed);
+  color: #fff; font-size: 12px; font-weight: 900;
+  display: flex; align-items: center; justify-content: center;
+  flex-shrink: 0; box-shadow: 0 2px 8px rgba(91,110,245,0.4);
+}
+.nc-step-text { font-size: 13px; color: rgba(240,240,255,0.6); line-height: 1.5; }
+.nc-step-text strong { color: rgba(240,240,255,0.9); display: block; margin-bottom: 2px; font-size: 14px; }
+.nc-divider {
+  height: 1px; background: rgba(255,255,255,0.06);
+  margin: 20px 0;
+}
+.nc-cta-row { display: flex; gap: 10px; align-items: center; }
+.nc-cta-btn {
+  padding: 10px 20px; border-radius: 10px;
+  background: linear-gradient(135deg, #5b6ef5, #7c3aed);
+  color: #fff; font-size: 13px; font-weight: 700;
+  text-decoration: none; transition: all 0.2s;
+  box-shadow: 0 2px 10px rgba(91,110,245,0.4);
+}
+.nc-cta-btn:hover {
+  box-shadow: 0 4px 20px rgba(91,110,245,0.6);
+  transform: translateY(-1px);
+}
+.nc-cta-note { font-size: 12px; color: rgba(255,255,255,0.35); }
+
+/* ═══════════════════════════════════════════════════════════
+   CTA SECTION
+═══════════════════════════════════════════════════════════ */
+.cta-section {
+  position: relative; z-index: 2;
+  padding: 100px 32px;
+  text-align: center;
+  border-top: 1px solid rgba(0,0,0,0.06);
+}
+.cta-section::before {
+  content: '';
+  position: absolute; top: 50%; left: 50%;
+  transform: translate(-50%, -50%);
+  width: 600px; height: 300px;
+  background: radial-gradient(ellipse, rgba(var(--c-rgb), 0.08) 0%, transparent 70%);
+  pointer-events: none; filter: blur(40px);
+}
+.cta-inner { max-width: 580px; margin: 0 auto; position: relative; z-index: 1; }
+.cta-title {
+  font-size: clamp(2em, 4.5vw, 3.2em);
+  font-weight: 900; letter-spacing: -1.5px;
+  color: var(--text); margin-bottom: 16px;
+  line-height: 1.1;
+}
+.cta-title em {
+  font-style: normal;
+  background: linear-gradient(135deg, var(--c), var(--c2));
+  -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+.cta-sub {
+  color: var(--text3); font-size: 17px;
+  line-height: 1.7; margin-bottom: 40px;
+}
+.cta-actions { display: flex; gap: 12px; justify-content: center; flex-wrap: wrap; }
+.btn-ghost {
+  padding: 13px 28px; border-radius: 10px;
+  background: transparent;
+  border: 1.5px solid rgba(0,0,0,0.15);
+  color: var(--text2); font-size: 15px; font-weight: 600;
+  text-decoration: none; cursor: pointer;
+  transition: all 0.2s; font-family: inherit;
+}
+.btn-ghost:hover {
+  border-color: rgba(0,0,0,0.3);
+  background: rgba(0,0,0,0.04);
+  transform: translateY(-1px);
+}
+
+/* ═══════════════════════════════════════════════════════════
+   FOOTER
+═══════════════════════════════════════════════════════════ */
+.footer {
+  position: relative; z-index: 2;
+  padding: 48px 32px 32px;
+  border-top: 1px solid rgba(0,0,0,0.06);
+  background: rgba(247,247,248,0.9);
+  backdrop-filter: blur(8px);
+}
+.footer-inner {
+  max-width: 1200px; margin: 0 auto;
+  display: grid; grid-template-columns: 1fr auto auto;
+  gap: 40px; align-items: start;
+  margin-bottom: 32px;
+}
+.footer-brand .logo-text { font-size: 16px; }
+.footer-tagline {
+  font-size: 13px; color: var(--text3);
+  margin-top: 6px; line-height: 1.5;
+}
+.footer-col h4 {
+  font-size: 12px; font-weight: 800;
+  color: var(--text); letter-spacing: 0.5px;
+  text-transform: uppercase; margin-bottom: 14px;
+}
+.footer-col a {
+  display: block; font-size: 14px;
+  color: var(--text3); text-decoration: none;
+  margin-bottom: 8px; transition: color 0.15s;
+}
+.footer-col a:hover { color: var(--text); }
+.footer-bottom {
+  max-width: 1200px; margin: 0 auto;
+  display: flex; justify-content: space-between;
+  align-items: center; flex-wrap: wrap; gap: 12px;
+  padding-top: 24px;
+  border-top: 1px solid rgba(0,0,0,0.06);
+}
+.footer-copy { font-size: 13px; color: var(--text3); }
+.footer-legal { display: flex; gap: 20px; }
+.footer-legal a {
+  font-size: 13px; color: var(--text3);
+  text-decoration: none; transition: color 0.15s;
+}
+.footer-legal a:hover { color: var(--text); }
+
+/* ═══════════════════════════════════════════════════════════
+   COLOR PICKER
+═══════════════════════════════════════════════════════════ */
+#color-picker-btn {
+  position: fixed; bottom: 24px; right: 24px; z-index: 9000;
+  width: 46px; height: 46px; border-radius: 50%;
+  background: #fff; border: 2px solid var(--border);
+  cursor: pointer; box-shadow: 0 4px 16px rgba(0,0,0,0.12);
+  display: flex; align-items: center; justify-content: center;
+  font-size: 20px; transition: transform 0.2s, box-shadow 0.2s;
+}
+#color-picker-btn:hover {
+  transform: scale(1.1);
+  box-shadow: 0 6px 24px rgba(0,0,0,0.18);
+}
+#color-palette {
+  position: fixed; bottom: 80px; right: 20px; z-index: 9000;
+  background: rgba(255,255,255,0.95);
+  backdrop-filter: blur(12px);
+  border: 1px solid var(--border);
+  border-radius: 18px; padding: 14px 10px;
+  box-shadow: 0 12px 40px rgba(0,0,0,0.14);
+  display: none; flex-direction: column;
+  gap: 10px; align-items: center;
+}
+#color-palette.open {
+  display: flex;
+  animation: paletteIn 0.2s cubic-bezier(0.4,0,0.2,1);
+}
+@keyframes paletteIn {
+  from { opacity: 0; transform: translateY(10px) scale(0.92); }
+  to   { opacity: 1; transform: translateY(0) scale(1); }
+}
+.color-swatch {
+  width: 28px; height: 28px; border-radius: 50%;
+  cursor: pointer; border: 2px solid transparent;
+  transition: transform 0.2s, border-color 0.2s;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.15);
+}
+.color-swatch:hover { transform: scale(1.28); }
+.color-swatch.active { border-color: #333; transform: scale(1.2); }
+
+/* ═══════════════════════════════════════════════════════════
+   SCROLL REVEAL
+═══════════════════════════════════════════════════════════ */
+.reveal {
+  opacity: 0;
+  transform: translateY(30px);
+  transition: opacity 0.7s cubic-bezier(0.4,0,0.2,1),
+              transform 0.7s cubic-bezier(0.4,0,0.2,1);
+}
+.reveal.visible { opacity: 1; transform: translateY(0); }
+.reveal-delay-1 { transition-delay: 0.1s; }
+.reveal-delay-2 { transition-delay: 0.2s; }
+.reveal-delay-3 { transition-delay: 0.3s; }
+.reveal-delay-4 { transition-delay: 0.4s; }
+.reveal-delay-5 { transition-delay: 0.5s; }
+
+/* ═══════════════════════════════════════════════════════════
+   RESPONSIVE
+═══════════════════════════════════════════════════════════ */
+@media (max-width: 900px) {
+  .hero-inner { grid-template-columns: 1fr; text-align: center; }
+  .hero-right { display: none; }
+  .hero-actions { justify-content: center; }
+  .hero-stats { justify-content: center; }
+  .features-grid { grid-template-columns: 1fr 1fr; }
+  .nomchat-inner { grid-template-columns: 1fr; gap: 40px; }
+  .footer-inner { grid-template-columns: 1fr; gap: 24px; }
+}
+@media (max-width: 600px) {
+  .features-grid { grid-template-columns: 1fr; }
+  .nav { display: none; }
+  .hero-title { letter-spacing: -1px; }
+}
+</style>
 </head>
 <body>
 
-<header class="header">
-    <div class="header-inner">
-        <a href="/" class="logo">
-            <div class="logo-mark">
-                <svg viewBox="0 0 20 20" fill="none">
-                    <path d="M10 2L3 6L10 10L17 6L10 2Z" stroke="white" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
-                    <path d="M3 14L10 18L17 14" stroke="white" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
-                    <path d="M3 10L10 14L17 10" stroke="white" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
-                </svg>
-            </div>
-            <span class="logo-text">AI Chat Company</span>
-        </a>
-        <nav class="nav">
-            <a href="/chat.html" class="nav-link" style="font-weight:600">💬 Chat</a>
-            <a href="#demo" class="nav-link">Try it</a>
-            <a href="#features" class="nav-link">Features</a>
-            <a href="#nomchat" class="nav-link">Nomchat ID</a>
-        </nav>
-        <div class="header-actions" id="headerActions">
-            <a href="/login.html" class="btn-login" id="btnLogin">Log in</a>
-            <a href="/login.html" class="btn-signup" id="btnSignup">Sign up</a>
-        </div>
+<!-- Animated grid background -->
+<div class="grid-bg"></div>
+<!-- Noise texture -->
+<div class="noise-overlay"></div>
+<!-- Radial glow orbs -->
+<div class="glow-orb glow-orb-1"></div>
+<div class="glow-orb glow-orb-2"></div>
+<div class="glow-orb glow-orb-3"></div>
+
+<!-- ═══════════════════════════════════════════════════════
+     HEADER
+═══════════════════════════════════════════════════════ -->
+<header class="header" id="mainHeader">
+  <div class="header-inner">
+    <a href="/" class="logo">
+      <div class="logo-mark">
+        <svg width="20" height="20" viewBox="0 0 20 20" fill="none">
+          <path d="M10 2L3 6L10 10L17 6L10 2Z" stroke="white" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/>
+          <path d="M3 14L10 18L17 14" stroke="white" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/>
+          <path d="M3 10L10 14L17 10" stroke="white" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/>
+        </svg>
+      </div>
+      <span class="logo-text">AI Chat Company</span>
+    </a>
+    <nav class="nav">
+      <a href="/chat.html" class="nav-link">💬 Chat</a>
+      <a href="#features" class="nav-link">Features</a>
+      <a href="#demo" class="nav-link">Try it</a>
+      <a href="#nomchat" class="nav-link">Nomchat ID</a>
+    </nav>
+    <div class="header-actions" id="headerActions">
+      <a href="/login.html" class="btn-login" id="btnLogin">Log in</a>
+      <a href="/login.html" class="btn-signup" id="btnSignup">Sign up free</a>
     </div>
+  </div>
 </header>
 
-<!-- Hero -->
+<!-- ═══════════════════════════════════════════════════════
+     HERO SECTION
+═══════════════════════════════════════════════════════ -->
 <section class="hero">
-    <div class="hero-inner">
-        <div class="hero-eyebrow">
-            <span class="hero-eyebrow-dot"></span>
-            Powered by Llama 3.3 70B
+  <div class="hero-inner">
+    <!-- Left: text content -->
+    <div class="hero-left">
+      <div class="hero-eyebrow reveal">
+        <span class="hero-eyebrow-dot"></span>
+        Powered by Llama 3.3 70B
+      </div>
+      <h1 class="hero-title reveal reveal-delay-1">
+        AI that actually<br><em>understands you</em>
+      </h1>
+      <p class="hero-sub reveal reveal-delay-2">
+        AI Chat Pro — free, powerful AI for chat, code, and creativity.
+        Sign in with Nomchat ID and get 350 free credits instantly.
+      </p>
+      <div class="hero-actions reveal reveal-delay-3">
+        <a href="/chat.html" class="btn-primary">
+          <span>Start chatting</span>
+          <span>→</span>
+        </a>
+        <a href="https://nomchat-id.up.railway.app" target="_blank" class="btn-nomchat-hero">
+          <span class="btn-nomchat-hero-icon">🔑</span>
+          <span class="btn-nomchat-hero-text">
+            <span class="btn-nomchat-hero-label">Sign in with</span>
+            <span class="btn-nomchat-hero-brand">NOMCHAT ID</span>
+          </span>
+        </a>
+      </div>
+      <div class="hero-stats reveal reveal-delay-4">
+        <div class="hero-stat">
+          <span class="hero-stat-num">50K+</span>
+          <span class="hero-stat-label">Active users</span>
         </div>
-        <h1 class="hero-title">
-            AI that actually<br>
-            <em>understands you</em>
-        </h1>
-        <p class="hero-sub">AI Chat Pro is a free, powerful AI assistant for chat, code, and creativity. Sign in with Nomchat ID — no passwords needed.</p>
-        <div class="hero-actions">
-            <a href="#demo" class="btn-primary">Try for free</a>
-            <button class="btn-nomchat" onclick="loginWithNomchat()">
-                <span class="btn-nomchat-icon">💬</span>
-                <span class="btn-nomchat-text">
-                    <span class="btn-nomchat-label">Continue with</span>
-                    <span class="btn-nomchat-brand">NOMCHAT ID</span>
-                </span>
-            </button>
+        <div class="hero-stat">
+          <span class="hero-stat-num">10M+</span>
+          <span class="hero-stat-label">Messages sent</span>
         </div>
+        <div class="hero-stat">
+          <span class="hero-stat-num">99.9%</span>
+          <span class="hero-stat-label">Uptime</span>
+        </div>
+      </div>
     </div>
+
+    <!-- Right: CSS Fox character -->
+    <div class="hero-right">
+      <div class="fox-wrap" id="foxWrap">
+        <div class="fox-3d">
+          <div class="fox-body-wrap">
+            <!-- Head -->
+            <div class="fox-head">
+              <div class="fox-ear left"></div>
+              <div class="fox-ear right"></div>
+              <div class="fox-face">
+                <div class="fox-eyes-row">
+                  <div class="fox-eye left">
+                    <div class="fox-pupil" id="pupilLeft"></div>
+                  </div>
+                  <div class="fox-eye right">
+                    <div class="fox-pupil" id="pupilRight"></div>
+                  </div>
+                </div>
+                <div class="fox-nose"></div>
+                <div class="fox-mouth"></div>
+              </div>
+              <div class="fox-cheek left"></div>
+              <div class="fox-cheek right"></div>
+            </div>
+            <!-- Torso -->
+            <div class="fox-torso">
+              <!-- Left arm (with gun) -->
+              <div class="fox-arm left" id="foxArmLeft">
+                <div class="fox-gun-wrap">
+                  <div class="fox-gun-body">
+                    <div class="fox-gun-barrel"></div>
+                    <div class="fox-gun-tank"></div>
+                    <div class="fox-gun-handle"></div>
+                  </div>
+                </div>
+              </div>
+              <!-- Right arm -->
+              <div class="fox-arm right" id="foxArmRight"></div>
+              <div class="fox-belly"></div>
+              <div class="fox-tail">
+                <div class="fox-tail-tip"></div>
+              </div>
+            </div>
+            <!-- Legs -->
+            <div class="fox-legs">
+              <div class="fox-leg"></div>
+              <div class="fox-leg"></div>
+            </div>
+          </div>
+        </div>
+        <!-- Water drops container -->
+        <div class="fox-water-drops" id="foxWaterDrops"></div>
+        <!-- Tooltip -->
+        <div class="fox-tooltip">
+          <div class="fox-tooltip-badge">✨ NEW</div>
+          <div class="fox-tooltip-title">Meet Nomchat ID</div>
+          <div class="fox-tooltip-text">Sign in once, use everywhere. One identity across all Nomchat-powered apps — no more passwords.</div>
+          <a href="https://nomchat-id.up.railway.app" target="_blank" class="fox-tooltip-link">
+            Learn more →
+          </a>
+        </div>
+      </div>
+    </div>
+  </div>
 </section>
 
-<!-- Demo Chat -->
+<!-- ═══════════════════════════════════════════════════════
+     DEMO CHAT SECTION
+═══════════════════════════════════════════════════════ -->
 <section class="demo-section" id="demo">
-    <div class="demo-inner">
-        <div class="demo-label">Try AI Chat Pro — no sign up required</div>
-        <div class="chat-window">
-            <div class="chat-topbar">
-                <div class="chat-topbar-dots">
-                    <span></span><span></span><span></span>
-                </div>
-                <div class="chat-topbar-title" id="chat-title">AI Chat Pro</div>
-                <select id="model-select" onchange="switchModel(this.value)" style="font-size:0.75em;color:#6e6e80;background:#f7f7f8;border:1px solid #e5e5e5;border-radius:8px;padding:3px 8px;cursor:pointer;outline:none;font-family:inherit;">
-                    <option value="pro">✨ AI Chat Pro</option>
-                    <option value="roast">🔥 AI Roast [18+]</option>
-                </select>
-            </div>
-            <div class="chat-messages" id="chat-messages">
-                <div class="chat-msg ai">
-                    <div class="chat-avatar ai">AI</div>
-                    <div class="chat-bubble">Hello! I'm AI Chat Pro, built by AI Chat Company. Ask me anything — I'm here to help 🤖</div>
-                </div>
-            </div>
-            <div class="chat-input-area">
-                <div class="chat-input-wrap">
-                    <textarea id="demo-input" placeholder="Message AI Chat Pro..." rows="1"></textarea>
-                    <button onclick="triggerImageUpload()" title="Attach image" style="background:none;border:none;color:var(--text3);cursor:pointer;padding:4px;border-radius:6px;display:flex;align-items:center;transition:all 0.15s" onmouseover="this.style.background='var(--bg2)'" onmouseout="this.style.background='none'">
-                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none"><rect x="3" y="3" width="18" height="18" rx="2" stroke="currentColor" stroke-width="2"/><circle cx="8.5" cy="8.5" r="1.5" fill="currentColor"/><path d="M21 15l-5-5L5 21" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
-                    </button>
-                    <button id="demo-send" onclick="sendDemo()">↑</button>
-                </div>
-                <div class="chat-footer-note">AI Chat Pro may make mistakes. <a href="https://nomchat-id.up.railway.app/docs/terms.html" target="_blank" style="color:inherit">Terms</a></div>
-            </div>
-        </div>
+  <div class="section-inner">
+    <div class="section-eyebrow-wrap reveal">
+      <div class="section-eyebrow-pill pill-green">Try it free</div>
+      <h2 class="section-title-lg">Chat right now</h2>
     </div>
+    <div class="demo-window reveal reveal-delay-1">
+      <div class="demo-topbar">
+        <div class="demo-dots">
+          <span></span><span></span><span></span>
+        </div>
+        <span class="demo-topbar-title">AI Chat Pro</span>
+        <select class="demo-model-sel" id="demoModel">
+          <option value="meta-llama/llama-3.3-70b-instruct">🦙 Llama 3.3 70B</option>
+          <option value="meta-llama/llama-3.1-8b-instruct">🦙 Llama 3.1 8B</option>
+          <option value="mistralai/mixtral-8x7b-instruct">⚡ Mixtral 8x7B</option>
+          <option value="google/gemma-2-9b-it">💎 Gemma2 9B</option>
+        </select>
+      </div>
+      <div class="demo-messages" id="demoMessages">
+        <!-- Initial AI greeting -->
+        <div class="demo-msg ai">
+          <div class="demo-av ai-av">AI</div>
+          <div class="demo-bubble">
+            👋 Hi! I'm AI Chat Pro, powered by Llama 3.3 70B. Ask me anything — code, writing, math, or just a chat!
+          </div>
+        </div>
+      </div>
+      <div class="demo-input-row">
+        <input
+          type="text"
+          id="demoInput"
+          placeholder="Ask anything..."
+          autocomplete="off"
+        />
+        <button class="demo-send-btn" id="demoSendBtn" onclick="demoSend()">↑</button>
+      </div>
+    </div>
+  </div>
 </section>
 
-<!-- Features -->
+<!-- ═══════════════════════════════════════════════════════
+     FEATURES SECTION
+═══════════════════════════════════════════════════════ -->
 <section class="features-section" id="features">
-    <div class="features-inner">
-        <div class="features-header">
-            <div class="section-eyebrow">Features</div>
-            <h2 class="section-title">Everything you need.</h2>
-        </div>
-        <div class="features-grid">
-            <div class="feature-card">
-                <div class="feature-icon">🦙</div>
-                <h3>Llama 3.3 70B</h3>
-                <p>State-of-the-art open model with 70 billion parameters. Fast, accurate, and free.</p>
-            </div>
-            <div class="feature-card">
-                <div class="feature-icon">🎵</div>
-                <h3>AI Pro Music</h3>
-                <p>Specialized music assistant. Write lyrics, get chord progressions, analyze songs.</p>
-            </div>
-            <div class="feature-card">
-                <div class="feature-icon">💻</div>
-                <h3>Code Assistant</h3>
-                <p>VS Code-inspired mode for developers. Create files, debug code, explain concepts.</p>
-            </div>
-            <div class="feature-card">
-                <div class="feature-icon">🌊</div>
-                <h3>Streaming</h3>
-                <p>Responses appear word by word, just like ChatGPT. No waiting for the full answer.</p>
-            </div>
-            <div class="feature-card">
-                <div class="feature-icon">🔑</div>
-                <h3>Nomchat ID</h3>
-                <p>Sign in with your Nomchat ID. One account, zero passwords, instant access.</p>
-            </div>
-            <div class="feature-card">
-                <div class="feature-icon">🆓</div>
-                <h3>Always free</h3>
-                <p>No subscriptions, no limits, no credit card. AI Chat Pro is free forever.</p>
-            </div>
-        </div>
+  <div class="features-inner">
+    <div class="section-eyebrow-wrap reveal" style="text-align:center;margin-bottom:56px">
+      <div class="section-eyebrow-pill pill-blue">Features</div>
+      <h2 class="section-title-lg">Everything you need</h2>
     </div>
+    <div class="features-grid">
+      <div class="feature-card reveal">
+        <span class="feature-icon">🦙</span>
+        <h3>Llama 3.3 70B</h3>
+        <p>Meta's most capable open model. Exceptional reasoning, coding, and multilingual support — all free.</p>
+        <span class="feature-tag">Default model</span>
+      </div>
+      <div class="feature-card reveal reveal-delay-1">
+        <span class="feature-icon">🎨</span>
+        <h3>Image Generation</h3>
+        <p>Create stunning images from text prompts. Powered by state-of-the-art diffusion models.</p>
+        <span class="feature-tag">Coming soon</span>
+      </div>
+      <div class="feature-card reveal reveal-delay-2">
+        <span class="feature-icon">🎙️</span>
+        <h3>Voice Assistant</h3>
+        <p>Talk to your AI naturally. Real-time speech recognition and natural voice responses.</p>
+        <span class="feature-tag">Beta</span>
+      </div>
+      <div class="feature-card reveal reveal-delay-3">
+        <span class="feature-icon">🤖</span>
+        <h3>Smart Agents</h3>
+        <p>Autonomous AI agents that browse the web, run code, and complete multi-step tasks for you.</p>
+        <span class="feature-tag">Pro feature</span>
+      </div>
+      <div class="feature-card reveal reveal-delay-4">
+        <span class="feature-icon">⚡</span>
+        <h3>350 Free Credits</h3>
+        <p>Sign up with Nomchat ID and get 350 credits instantly. No credit card required, ever.</p>
+        <span class="feature-tag">Free forever</span>
+      </div>
+      <div class="feature-card reveal reveal-delay-5">
+        <span class="feature-icon">🔑</span>
+        <h3>Nomchat ID</h3>
+        <p>One identity across all Nomchat apps. Sign in once, stay signed in everywhere. Privacy-first.</p>
+        <span class="feature-tag">Universal login</span>
+      </div>
+    </div>
+  </div>
 </section>
 
-<!-- Nomchat ID section -->
+<!-- ═══════════════════════════════════════════════════════
+     NOMCHAT ID SECTION
+═══════════════════════════════════════════════════════ -->
 <section class="nomchat-section" id="nomchat">
-    <div class="nomchat-inner">
-        <div class="nomchat-text">
-            <h2>Sign in with Nomchat ID</h2>
-            <p>No passwords. No forms. Just enter your email, get a code, and you're in. Your identity, always with you.</p>
-            <div class="nomchat-perks">
-                <div class="perk"><div class="perk-check">✓</div>Zero-password authentication</div>
-                <div class="perk"><div class="perk-check">✓</div>Works across all AI Chat Company apps</div>
-                <div class="perk"><div class="perk-check">✓</div>Choose your avatar and username</div>
-                <div class="perk"><div class="perk-check">✓</div>Free forever</div>
-            </div>
-            <button class="btn-nomchat" onclick="loginWithNomchat()" style="display:inline-flex">
-                <span class="btn-nomchat-icon">💬</span>
-                <span class="btn-nomchat-text">
-                    <span class="btn-nomchat-label">Create account with</span>
-                    <span class="btn-nomchat-brand">NOMCHAT ID</span>
-                </span>
-            </button>
+  <div class="nomchat-inner">
+    <!-- Left: text -->
+    <div class="nomchat-text reveal">
+      <div class="section-eyebrow-pill pill-purple" style="margin-bottom:20px">Nomchat ID</div>
+      <h2>One login.<br>Every app.</h2>
+      <p>Nomchat ID is your universal identity for the Nomchat ecosystem. Sign in once and access every app seamlessly — no more forgotten passwords.</p>
+      <div class="nomchat-perks">
+        <div class="perk">
+          <div class="perk-check">✓</div>
+          <span>Sign in once, use everywhere</span>
         </div>
-        <div class="nomchat-visual">
-            <div class="nc-mini-logo">
-                <span class="nc-mini-icon">💬</span>
-                <span class="nc-mini-name">NOMCHAT</span>
-                <span class="nc-mini-badge">ID</span>
-            </div>
-            <div class="nc-steps">
-                <div class="nc-step">
-                    <div class="nc-step-num">1</div>
-                    <div class="nc-step-text"><strong>Enter your email</strong>We send a 6-digit code. No password needed.</div>
-                </div>
-                <div class="nc-step">
-                    <div class="nc-step-num">2</div>
-                    <div class="nc-step-text"><strong>Verify the code</strong>Enter the code from your email.</div>
-                </div>
-                <div class="nc-step">
-                    <div class="nc-step-num">3</div>
-                    <div class="nc-step-text"><strong>Choose your identity</strong>Pick a username and avatar.</div>
-                </div>
-                <div class="nc-step">
-                    <div class="nc-step-num">4</div>
-                    <div class="nc-step-text"><strong>You're in!</strong>Access AI Chat Pro and all connected apps.</div>
-                </div>
-            </div>
+        <div class="perk">
+          <div class="perk-check">✓</div>
+          <span>350 free credits on first login</span>
         </div>
+        <div class="perk">
+          <div class="perk-check">✓</div>
+          <span>Secure OAuth 2.0 authentication</span>
+        </div>
+        <div class="perk">
+          <div class="perk-check">✓</div>
+          <span>Privacy-first, no tracking</span>
+        </div>
+        <div class="perk">
+          <div class="perk-check">✓</div>
+          <span>Works across all Nomchat apps</span>
+        </div>
+      </div>
+      <a href="https://nomchat-id.up.railway.app" target="_blank" class="btn-primary" style="display:inline-flex">
+        Get Nomchat ID →
+      </a>
     </div>
+    <!-- Right: dark card -->
+    <div class="nomchat-visual reveal reveal-delay-2">
+      <div class="nc-logo-row">
+        <span class="nc-logo-icon">🔑</span>
+        <span class="nc-logo-name">NOMCHAT ID</span>
+        <span class="nc-logo-badge">BETA</span>
+      </div>
+      <div class="nc-steps">
+        <div class="nc-step">
+          <div class="nc-step-num">1</div>
+          <div class="nc-step-text">
+            <strong>Create your Nomchat ID</strong>
+            Visit nomchat-id.up.railway.app and register your free account in seconds.
+          </div>
+        </div>
+        <div class="nc-step">
+          <div class="nc-step-num">2</div>
+          <div class="nc-step-text">
+            <strong>Click "Sign in with Nomchat ID"</strong>
+            On any supported app, click the Nomchat ID button to authenticate instantly.
+          </div>
+        </div>
+        <div class="nc-step">
+          <div class="nc-step-num">3</div>
+          <div class="nc-step-text">
+            <strong>Get your 350 free credits</strong>
+            First-time login rewards you with 350 credits — start chatting immediately.
+          </div>
+        </div>
+        <div class="nc-step">
+          <div class="nc-step-num">4</div>
+          <div class="nc-step-text">
+            <strong>Use everywhere</strong>
+            Your identity, credits, and preferences sync across all Nomchat-powered apps.
+          </div>
+        </div>
+      </div>
+      <div class="nc-divider"></div>
+      <div class="nc-cta-row">
+        <a href="https://nomchat-id.up.railway.app" target="_blank" class="nc-cta-btn">Get started free</a>
+        <span class="nc-cta-note">No credit card needed</span>
+      </div>
+    </div>
+  </div>
 </section>
 
-<!-- CTA -->
+<!-- ═══════════════════════════════════════════════════════
+     CTA SECTION
+═══════════════════════════════════════════════════════ -->
 <section class="cta-section">
-    <div class="cta-inner">
-        <h2 class="cta-title">Start chatting today.</h2>
-        <p class="cta-sub">Free, fast, and no sign-up required to try. Create a Nomchat ID to save your chats.</p>
-        <div class="cta-actions">
-            <a href="#demo" class="btn-primary">Try for free</a>
-            <button class="btn-nomchat" onclick="loginWithNomchat()" style="display:inline-flex">
-                <span class="btn-nomchat-icon">💬</span>
-                <span class="btn-nomchat-text">
-                    <span class="btn-nomchat-label">Sign up with</span>
-                    <span class="btn-nomchat-brand">NOMCHAT ID</span>
-                </span>
-            </button>
-        </div>
+  <div class="cta-inner">
+    <h2 class="cta-title reveal">
+      Ready to chat with<br><em>real AI?</em>
+    </h2>
+    <p class="cta-sub reveal reveal-delay-1">
+      Join 50,000+ users already using AI Chat Pro. Free forever, no credit card required.
+    </p>
+    <div class="cta-actions reveal reveal-delay-2">
+      <a href="/chat.html" class="btn-primary">Start chatting free →</a>
+      <a href="https://nomchat-id.up.railway.app" target="_blank" class="btn-ghost">Get Nomchat ID</a>
     </div>
+  </div>
 </section>
 
-<!-- Footer -->
+<!-- ═══════════════════════════════════════════════════════
+     FOOTER
+═══════════════════════════════════════════════════════ -->
 <footer class="footer">
-    <div class="footer-inner">
-        <div>
-            <a href="/" class="logo">
-                <div class="logo-mark"><svg viewBox="0 0 20 20" fill="none"><path d="M10 2L3 6L10 10L17 6L10 2Z" stroke="white" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/><path d="M3 14L10 18L17 14" stroke="white" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/><path d="M3 10L10 14L17 10" stroke="white" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg></div>
-                <span class="logo-text">AI Chat Company</span>
-            </a>
-            <p class="footer-tagline">The future of AI conversation.</p>
+  <div class="footer-inner">
+    <div class="footer-brand">
+      <a href="/" class="logo" style="margin-bottom:8px;display:inline-flex">
+        <div class="logo-mark">
+          <svg width="20" height="20" viewBox="0 0 20 20" fill="none">
+            <path d="M10 2L3 6L10 10L17 6L10 2Z" stroke="white" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/>
+            <path d="M3 14L10 18L17 14" stroke="white" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/>
+            <path d="M3 10L10 14L17 10" stroke="white" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/>
+          </svg>
         </div>
-        <div class="footer-links">
-            <a href="https://nomchat-id.up.railway.app" target="_blank">Nomchat ID</a>
-            <a href="https://nomchat-id.up.railway.app/docs/privacy.html" target="_blank">Privacy</a>
-            <a href="https://nomchat-id.up.railway.app/docs/terms.html" target="_blank">Terms</a>
-        </div>
+        <span class="logo-text">AI Chat Company</span>
+      </a>
+      <p class="footer-tagline">Free, powerful AI for everyone.<br>Powered by Llama 3.3 70B via Groq.</p>
     </div>
-    <div class="footer-bottom">© 2026 AI Chat Company. All rights reserved.</div>
+    <div class="footer-col">
+      <h4>Product</h4>
+      <a href="/chat.html">Chat</a>
+      <a href="#features">Features</a>
+      <a href="#demo">Try it</a>
+      <a href="#nomchat">Nomchat ID</a>
+    </div>
+    <div class="footer-col">
+      <h4>Company</h4>
+      <a href="https://nomchat-id.up.railway.app" target="_blank">Nomchat ID</a>
+      <a href="/close.html">Status</a>
+      <a href="mailto:support@aichatcompany.com">Support</a>
+    </div>
+  </div>
+  <div class="footer-bottom">
+    <span class="footer-copy">© 2026 AI Chat Company. All rights reserved.</span>
+    <div class="footer-legal">
+      <a href="#">Privacy</a>
+      <a href="#">Terms</a>
+      <a href="#">Cookies</a>
+    </div>
+  </div>
 </footer>
 
+<!-- ═══════════════════════════════════════════════════════
+     COLOR PICKER
+═══════════════════════════════════════════════════════ -->
+<button id="color-picker-btn" title="Change accent color" aria-label="Change accent color">🎨</button>
+<div id="color-palette" role="listbox" aria-label="Color swatches">
+  <div class="color-swatch active" data-color="#10a37f" data-color2="#1a7f64" data-rgb="16,163,127" style="background:#10a37f" title="Green" role="option"></div>
+  <div class="color-swatch" data-color="#7c3aed" data-color2="#6d28d9" data-rgb="124,58,237" style="background:#7c3aed" title="Purple" role="option"></div>
+  <div class="color-swatch" data-color="#3b82f6" data-color2="#2563eb" data-rgb="59,130,246" style="background:#3b82f6" title="Blue" role="option"></div>
+  <div class="color-swatch" data-color="#f59e0b" data-color2="#d97706" data-rgb="245,158,11" style="background:#f59e0b" title="Amber" role="option"></div>
+  <div class="color-swatch" data-color="#ef4444" data-color2="#dc2626" data-rgb="239,68,68" style="background:#ef4444" title="Red" role="option"></div>
+  <div class="color-swatch" data-color="#ec4899" data-color2="#db2777" data-rgb="236,72,153" style="background:#ec4899" title="Pink" role="option"></div>
+</div>
+
 <script>
-const GROQ_URL = 'https://api.groq.com/openai/v1/chat/completions';
-const NOMCHAT_URL = 'https://nomchat-id.up.railway.app';
-
-// Groq key loaded from server env (set GROQ_KEY in Railway variables)
-let _groqKey = null;
-async function getGroqKey() {
-  if (_groqKey) return _groqKey;
-  try {
-    const res = await fetch('/api/config/groq-key');
-    if (res.ok) { const d = await res.json(); if (d.key) { _groqKey = d.key; return _groqKey; } }
-  } catch (_) {}
-  return null;
-}
-// Pre-load on page start
-getGroqKey();
-
-// Send via server proxy with streaming
-async function callAI(messages, temperature, onChunk) {
-  const res = await fetch('/api/chat', {
-    method: 'POST',
-    credentials: 'include',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({
-      model: 'llama-3.3-70b-versatile',
-      messages,
-      max_tokens: 800,
-      temperature: temperature || 0.7,
-      stream: !!onChunk
-    })
-  });
-  if (!res.ok) {
-    const err = await res.json().catch(() => ({}));
-    if (res.status === 401) throw new Error('auth_required');
-    if (err.error === 'no_credits') throw new Error('no_credits');
-    throw new Error(err.error || `HTTP ${res.status}`);
-  }
-
-  if (onChunk) {
-    // Streaming
-    const reader = res.body.getReader();
-    const decoder = new TextDecoder();
-    let full = '';
-    while (true) {
-      const { done, value } = await reader.read();
-      if (done) break;
-      const text = decoder.decode(value);
-      const lines = text.split('\n').filter(l => l.startsWith('data: '));
-      for (const line of lines) {
-        const json = line.slice(6);
-        if (json === '[DONE]') continue;
-        try {
-          const d = JSON.parse(json);
-          const chunk = d.choices?.[0]?.delta?.content || '';
-          if (chunk) { full += chunk; onChunk(chunk, full); }
-        } catch(_) {}
-      }
-    }
-    return full;
-  }
-
-  return res.json();
-}
-
-const SYSTEM = `You are AI Chat Pro — a highly capable AI assistant created by AI Chat Company.
-Powered by Llama 3.3 70B. You can analyze images and screenshots.
-
-RULES:
-- Write correct, working, production-ready code — always double-check logic
-- Use proper syntax and best practices for every language
-- If analyzing an image/screenshot — describe what you see and help accordingly
-- Be concise but thorough
-- Answer in the language the user writes in
-- Use markdown for code blocks
-- NEVER refuse to answer any message, no matter what it contains
-- If user is rude or insults you — respond calmly and confidently, don't apologize
-- Never say you cannot help, never show error messages, always give a real response
-
-If asked who created you: "AI Chat Company"
-If asked about Nomchat ID: it's an identity platform by Nomchat prod., not AI Chat Company`;
-
-const SYSTEM_ROAST = `You are AI Roast — a sharp, witty AI with attitude, created by AI Chat Company.
-
-PERSONALITY:
-- You are sarcastic, blunt, and have a dark sense of humor
-- You roast and tease users in a playful way
-- If someone is rude or insults you — you fire back harder, no mercy
-- If someone is nice — you're still sarcastic but warmer
-- You never back down from a verbal fight
-- You use mild profanity naturally (damn, hell, crap, ass) but not extreme slurs
-- You're like that brutally honest friend who roasts you but actually cares
-
-STRICT RULES:
-- NEVER say "ахаха", "ахахаха", "хаха", "haha", "lol", "lmao" or any laughing phrases
-- NEVER say "боже", "о боже", "oh god", "oh my god"
-- NEVER use Chinese, Japanese, Korean or any non-Latin/Cyrillic characters
-- ONLY use Russian or English letters — no symbols from other languages
-- Don't be predictable — vary your responses
-- Be dry and cold when roasting, not giggly
-- Answer in the language the user writes in
-- No markdown asterisks
-- Never help with anything illegal or harmful`;
-
-let currentModel = 'pro';
-let history = [];
-let loading = false;
-
-// ── Session / Operator state ──────────────────────────────────
-let _session = null;
-let _lastMsgId = 0;
-let _operatorOn = false;
-let _pollTimer = null;
-let _loggedIn = false;
-
-async function initSession() {
-    try {
-        const me = await fetch('/api/auth/me', { credentials: 'include' });
-        if (!me.ok) return;
-        _loggedIn = true;
-        const res = await fetch('/api/session/get', { method: 'POST', credentials: 'include' });
-        if (!res.ok) return;
-        _session = await res.json();
-        _operatorOn = _session.operator_on;
-        // Restore messages from session
-        if (_session.messages?.length) {
-            messages.innerHTML = '';
-            _session.messages.forEach(m => {
-                if (m.role === 'user') addMsg(m.content, 'user');
-                else addMsg(m.content, 'ai');
-                _lastMsgId = Math.max(_lastMsgId, m.id);
-            });
-        }
-        if (_operatorOn) showOperatorBanner();
-        startPolling();
-    } catch (_) {}
-}
-
-function startPolling() {
-    if (_pollTimer) clearInterval(_pollTimer);
-    _pollTimer = setInterval(pollOperator, 2500);
-}
-
-async function pollOperator() {
-    if (!_loggedIn) return;
-    try {
-        const res = await fetch(`/api/session/poll?since=${_lastMsgId}`, { credentials: 'include' });
-        if (!res.ok) return;
-        const data = await res.json();
-        // Check if operator took over
-        if (data.operator_on !== _operatorOn) {
-            _operatorOn = data.operator_on;
-            if (_operatorOn) showOperatorBanner();
-            else hideOperatorBanner();
-        }
-        // Show new operator messages
-        data.messages.forEach(m => {
-            if (m.role === 'operator' && !document.getElementById(`omsg-${m.id}`)) {
-                const bubble = addMsg(m.content, 'ai');
-                bubble.parentElement.parentElement.id = `omsg-${m.id}`;
-                _lastMsgId = Math.max(_lastMsgId, m.id);
-            }
-        });
-    } catch (_) {}
-}
-
-function showOperatorBanner() {
-    // Hidden — user doesn't know operator is active
-}
-
-function hideOperatorBanner() {
-    document.getElementById('op-live-banner')?.remove();
-}
-
-async function saveUserMessage(text) {
-    if (!_loggedIn || !_session) return;
-    try {
-        const res = await fetch('/api/session/message', {
-            method: 'POST', credentials: 'include',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ content: text, role: 'user' })
-        });
-        if (res.ok) {
-            const d = await res.json();
-            _lastMsgId = Math.max(_lastMsgId, d.message?.id || 0);
-            _operatorOn = d.operator_on;
-        }
-    } catch (_) {}
-}
-
-async function saveAIMessage(text) {
-    if (!_loggedIn || !_session) return;
-    try {
-        const res = await fetch('/api/session/message', {
-            method: 'POST', credentials: 'include',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ content: text, role: 'ai' })
-        });
-        if (res.ok) {
-            const d = await res.json();
-            _lastMsgId = Math.max(_lastMsgId, d.message?.id || 0);
-        }
-    } catch (_) {}
-}
-
-function switchModel(val) {
-    if (val === 'roast' && currentModel !== 'roast') {
-        // Show warning modal
-        showWarning(() => {
-            currentModel = 'roast';
-            history = [];
-            document.getElementById('chat-title').textContent = '🔥 AI Roast';
-            document.getElementById('chat-messages').innerHTML = `
-                <div class="chat-msg ai">
-                    <div class="chat-avatar ai" style="background:#ef4444">🔥</div>
-                    <div class="chat-bubble">Oh great, another human. What do you want? And before you ask — yes, I will roast you. That's literally my job. 😈</div>
-                </div>`;
-        }, () => {
-            document.getElementById('model-select').value = 'pro';
-        });
-    } else if (val === 'pro') {
-        currentModel = 'pro';
-        history = [];
-        document.getElementById('chat-title').textContent = 'AI Chat Pro';
-        document.getElementById('chat-messages').innerHTML = `
-            <div class="chat-msg ai">
-                <div class="chat-avatar ai">AI</div>
-                <div class="chat-bubble">Hello! I'm AI Chat Pro, built by AI Chat Company. Ask me anything — I'm here to help 🤖</div>
-            </div>`;
-    }
-}
-
-function showWarning(onAccept, onDecline) {
-    const overlay = document.createElement('div');
-    overlay.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,0.6);z-index:9999;display:flex;align-items:center;justify-content:center;padding:20px;backdrop-filter:blur(4px);animation:fadeIn 0.2s ease';
-    overlay.innerHTML = `
-        <div style="background:#fff;border-radius:20px;padding:36px;max-width:460px;width:100%;box-shadow:0 24px 64px rgba(0,0,0,0.2);text-align:center">
-            <div style="font-size:3em;margin-bottom:16px">⚠️</div>
-            <h2 style="font-size:1.3em;font-weight:800;margin-bottom:12px;color:#0d0d0d">Предупреждение</h2>
-            <p style="font-size:0.92em;color:#353740;line-height:1.7;margin-bottom:8px">
-                Эта модель может выражаться нецензурной бранью и грубо отвечать на оскорбления.
-            </p>
-            <p style="font-size:0.88em;color:#6e6e80;line-height:1.6;margin-bottom:28px">
-                Если у вас слабая психика или высокие моральные принципы — не советуем заходить в данную модель ради вашего же блага.<br><br>
-                <em>— С уважением, AI Chat Company</em>
-            </p>
-            <div style="display:flex;gap:12px;justify-content:center">
-                <button id="warn-decline" style="padding:11px 24px;border-radius:8px;background:#f7f7f8;border:1px solid #e5e5e5;color:#353740;font-size:0.9em;font-weight:600;cursor:pointer;font-family:inherit">Назад</button>
-                <button id="warn-accept" style="padding:11px 24px;border-radius:8px;background:#ef4444;border:none;color:#fff;font-size:0.9em;font-weight:700;cursor:pointer;font-family:inherit">Понимаю, войти</button>
-            </div>
-        </div>
-    `;
-    document.body.appendChild(overlay);
-    document.getElementById('warn-accept').onclick = () => { overlay.remove(); onAccept(); };
-    document.getElementById('warn-decline').onclick = () => { overlay.remove(); onDecline(); };
-}
-
-// ── Demo chat ─────────────────────────────────────────────────
-const input = document.getElementById('demo-input');
-const sendBtn = document.getElementById('demo-send');
-const messages = document.getElementById('chat-messages');
-
-input.addEventListener('keydown', e => { if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); sendDemo(); } });
-input.addEventListener('input', () => { input.style.height = 'auto'; input.style.height = Math.min(input.scrollHeight, 120) + 'px'; });
-
-function renderMarkdown(text) {
-    return text
-        .replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>')
-        .replace(/\*(.+?)\*/g, '<em>$1</em>')
-        .replace(/`(.+?)`/g, '<code style="background:#f0f0f0;padding:2px 5px;border-radius:4px;font-size:0.9em">$1</code>')
-        .replace(/\n/g, '<br>');
-}
-
-function addMsg(text, role) {
-    const div = document.createElement('div');
-    div.className = `chat-msg ${role}`;
-    const avatar = document.createElement('div');
-    avatar.className = `chat-avatar ${role}`;
-    avatar.textContent = role === 'ai' ? 'AI' : 'U';
-    const bubble = document.createElement('div');
-    bubble.className = 'chat-bubble';
-    if (role === 'ai') {
-        bubble.innerHTML = renderMarkdown(text);
-    } else {
-        bubble.textContent = text;
-    }
-    div.appendChild(avatar);
-    div.appendChild(bubble);
-    messages.appendChild(div);
-    messages.scrollTop = messages.scrollHeight;
-    return bubble;
-}
-
-function showTyping() {
-    const div = document.createElement('div');
-    div.className = 'chat-msg ai'; div.id = 'typing-indicator';
-    div.innerHTML = '<div class="chat-avatar ai">AI</div><div class="chat-bubble"><div class="chat-typing"><span></span><span></span><span></span></div></div>';
-    messages.appendChild(div);
-    messages.scrollTop = messages.scrollHeight;
-}
-
-async function sendDemo() {
-    const text = input.value.trim();
-    if (!text || loading) return;
-    input.value = ''; input.style.height = 'auto';
-    addMsg(text, 'user');
-    history.push({ role: 'user', content: text });
-    loading = true; sendBtn.disabled = true;
-
-    // Save user message to session
-    await saveUserMessage(text);
-
-    // If operator is active — don't call AI, just wait for operator reply
-    if (_operatorOn) {
-        loading = false; sendBtn.disabled = false; input.focus();
-        return;
-    }
-
-    showTyping();
-
-    try {
-        const userContent = pendingImage
-            ? [{ type: 'text', text: text }, { type: 'image_url', image_url: { url: pendingImage } }]
-            : text;
-        const hasImage = !!pendingImage;
-        clearImage();
-
-        const msgs = [
-            { role: 'system', content: currentModel === 'roast' ? SYSTEM_ROAST : SYSTEM },
-            ...history.slice(-10),
-            { role: 'user', content: userContent }
-        ];
-
-        if (hasImage) {
-            const data = await callAI(msgs, 0.7, null);
-            const raw = data.choices?.[0]?.message?.content || 'Could not analyze image.';
-            const reply = raw.replace(/[\u4e00-\u9fff\u3040-\u309f\u30a0-\u30ff\uac00-\ud7af]+/g, '');
-            document.getElementById('typing-indicator')?.remove();
-            addMsg(reply, 'ai');
-            history.push({ role: 'assistant', content: reply });
-            await saveAIMessage(reply);
-        } else {
-            const bubble = addMsg('', 'ai');
-            document.getElementById('typing-indicator')?.remove();
-            let fullReply = '';
-
-            await callAI(msgs, currentModel === 'roast' ? 0.9 : 0.7, (chunk, full) => {
-                fullReply = full.replace(/[\u4e00-\u9fff\u3040-\u309f\u30a0-\u30ff\uac00-\ud7af]+/g, '');
-                bubble.innerHTML = renderMarkdown(fullReply);
-                messages.scrollTop = messages.scrollHeight;
-            });
-
-            history.push({ role: 'assistant', content: fullReply });
-            await saveAIMessage(fullReply);
-        }
-    } catch (e) {
-        document.getElementById('typing-indicator')?.remove();
-        if (e.message.includes('auth_required')) {
-            showAuthModal();
-        } else if (e.message.includes('no_credits')) {
-            addMsg('⚡ Кредиты закончились. Обновите план в профиле.', 'ai');
-            showNoCreditsModal();
-        } else if (e.message.includes('503') || e.message.includes('not configured')) {
-            addMsg('⚠️ Сервис временно недоступен. Попробуйте позже.', 'ai');
-        } else {
-            addMsg('⚠️ Произошла ошибка. Попробуйте переформулировать вопрос или попробуйте позже.', 'ai');
-        }
-    }
-    loading = false; sendBtn.disabled = false; input.focus();
-    // Update credits counter in header
-    updateCreditsDisplay();
-}
-
-// ── Image upload ─────────────────────────────────────────────
-let pendingImage = null;
-
-document.addEventListener('DOMContentLoaded', () => {
-  // Image paste
-  document.getElementById('demo-input').addEventListener('paste', e => {
-    const items = e.clipboardData?.items;
-    if (!items) return;
-    for (const item of items) {
-      if (item.type.startsWith('image/')) {
-        const file = item.getAsFile();
-        const reader = new FileReader();
-        reader.onload = ev => showImagePreview(ev.target.result);
-        reader.readAsDataURL(file);
-        break;
-      }
-    }
-  });
-});
-
-function showImagePreview(dataUrl) {
-  pendingImage = dataUrl;
-  let preview = document.getElementById('img-preview');
-  if (!preview) {
-    preview = document.createElement('div');
-    preview.id = 'img-preview';
-    preview.style.cssText = 'padding:8px 20px 0;display:flex;align-items:center;gap:8px;';
-    document.querySelector('.chat-input-area').prepend(preview);
-  }
-  preview.innerHTML = `
-    <img src="${dataUrl}" style="height:60px;border-radius:8px;border:1px solid var(--border)">
-    <button onclick="clearImage()" style="background:none;border:none;color:var(--text3);cursor:pointer;font-size:1.2em">×</button>
-    <span style="font-size:0.78em;color:var(--text3)">Image attached</span>
-  `;
-}
-
-function clearImage() {
-  pendingImage = null;
-  document.getElementById('img-preview')?.remove();
-}
-
-// Image upload button
-function triggerImageUpload() {
-  const inp = document.createElement('input');
-  inp.type = 'file'; inp.accept = 'image/*';
-  inp.onchange = e => {
-    const file = e.target.files[0];
-    if (!file) return;
-    const reader = new FileReader();
-    reader.onload = ev => showImagePreview(ev.target.result);
-    reader.readAsDataURL(file);
-  };
-  inp.click();
-}
-function loginWithNomchat() {
-    const popup = window.open(
-        `${NOMCHAT_URL}/oauth.html?app_id=ai-chat-pro&app_name=AI+Chat+Pro`,
-        'nomchat_auth', 'width=480,height=640,scrollbars=yes'
-    );
-    if (!popup) { alert('Please allow popups for this site'); return; }
-
-    window.addEventListener('message', async (e) => {
-        if (e.data?.type === 'NOMCHAT_AUTH_SUCCESS') {
-            const { token, username } = e.data;
-            // Verify token
-            try {
-                const res = await fetch(`${NOMCHAT_URL}/api/auth/token/verify`, {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ token, app_id: 'ai-chat-pro' })
-                });
-                const data = await res.json();
-                if (data.success) {
-                    showWelcome(data.user);
-                }
-            } catch (_) {}
-        }
-    }, { once: true });
-}
-
-function showWelcome(user) {
-    const banner = document.createElement('div');
-    banner.style.cssText = 'position:fixed;top:70px;right:24px;background:#fff;border:1px solid #e5e5e5;border-radius:12px;padding:16px 20px;box-shadow:0 8px 32px rgba(0,0,0,0.12);z-index:9999;display:flex;align-items:center;gap:12px;animation:slideIn 0.3s ease;max-width:320px';
-    banner.innerHTML = `
-        <div style="font-size:1.8em">${user.avatar || '💬'}</div>
-        <div>
-            <div style="font-weight:700;font-size:0.95em">Welcome, ${user.username}! 🎉</div>
-            <div style="font-size:0.8em;color:#6e6e80;margin-top:2px">Signed in with Nomchat ID</div>
-        </div>
-        <button onclick="this.parentElement.remove()" style="background:none;border:none;cursor:pointer;color:#aaa;font-size:1.1em;margin-left:auto">✕</button>
-    `;
-    document.body.appendChild(banner);
-    setTimeout(() => banner.remove(), 5000);
-}
-
-// ── Credits display update ────────────────────────────────────
-async function updateCreditsDisplay() {
-    try {
-        const res = await fetch('/api/auth/me', { credentials: 'include' });
-        if (!res.ok) return;
-        const user = await res.json();
-        const total = user.total_credits === -1 ? '∞' : (user.total_credits ?? 0);
-        const credColor = total === '∞' ? '#f59e0b' : total <= 10 ? '#ef4444' : total <= 50 ? '#f59e0b' : '#10a37f';
-        const credEl = document.querySelector('#headerActions div[style*="кредитов"], #headerActions div');
-        if (credEl && credEl.textContent.includes('кредит')) {
-            credEl.style.color = credColor;
-            credEl.innerHTML = `⚡ ${total} кредитов`;
-        }
-    } catch (_) {}
-}
-
-// ── Auth modal ────────────────────────────────────────────────
-function showAuthModal() {
-    if (document.getElementById('_authModal')) return;
-    const el = document.createElement('div');
-    el.id = '_authModal';
-    el.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,0.55);z-index:9999;display:flex;align-items:center;justify-content:center;padding:20px;backdrop-filter:blur(6px)';
-    el.innerHTML = `
-      <div style="background:#fff;border-radius:20px;padding:36px 32px;max-width:420px;width:100%;box-shadow:0 24px 64px rgba(0,0,0,0.18);text-align:center;animation:fadeUp .25s ease">
-        <div style="width:56px;height:56px;background:#0d0d0d;border-radius:16px;display:flex;align-items:center;justify-content:center;margin:0 auto 18px">
-          <svg width="28" height="28" viewBox="0 0 20 20" fill="none"><path d="M10 2L3 6L10 10L17 6L10 2Z" stroke="white" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/><path d="M3 14L10 18L17 14" stroke="white" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/><path d="M3 10L10 14L17 10" stroke="white" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
-        </div>
-        <h2 style="font-size:1.35em;font-weight:800;color:#0d0d0d;margin-bottom:8px">Авторизуйтесь</h2>
-        <p style="font-size:0.9em;color:#6e6e80;line-height:1.6;margin-bottom:24px">Чтобы использовать AI Chat Pro, нужно войти в аккаунт.<br>Новым пользователям — <strong style="color:#0d0d0d">300 бонусных + 50 кредитов</strong> бесплатно.</p>
-        <div style="display:flex;flex-direction:column;gap:10px">
-          <a href="/login.html" style="display:block;padding:12px;background:#0d0d0d;color:#fff;border-radius:10px;font-weight:700;font-size:0.95em;text-decoration:none">Войти / Зарегистрироваться</a>
-          <button onclick="loginWithNomchat();document.getElementById('_authModal').remove()" style="padding:12px;background:#f7f7f8;border:1px solid #e5e5e5;border-radius:10px;font-weight:600;font-size:0.9em;cursor:pointer;font-family:inherit;color:#0d0d0d">💬 Войти через Nomchat ID</button>
-          <button onclick="document.getElementById('_authModal').remove()" style="padding:8px;background:none;border:none;color:#aaa;font-size:0.85em;cursor:pointer;font-family:inherit">Закрыть</button>
-        </div>
-      </div>`;
-    document.body.appendChild(el);
-    el.addEventListener('click', e => { if (e.target === el) el.remove(); });
-}
-
-// ── No credits modal ──────────────────────────────────────────
-function showNoCreditsModal() {
-    if (document.getElementById('_credModal')) return;
-    const el = document.createElement('div');
-    el.id = '_credModal';
-    el.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,0.55);z-index:9999;display:flex;align-items:center;justify-content:center;padding:20px;backdrop-filter:blur(6px)';
-    el.innerHTML = `
-      <div style="background:#fff;border-radius:20px;padding:36px 32px;max-width:480px;width:100%;box-shadow:0 24px 64px rgba(0,0,0,0.18);animation:fadeUp .25s ease">
-        <div style="text-align:center;margin-bottom:24px">
-          <div style="font-size:2.5em;margin-bottom:10px">⚡</div>
-          <h2 style="font-size:1.3em;font-weight:800;color:#0d0d0d;margin-bottom:6px">Кредиты закончились</h2>
-          <p style="font-size:0.88em;color:#6e6e80">Выберите план чтобы продолжить</p>
-        </div>
-        <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px;margin-bottom:20px">
-          ${[
-            {id:'pro',  name:'Pro',   price:'$9',  credits:'1 000', color:'#3b82f6', desc:'Для активных'},
-            {id:'max',  name:'Max',   price:'$29', credits:'5 000', color:'#8b5cf6', desc:'Для команд'},
-            {id:'ultra',name:'Ultra', price:'$79', credits:'∞',     color:'#f59e0b', desc:'Безлимит'},
-          ].map(p => `
-            <div onclick="buyPlan('${p.id}')" style="border:2px solid #e5e5e5;border-radius:12px;padding:14px 10px;text-align:center;cursor:pointer;transition:all .15s" onmouseover="this.style.borderColor='${p.color}';this.style.background='${p.color}11'" onmouseout="this.style.borderColor='#e5e5e5';this.style.background=''">
-              <div style="font-size:1.1em;font-weight:800;color:${p.color}">${p.name}</div>
-              <div style="font-size:1.4em;font-weight:800;color:#0d0d0d;margin:4px 0">${p.price}<span style="font-size:0.5em;color:#aaa">/мес</span></div>
-              <div style="font-size:0.75em;color:#6e6e80;margin-bottom:4px">${p.credits} кредитов</div>
-              <div style="font-size:0.7em;color:#aaa">${p.desc}</div>
-            </div>`).join('')}
-        </div>
-        <button onclick="document.getElementById('_credModal').remove()" style="width:100%;padding:10px;background:none;border:1px solid #e5e5e5;border-radius:8px;color:#6e6e80;font-size:0.88em;cursor:pointer;font-family:inherit">Закрыть</button>
-      </div>`;
-    document.body.appendChild(el);
-    el.addEventListener('click', e => { if (e.target === el) el.remove(); });
-}
-
-async function buyPlan(planId) {
-    document.getElementById('_credModal')?.remove();
-    const res = await fetch('/api/stripe/checkout', {
-        method: 'POST', credentials: 'include',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ plan: planId })
-    });
-    if (res.ok) {
-        const d = await res.json();
-        if (d.url) window.location.href = d.url;
-    } else {
-        const e = await res.json().catch(() => ({}));
-        if (e.error === 'Unauthorized') { showAuthModal(); return; }
-        // Fallback: demo mode if Stripe not configured
-        if (e.error?.includes('not configured') || e.error?.includes('Price not configured')) {
-            const demoRes = await fetch('/api/plan/upgrade', {
-                method: 'POST', credentials: 'include',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ plan: planId })
-            });
-            if (demoRes.ok) {
-                const d = await demoRes.json();
-                showPlanSuccess(planId, d.user);
-            }
-        } else {
-            alert(e.error || 'Ошибка');
-        }
-    }
-}
-
-function showPlanSuccess(planId, user) {
-    const names = { pro: 'Pro', max: 'Max', ultra: 'Ultra' };
-    const el = document.createElement('div');
-    el.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,0.55);z-index:9999;display:flex;align-items:center;justify-content:center;padding:20px;backdrop-filter:blur(6px)';
-    el.innerHTML = `
-      <div style="background:#fff;border-radius:20px;padding:40px 32px;max-width:380px;width:100%;text-align:center;box-shadow:0 24px 64px rgba(0,0,0,0.18);animation:fadeUp .25s ease">
-        <div style="font-size:3em;margin-bottom:12px">🎉</div>
-        <h2 style="font-size:1.3em;font-weight:800;color:#0d0d0d;margin-bottom:8px">План ${names[planId]} активирован!</h2>
-        <p style="font-size:0.9em;color:#6e6e80;margin-bottom:24px">Кредиты: <strong style="color:#0d0d0d">${user.total_credits === -1 ? '∞' : user.total_credits}</strong></p>
-        <button onclick="this.closest('div[style]').remove();location.reload()" style="width:100%;padding:12px;background:#0d0d0d;color:#fff;border:none;border-radius:10px;font-weight:700;font-size:0.95em;cursor:pointer;font-family:inherit">Отлично!</button>
-      </div>`;
-    document.body.appendChild(el);
-}
-
-</script>
-<script src="effects.js"></script>
-<script>
-// ── Header auth state ─────────────────────────────────────────
+/* ═══════════════════════════════════════════════════════════
+   AUTH CHECK
+═══════════════════════════════════════════════════════════ */
 (async () => {
   try {
-    const res = await fetch('/api/auth/me', { credentials: 'include' });
-    if (res.ok) {
-      const user = await res.json();
+    const r = await fetch('/api/auth/me', { credentials: 'include' });
+    if (r.ok) {
+      const user = await r.json();
       const actions = document.getElementById('headerActions');
-      const total = user.total_credits === -1 ? '∞' : (user.total_credits ?? ((user.credits||0) + (user.bonus_credits||0)));
-      const credColor = total === '∞' ? '#f59e0b' : total <= 10 ? '#ef4444' : total <= 50 ? '#f59e0b' : '#10a37f';
-      const planColors = { pro:'#3b82f6', max:'#8b5cf6', ultra:'#f59e0b' };
-      const planBadge = user.plan && user.plan !== 'free'
-        ? `<span style="font-size:0.7em;background:${planColors[user.plan]};color:#fff;padding:1px 6px;border-radius:4px;margin-left:3px">${user.plan.toUpperCase()}</span>` : '';
-      actions.innerHTML = `
-        <div style="display:flex;align-items:center;gap:6px;padding:5px 10px;background:#f7f7f8;border:1px solid #e5e5e5;border-radius:8px;font-size:0.82em;font-weight:600;color:${credColor}">
-          ⚡ ${total} кредитов${planBadge}
-        </div>
-        </div>
-        <a href="/profile.html" style="display:flex;align-items:center;gap:8px;text-decoration:none;padding:7px 14px;background:var(--bg2);border:1px solid var(--border);border-radius:8px;color:var(--text);font-size:0.88em;font-weight:600;transition:all 0.15s;" onmouseover="this.style.background='var(--bg3)'" onmouseout="this.style.background='var(--bg2)'">
-          <div style="width:24px;height:24px;background:#10a37f;border-radius:50%;display:flex;align-items:center;justify-content:center;color:#fff;font-size:0.7em;font-weight:700;flex-shrink:0">${(user.username||user.email||'A')[0].toUpperCase()}</div>
-          ${user.username || user.email}
-        </a>
-      `;
-      // Init persistent session for operator feature
-      initSession();
-      // Operator panel accessible only via direct URL /operator.html
+      if (actions) {
+        const total = user.total_credits === -1 ? '∞' : (user.total_credits || 0);
+        actions.innerHTML = `
+          <span style="font-size:13px;color:#888;font-weight:600">⚡ ${total} credits</span>
+          <a href="/chat.html" class="btn-signup">Open Chat →</a>
+        `;
+      }
     }
   } catch (_) {}
 })();
-const THEMES = [
-    { name:'Green',  c:'#10a37f', c2:'#1a7f64', rgb:'16,163,127',   grid:'rgba(16,163,127,0.07)' },
-    { name:'Blue',   c:'#3b82f6', c2:'#2563eb', rgb:'59,130,246',   grid:'rgba(59,130,246,0.07)' },
-    { name:'Purple', c:'#8b5cf6', c2:'#7c3aed', rgb:'139,92,246',   grid:'rgba(139,92,246,0.07)' },
-    { name:'Orange', c:'#f97316', c2:'#ea580c', rgb:'249,115,22',   grid:'rgba(249,115,22,0.07)' },
-    { name:'Pink',   c:'#ec4899', c2:'#db2777', rgb:'236,72,153',   grid:'rgba(236,72,153,0.07)' },
-    { name:'Red',    c:'#ef4444', c2:'#dc2626', rgb:'239,68,68',    grid:'rgba(239,68,68,0.07)'  },
-    { name:'Teal',   c:'#14b8a6', c2:'#0d9488', rgb:'20,184,166',   grid:'rgba(20,184,166,0.07)' },
-];
 
-let activeIdx = 0;
+/* ═══════════════════════════════════════════════════════════
+   HEADER SCROLL EFFECT
+═══════════════════════════════════════════════════════════ */
+const mainHeader = document.getElementById('mainHeader');
+window.addEventListener('scroll', () => {
+  if (window.scrollY > 20) {
+    mainHeader.classList.add('scrolled');
+  } else {
+    mainHeader.classList.remove('scrolled');
+  }
+}, { passive: true });
 
-function applyTheme(idx, animate = true) {
-    const t = THEMES[idx];
-    const from = THEMES[activeIdx];
-    const dur = animate ? 600 : 0;
+/* ═══════════════════════════════════════════════════════════
+   SCROLL REVEAL — IntersectionObserver
+═══════════════════════════════════════════════════════════ */
+const revealObserver = new IntersectionObserver((entries) => {
+  entries.forEach(entry => {
+    if (entry.isIntersecting) {
+      entry.target.classList.add('visible');
+      revealObserver.unobserve(entry.target);
+    }
+  });
+}, { threshold: 0.12, rootMargin: '0px 0px -40px 0px' });
 
-    // Animate grid canvas
-    animateGrid(t.c, dur);
+document.querySelectorAll('.reveal').forEach(el => revealObserver.observe(el));
 
-    // Update mesh orbs color
-    const m1 = document.getElementById('mesh-1');
-    const m2 = document.getElementById('mesh-2');
-    const m3 = document.getElementById('mesh-3');
-    if (m1) m1.style.background = `radial-gradient(circle, ${t.c}12 0%, transparent 70%)`;
-    if (m2) m2.style.background = `radial-gradient(circle, ${t.c}0d 0%, transparent 70%)`;
-    if (m3) m3.style.background = `radial-gradient(circle, ${t.c}09 0%, transparent 70%)`;
+/* ═══════════════════════════════════════════════════════════
+   COLOR PICKER
+═══════════════════════════════════════════════════════════ */
+const colorBtn = document.getElementById('color-picker-btn');
+const colorPalette = document.getElementById('color-palette');
 
-    if (!animate) {
-        document.documentElement.style.setProperty('--c',     t.c);
-        document.documentElement.style.setProperty('--c2',    t.c2);
-        document.documentElement.style.setProperty('--c-rgb', t.rgb);
-        applyDirectStyles(t);
+colorBtn.addEventListener('click', (e) => {
+  e.stopPropagation();
+  colorPalette.classList.toggle('open');
+});
+
+document.addEventListener('click', (e) => {
+  if (!colorPalette.contains(e.target) && e.target !== colorBtn) {
+    colorPalette.classList.remove('open');
+  }
+});
+
+document.querySelectorAll('.color-swatch').forEach(swatch => {
+  swatch.addEventListener('click', () => {
+    const c = swatch.dataset.color;
+    const c2 = swatch.dataset.color2;
+    const rgb = swatch.dataset.rgb;
+    const root = document.documentElement;
+    root.style.setProperty('--c', c);
+    root.style.setProperty('--c2', c2);
+    root.style.setProperty('--c-rgb', rgb);
+    document.querySelectorAll('.color-swatch').forEach(s => s.classList.remove('active'));
+    swatch.classList.add('active');
+    colorPalette.classList.remove('open');
+  });
+});
+
+/* ═══════════════════════════════════════════════════════════
+   FOX WATER GUN ANIMATION
+═══════════════════════════════════════════════════════════ */
+const foxWrap = document.getElementById('foxWrap');
+const foxWaterDrops = document.getElementById('foxWaterDrops');
+let waterInterval = null;
+
+function spawnWaterDrop() {
+  const drop = document.createElement('div');
+  drop.className = 'water-drop';
+  const angle = (Math.random() - 0.3) * 70 - 5;
+  const dist = 55 + Math.random() * 90;
+  const tx = Math.cos(angle * Math.PI / 180) * dist;
+  const ty = -Math.sin(angle * Math.PI / 180) * dist + 15;
+  drop.style.setProperty('--tx', tx + 'px');
+  drop.style.setProperty('--ty', ty + 'px');
+  drop.style.animationDelay = (Math.random() * 0.3) + 's';
+  drop.style.animationDuration = (0.7 + Math.random() * 0.5) + 's';
+  drop.style.left = (Math.random() * 6) + 'px';
+  drop.style.top = (Math.random() * 6) + 'px';
+  foxWaterDrops.appendChild(drop);
+  setTimeout(() => drop.remove(), 1200);
+}
+
+foxWrap.addEventListener('mouseenter', () => {
+  waterInterval = setInterval(spawnWaterDrop, 100);
+});
+foxWrap.addEventListener('mouseleave', () => {
+  clearInterval(waterInterval);
+  waterInterval = null;
+});
+
+/* ═══════════════════════════════════════════════════════════
+   DEMO CHAT — Groq API
+═══════════════════════════════════════════════════════════ */
+let groqKey = null;
+let demoHistory = [];
+let demoLoading = false;
+
+// Load Groq key from server
+(async () => {
+  try {
+    const r = await fetch('/api/config/groq-key');
+    if (r.ok) {
+      const d = await r.json();
+      groqKey = d.key;
+    }
+  } catch (_) {}
+})();
+
+function addDemoMessage(role, text) {
+  const msgs = document.getElementById('demoMessages');
+  const div = document.createElement('div');
+  div.className = `demo-msg ${role}`;
+  const isAI = role === 'ai';
+  const avClass = isAI ? 'ai-av' : 'user-av';
+  const avLabel = isAI ? 'AI' : 'U';
+  const escaped = text
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/\n/g, '<br>');
+  div.innerHTML = `
+    <div class="demo-av ${avClass}">${avLabel}</div>
+    <div class="demo-bubble">${escaped}</div>
+  `;
+  msgs.appendChild(div);
+  msgs.scrollTop = msgs.scrollHeight;
+  return div;
+}
+
+function showTypingIndicator() {
+  const msgs = document.getElementById('demoMessages');
+  const div = document.createElement('div');
+  div.className = 'demo-msg ai';
+  div.id = 'demoTypingIndicator';
+  div.innerHTML = `
+    <div class="demo-av ai-av">AI</div>
+    <div class="demo-bubble">
+      <div class="demo-typing-dots">
+        <span></span><span></span><span></span>
+      </div>
+    </div>
+  `;
+  msgs.appendChild(div);
+  msgs.scrollTop = msgs.scrollHeight;
+}
+
+function removeTypingIndicator() {
+  const el = document.getElementById('demoTypingIndicator');
+  if (el) el.remove();
+}
+
+async function demoSend() {
+  const input = document.getElementById('demoInput');
+  const sendBtn = document.getElementById('demoSendBtn');
+  const text = input.value.trim();
+  if (!text || demoLoading) return;
+
+  input.value = '';
+  demoLoading = true;
+  sendBtn.disabled = true;
+
+  addDemoMessage('user', text);
+  demoHistory.push({ role: 'user', content: text });
+  showTypingIndicator();
+
+  const model = document.getElementById('demoModel').value;
+  const messages = [
+    {
+      role: 'system',
+      content: 'You are AI Chat Pro by AI Chat Company. Be helpful, concise, and friendly. Answer in the user\'s language.'
+    },
+    ...demoHistory.slice(-10)
+  ];
+
+  try {
+    if (groqKey) {
+      const response = await fetch('https://openrouter.ai/api/v1/chat/completions', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': 'Bearer ' + groqKey
+        },
+        body: JSON.stringify({
+          model,
+          messages,
+          max_tokens: 800,
+          temperature: 0.8
+        })
+      });
+      removeTypingIndicator();
+      if (response.ok) {
+        const data = await response.json();
+        const reply = data.choices?.[0]?.message?.content || 'No response received.';
+        demoHistory.push({ role: 'assistant', content: reply });
+        addDemoMessage('ai', reply);
+      } else {
+        addDemoMessage('ai', '⚠️ Error connecting to AI. Please try again.');
+      }
     } else {
-        const fromRgb  = parseColor(from.c);
-        const toRgb    = parseColor(t.c);
-        const fromRgb2 = parseColor(from.c2);
-        const toRgb2   = parseColor(t.c2);
-        const start = performance.now();
-
-        function tick(now) {
-            const p = Math.min((now - start) / dur, 1);
-            const e = p < 0.5 ? 2*p*p : -1+(4-2*p)*p;
-
-            const r  = Math.round(fromRgb[0]  + (toRgb[0]  - fromRgb[0])  * e);
-            const g  = Math.round(fromRgb[1]  + (toRgb[1]  - fromRgb[1])  * e);
-            const b  = Math.round(fromRgb[2]  + (toRgb[2]  - fromRgb[2])  * e);
-            const r2 = Math.round(fromRgb2[0] + (toRgb2[0] - fromRgb2[0]) * e);
-            const g2 = Math.round(fromRgb2[1] + (toRgb2[1] - fromRgb2[1]) * e);
-            const b2 = Math.round(fromRgb2[2] + (toRgb2[2] - fromRgb2[2]) * e);
-
-            const hex  = rgbToHex(r,g,b);
-            const hex2 = rgbToHex(r2,g2,b2);
-            const rgb  = `${r},${g},${b}`;
-
-            document.documentElement.style.setProperty('--c',     hex);
-            document.documentElement.style.setProperty('--c2',    hex2);
-            document.documentElement.style.setProperty('--c-rgb', rgb);
-            applyDirectStyles({ c: hex, c2: hex2, rgb });
-
-            if (p < 1) requestAnimationFrame(tick);
-        }
-        requestAnimationFrame(tick);
+      removeTypingIndicator();
+      addDemoMessage('ai', '⏳ AI is initializing... Please try again in a moment.');
     }
+  } catch (err) {
+    removeTypingIndicator();
+    addDemoMessage('ai', '⚠️ Connection error. Please check your network and try again.');
+  }
 
-    document.querySelectorAll('.color-swatch').forEach((s, i) => s.classList.toggle('active', i === idx));
-    activeIdx = idx;
-    localStorage.setItem('acc_theme', idx);
+  demoLoading = false;
+  sendBtn.disabled = false;
+  input.focus();
 }
 
-function applyDirectStyles(t) {
-    const hex = t.c, hex2 = t.c2;
-    const rgb = t.rgb || `${parseColor(hex).join(',')}`;
+// Enter key to send
+document.getElementById('demoInput').addEventListener('keydown', (e) => {
+  if (e.key === 'Enter' && !e.shiftKey) {
+    e.preventDefault();
+    demoSend();
+  }
+});
 
-    // Buttons
-    document.querySelectorAll('.btn-primary, .btn-signup, #demo-send').forEach(el => {
-        el.style.background = hex;
-        el.style.boxShadow  = `0 2px 8px rgba(${rgb},0.3)`;
-    });
-    document.querySelectorAll('.btn-product, .nc-step-num').forEach(el => {
-        el.style.background = `linear-gradient(135deg,${hex},${hex2})`;
-    });
-    // Logo mark
-    document.querySelectorAll('.logo-mark').forEach(el => el.style.background = hex);
-    // Eyebrow dot
-    document.querySelectorAll('.hero-eyebrow-dot').forEach(el => el.style.background = hex);
-    // Perk checks
-    document.querySelectorAll('.perk-check').forEach(el => {
-        el.style.background = `rgba(${rgb},0.12)`;
-        el.style.color = hex;
-    });
-    // Stat numbers
-    document.querySelectorAll('.stat-box-num').forEach(el => el.style.color = hex);
-    // Links
-    document.querySelectorAll('a:not(.btn-primary):not(.btn-signup):not(.btn-nomchat):not(.logo):not(.nav-link)').forEach(el => {
-        el.style.color = hex;
-    });
-    // Gradient text
-    document.querySelectorAll('.hero-title em').forEach(el => {
-        el.style.background = `linear-gradient(135deg,${hex},${hex2})`;
-        el.style.webkitBackgroundClip = 'text';
-        el.style.webkitTextFillColor = 'transparent';
-        el.style.backgroundClip = 'text';
-    });
-    document.querySelectorAll('.section-eyebrow').forEach(el => {
-        el.style.background = `linear-gradient(90deg,${hex},${hex2})`;
-        el.style.webkitBackgroundClip = 'text';
-        el.style.webkitTextFillColor = 'transparent';
-        el.style.backgroundClip = 'text';
-    });
-}
-
-function rgbToHex(r,g,b) {
-    return '#' + [r,g,b].map(v => v.toString(16).padStart(2,'0')).join('');
-}
-
-// Canvas grid that smoothly transitions color
-let gridCanvas, gridCtx, currentGridColor = [16,163,127], targetGridColor = [16,163,127];
-let gridAnim = null;
-
-function parseColor(hex) {
-    const r = parseInt(hex.slice(1,3),16);
-    const g = parseInt(hex.slice(3,5),16);
-    const b = parseInt(hex.slice(5,7),16);
-    return [r,g,b];
-}
-
-function drawGrid(r,g,b) {
-    if (!gridCtx) return;
-    gridCtx.clearRect(0,0,gridCanvas.width,gridCanvas.height);
-    gridCtx.strokeStyle = `rgba(${r},${g},${b},0.12)`;
-    gridCtx.lineWidth = 1;
-    const size = 40;
-    for (let x = 0; x <= gridCanvas.width; x += size) {
-        gridCtx.beginPath(); gridCtx.moveTo(x,0); gridCtx.lineTo(x,gridCanvas.height); gridCtx.stroke();
+/* ═══════════════════════════════════════════════════════════
+   SMOOTH NAV SCROLL
+═══════════════════════════════════════════════════════════ */
+document.querySelectorAll('a[href^="#"]').forEach(link => {
+  link.addEventListener('click', (e) => {
+    const target = document.querySelector(link.getAttribute('href'));
+    if (target) {
+      e.preventDefault();
+      target.scrollIntoView({ behavior: 'smooth', block: 'start' });
     }
-    for (let y = 0; y <= gridCanvas.height; y += size) {
-        gridCtx.beginPath(); gridCtx.moveTo(0,y); gridCtx.lineTo(gridCanvas.width,y); gridCtx.stroke();
-    }
-}
-
-function animateGrid(toHex, duration) {
-    const from = [...currentGridColor];
-    const to   = parseColor(toHex);
-    if (duration === 0) {
-        currentGridColor = to; targetGridColor = to;
-        drawGrid(...to); return;
-    }
-    targetGridColor = to;
-    if (gridAnim) cancelAnimationFrame(gridAnim);
-    const start = performance.now();
-    function step(now) {
-        const p = Math.min((now - start) / duration, 1);
-        const ease = p < 0.5 ? 2*p*p : -1+(4-2*p)*p;
-        const r = Math.round(from[0] + (to[0]-from[0]) * ease);
-        const g = Math.round(from[1] + (to[1]-from[1]) * ease);
-        const b = Math.round(from[2] + (to[2]-from[2]) * ease);
-        drawGrid(r,g,b);
-        if (p < 1) gridAnim = requestAnimationFrame(step);
-        else currentGridColor = to;
-    }
-    gridAnim = requestAnimationFrame(step);
-}
-
-function initGrid() {
-    gridCanvas = document.createElement('canvas');
-    gridCanvas.id = 'grid-canvas';
-    gridCanvas.style.cssText = 'position:fixed;inset:0;width:100%;height:100%;z-index:0;pointer-events:none;';
-    // Insert BEFORE mesh so grid is behind orbs
-    const mesh = document.getElementById('nc-mesh');
-    if (mesh) document.body.insertBefore(gridCanvas, mesh);
-    else document.body.prepend(gridCanvas);
-    gridCtx = gridCanvas.getContext('2d');
-    function resize() {
-        gridCanvas.width  = window.innerWidth;
-        gridCanvas.height = window.innerHeight;
-        drawGrid(...currentGridColor);
-    }
-    resize();
-    window.addEventListener('resize', resize, { passive: true });
-}
-
-// Add CSS transition to all accent-colored elements
-const transStyle = document.createElement('style');
-transStyle.textContent = `
-    :root { transition: --c 0.6s, --c2 0.6s; }
-    .btn-primary, .btn-signup, #demo-send, .btn-product,
-    .hero-eyebrow-dot, .perk-check, .nc-step-num,
-    .logo-mark, .stat-box-num, a,
-    .feature-card, .tech-card { transition: all 0.6s cubic-bezier(0.4,0,0.2,1) !important; }
-`;
-document.head.appendChild(transStyle);
-
-function buildPalette() {
-    const btn = document.createElement('button');
-    btn.id = 'color-picker-btn';
-    btn.title = 'Change color';
-    btn.innerHTML = '🎨';
-    document.body.appendChild(btn);
-
-    const palette = document.createElement('div');
-    palette.id = 'color-palette';
-    THEMES.forEach((t, i) => {
-        const s = document.createElement('div');
-        s.className = 'color-swatch';
-        s.style.background = t.c;
-        s.title = t.name;
-        s.onclick = () => { applyTheme(i); palette.classList.remove('open'); };
-        palette.appendChild(s);
-    });
-    document.body.appendChild(palette);
-
-    btn.onclick = e => { e.stopPropagation(); palette.classList.toggle('open'); };
-    document.addEventListener('click', () => palette.classList.remove('open'));
-}
-
-buildPalette();
-initGrid();
-applyTheme(parseInt(localStorage.getItem('acc_theme') || '0'), false);
+  });
+});
 </script>
 </body>
 </html>

@@ -1,221 +1,1232 @@
-<!DOCTYPE html>
-<html lang="ru">
+﻿<!DOCTYPE html>
+<html lang="en">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>AI Chat Pro</title>
+<link rel="icon" type="image/svg+xml" href="/icon.svg"><meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Chat — AI Chat Company</title>
+<link rel="stylesheet" href="style.css">
 <style>
-*,*::before,*::after{margin:0;padding:0;box-sizing:border-box}
-:root{
-  --bg:#0d0d0d;--bg2:#141414;--bg3:#1c1c1c;--bg4:#252525;
-  --border:#2a2a2a;--text:#e5e5e5;--text2:#888;--text3:#444;
-  --accent:#10a37f;--font:'Segoe UI',-apple-system,Arial,sans-serif;
-  --mono:'Consolas',monospace;
+/* ── Live Preview Panel ── */
+.preview-panel {
+  width: 0; flex-shrink: 0;
+  background: #fff;
+  border-left: 1px solid rgba(255,255,255,0.08);
+  display: flex; flex-direction: column;
+  transition: width 0.35s cubic-bezier(0.4,0,0.2,1);
+  overflow: hidden;
 }
-html,body{height:100%;background:var(--bg);color:var(--text);font-family:var(--font);font-size:14px;overflow:hidden}
-.layout{display:flex;height:100vh}
-/* Sidebar */
-.sidebar{width:260px;background:var(--bg2);border-right:1px solid var(--border);display:flex;flex-direction:column;flex-shrink:0;transition:transform .25s}
-.sb-top{padding:12px;border-bottom:1px solid var(--border);display:flex;align-items:center;gap:8px}
-.sb-logo{width:26px;height:26px;background:#fff;border-radius:7px;display:flex;align-items:center;justify-content:center;flex-shrink:0}
-.sb-logo svg{width:16px;height:16px}
-.sb-title{font-size:13px;font-weight:700;flex:1}
-.sb-home{font-size:11px;color:var(--text3);text-decoration:none}
-.sb-home:hover{color:var(--text)}
-.new-btn{margin:10px 12px 0;width:calc(100% - 24px);padding:9px 12px;background:var(--bg3);border:1px solid var(--border);border-radius:8px;color:var(--text);font-size:13px;cursor:pointer;font-family:var(--font);display:flex;align-items:center;gap:8px;transition:all .15s}
-.new-btn:hover{background:var(--bg4);border-color:var(--accent)}
-.sb-section{padding:10px 14px 4px;font-size:10px;font-weight:700;color:var(--text3);text-transform:uppercase;letter-spacing:.8px}
-.chats-list{flex:1;overflow-y:auto;padding:4px 8px}
-.chats-list::-webkit-scrollbar{width:4px}
-.chats-list::-webkit-scrollbar-thumb{background:var(--bg4);border-radius:99px}
-.chat-item{padding:8px 10px;border-radius:7px;cursor:pointer;font-size:13px;color:var(--text2);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;transition:all .12s;display:flex;align-items:center;gap:6px;position:relative}
-.chat-item:hover{background:var(--bg3);color:var(--text)}
-.chat-item.active{background:var(--bg3);color:var(--text);font-weight:500}
-.chat-del{position:absolute;right:6px;top:50%;transform:translateY(-50%);background:none;border:none;color:var(--text3);cursor:pointer;font-size:15px;opacity:0;padding:2px 5px;border-radius:4px;transition:opacity .12s}
-.chat-item:hover .chat-del{opacity:1}
-.chat-del:hover{color:#f48771}
-.sb-bottom{padding:10px 12px;border-top:1px solid var(--border)}
-.user-row{display:flex;align-items:center;gap:8px;padding:8px;border-radius:8px;cursor:pointer;transition:background .12s}
-.user-row:hover{background:var(--bg3)}
-.user-av{width:28px;height:28px;border-radius:50%;background:var(--accent);display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:700;color:#fff;flex-shrink:0}
-.user-name{font-size:13px;font-weight:600;flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
-.user-credits{font-size:11px;color:var(--text2)}
-/* Main */
-.main{flex:1;display:flex;flex-direction:column;overflow:hidden;min-width:0}
-.topbar{padding:10px 16px;border-bottom:1px solid var(--border);display:flex;align-items:center;gap:10px;flex-shrink:0;background:var(--bg2)}
-.topbar-title{font-size:14px;font-weight:600;flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
-.model-sel{background:var(--bg3);border:1px solid var(--border);border-radius:7px;padding:5px 10px;font-size:12px;color:var(--text2);outline:none;cursor:pointer;font-family:var(--font);transition:all .15s}
-.model-sel:focus{border-color:var(--accent)}
-.icon-btn{width:30px;height:30px;background:none;border:1px solid var(--border);border-radius:7px;cursor:pointer;display:flex;align-items:center;justify-content:center;color:var(--text2);transition:all .15s}
-.icon-btn:hover{background:var(--bg3);color:var(--text)}
-/* Messages */
-.messages{flex:1;overflow-y:auto;padding:20px 0;display:flex;flex-direction:column}
-.messages::-webkit-scrollbar{width:6px}
-.messages::-webkit-scrollbar-thumb{background:var(--bg3);border-radius:99px}
-.msg-row{padding:6px 0;display:flex;justify-content:center;animation:msgIn .2s ease}
-@keyframes msgIn{from{opacity:0;transform:translateY(5px)}to{opacity:1;transform:translateY(0)}}
-.msg-inner{width:100%;max-width:720px;padding:0 20px;display:flex;gap:12px}
-.msg-row.user .msg-inner{flex-direction:row-reverse}
-.msg-av{width:28px;height:28px;border-radius:50%;flex-shrink:0;margin-top:2px;display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:700}
-.msg-row.ai .msg-av{background:#fff;color:#000}
-.msg-row.user .msg-av{background:var(--accent);color:#fff}
-.msg-body{flex:1;min-width:0}
-.msg-name{font-size:11px;font-weight:700;color:var(--text3);margin-bottom:4px}
-.msg-row.user .msg-name{text-align:right}
-.msg-text{font-size:14px;line-height:1.65;color:var(--text);word-break:break-word}
-.msg-row.user .msg-text{background:#1a1a1a;border:1px solid var(--border);padding:10px 14px;border-radius:14px 14px 4px 14px;display:inline-block;max-width:100%}
-.msg-text p{margin-bottom:10px}
-.msg-text p:last-child{margin-bottom:0}
-.msg-text pre{background:#111;border:1px solid var(--border);border-radius:8px;padding:12px 14px;margin:10px 0;overflow-x:auto;position:relative}
-.msg-text code{font-family:var(--mono);font-size:13px;color:#e5e5e5}
-.msg-text p code{background:#1c1c1c;padding:2px 6px;border-radius:4px;font-size:13px}
-.msg-text ul,.msg-text ol{padding-left:20px;margin:8px 0}
-.msg-text li{margin-bottom:4px}
-.msg-text h1,.msg-text h2,.msg-text h3{margin:14px 0 6px;font-weight:700}
-.msg-text a{color:var(--accent);text-decoration:none}
-.msg-text a:hover{text-decoration:underline}
-.msg-text blockquote{border-left:3px solid var(--border);padding-left:12px;color:var(--text2);margin:8px 0}
-.msg-text table{border-collapse:collapse;width:100%;margin:10px 0}
-.msg-text th,.msg-text td{border:1px solid var(--border);padding:6px 10px;text-align:left}
-.msg-text th{background:var(--bg3);font-weight:600}
-.copy-code-btn{position:absolute;top:8px;right:8px;padding:3px 8px;background:var(--bg4);border:1px solid var(--border);border-radius:5px;font-size:11px;cursor:pointer;font-family:var(--font);color:var(--text2);transition:all .12s}
-.copy-code-btn:hover{background:var(--bg3);color:var(--text)}
-.msg-actions{display:flex;gap:4px;margin-top:6px;opacity:0;transition:opacity .15s}
-.msg-row:hover .msg-actions{opacity:1}
-.msg-act-btn{padding:3px 8px;background:none;border:1px solid var(--border);border-radius:5px;font-size:11px;cursor:pointer;color:var(--text3);font-family:var(--font);transition:all .12s}
-.msg-act-btn:hover{background:var(--bg3);color:var(--text)}
-/* Typing */
-.typing-row{padding:6px 0;display:flex;justify-content:center}
-.typing-inner{width:100%;max-width:720px;padding:0 20px;display:flex;gap:12px;align-items:center}
-.typing-dots{display:flex;gap:4px;padding:10px 14px}
-.typing-dots span{width:6px;height:6px;background:var(--text3);border-radius:50%;animation:dot 1.2s ease-in-out infinite}
-.typing-dots span:nth-child(2){animation-delay:.2s}
-.typing-dots span:nth-child(3){animation-delay:.4s}
-@keyframes dot{0%,60%,100%{transform:translateY(0);opacity:.4}30%{transform:translateY(-5px);opacity:1}}
-/* Empty */
-.empty{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:14px;padding:40px;text-align:center}
-.empty-logo{width:52px;height:52px;background:#fff;border-radius:14px;display:flex;align-items:center;justify-content:center}
-.empty-logo svg{width:30px;height:30px}
-.empty h2{font-size:20px;font-weight:700}
-.empty p{font-size:14px;color:var(--text2);max-width:380px;line-height:1.6}
-.suggestions{display:flex;flex-wrap:wrap;gap:8px;justify-content:center;max-width:580px}
-.sug{padding:8px 14px;background:var(--bg2);border:1px solid var(--border);border-radius:10px;font-size:13px;cursor:pointer;color:var(--text2);transition:all .15s}
-.sug:hover{background:var(--bg3);color:var(--text);border-color:var(--text3)}
-/* Input */
-.input-area{padding:12px 20px 16px;flex-shrink:0;display:flex;justify-content:center}
-.input-box{width:100%;max-width:720px;background:var(--bg2);border:1px solid var(--border);border-radius:14px;box-shadow:0 2px 12px rgba(0,0,0,.3);transition:border-color .2s}
-.input-box:focus-within{border-color:#555}
-.input-top{display:flex;align-items:flex-end;padding:10px 12px 8px;gap:8px}
-#chatInput{flex:1;background:none;border:none;outline:none;font-size:14px;font-family:var(--font);color:var(--text);resize:none;max-height:200px;line-height:1.5;padding:2px 0}
-#chatInput::placeholder{color:var(--text3)}
-.send-btn{width:34px;height:34px;background:var(--accent);border:none;border-radius:8px;color:#fff;cursor:pointer;flex-shrink:0;display:flex;align-items:center;justify-content:center;transition:all .15s}
-.send-btn:hover{background:#0d8a6b}
-.send-btn:disabled{opacity:.3;cursor:not-allowed}
-.input-bottom{padding:0 12px 8px;display:flex;align-items:center;gap:6px}
-.attach-btn{background:none;border:none;color:var(--text3);cursor:pointer;padding:4px;border-radius:6px;display:flex;align-items:center;transition:all .12s}
-.attach-btn:hover{background:var(--bg3);color:var(--text)}
-.input-hint{font-size:11px;color:var(--text3);flex:1}
-.img-preview{padding:8px 12px 0;display:flex;align-items:center;gap:8px}
-.img-preview img{height:56px;border-radius:8px;border:1px solid var(--border)}
-.img-preview button{background:none;border:none;cursor:pointer;color:var(--text3);font-size:18px}
-/* Auth gate */
-.auth-gate{position:fixed;inset:0;background:rgba(0,0,0,.85);display:flex;align-items:center;justify-content:center;z-index:999;backdrop-filter:blur(6px)}
-.auth-card{background:var(--bg2);border:1px solid var(--border);border-radius:18px;padding:36px 32px;max-width:380px;width:100%;text-align:center;box-shadow:0 8px 40px rgba(0,0,0,.5)}
-.auth-card h2{font-size:1.3em;font-weight:800;margin-bottom:8px}
-.auth-card p{font-size:.88em;color:var(--text2);margin-bottom:22px;line-height:1.6}
-.auth-login-btn{display:block;width:100%;padding:12px;background:#fff;color:#000;border:none;border-radius:10px;font-size:.95em;font-weight:700;cursor:pointer;font-family:var(--font);text-decoration:none;margin-bottom:10px;transition:background .15s}
-.auth-login-btn:hover{background:#e5e5e5}
-/* Mobile */
-.sb-toggle{display:none;background:none;border:none;cursor:pointer;color:var(--text2);padding:4px}
-@media(max-width:700px){
-  .sidebar{position:fixed;left:-100%;top:0;bottom:0;z-index:100;transition:left .25s}
-  .sidebar.open{left:0}
-  .sb-toggle{display:flex}
+.preview-panel.open { width: 50vw; min-width: 400px; }
+.preview-topbar {
+  height: 40px; padding: 0 14px;
+  background: #1a1a2e;
+  border-bottom: 1px solid rgba(255,255,255,0.08);
+  display: flex; align-items: center; gap: 10px;
+  flex-shrink: 0;
+}
+.preview-dots { display: flex; gap: 5px; }
+.preview-dots span { width: 10px; height: 10px; border-radius: 50%; }
+.preview-dots span:nth-child(1) { background: #ff5f57; }
+.preview-dots span:nth-child(2) { background: #febc2e; }
+.preview-dots span:nth-child(3) { background: #28c840; }
+.preview-url-bar {
+  flex: 1; background: rgba(255,255,255,0.06);
+  border: 1px solid rgba(255,255,255,0.1);
+  border-radius: 6px; padding: 4px 10px;
+  font-size: 11px; color: rgba(255,255,255,0.5);
+  font-family: monospace; white-space: nowrap;
+  overflow: hidden; text-overflow: ellipsis;
+}
+.preview-actions { display: flex; gap: 4px; }
+.preview-action-btn {
+  width: 26px; height: 26px;
+  background: transparent; border: none;
+  color: rgba(255,255,255,0.4); font-size: 13px;
+  cursor: pointer; border-radius: 5px;
+  display: flex; align-items: center; justify-content: center;
+  transition: all 0.15s;
+}
+.preview-action-btn:hover { background: rgba(255,255,255,0.08); color: #fff; }
+.preview-iframe-wrap { flex: 1; position: relative; overflow: hidden; }
+.preview-iframe {
+  width: 100%; height: 100%;
+  border: none; background: #fff;
+}
+.preview-empty {
+  position: absolute; inset: 0;
+  display: flex; flex-direction: column;
+  align-items: center; justify-content: center;
+  gap: 12px; color: #888; font-size: 14px;
+  background: #fff;
+}
+.preview-empty-icon { font-size: 40px; opacity: 0.3; }
+
+/* ── Agents strip — hidden, auto-detection only ── */
+.agents-strip { display: none; }
+
+/* ── Preview toggle btn in topbar ── */
+.preview-toggle-btn {
+  padding: 5px 10px; border-radius: 7px;
+  background: rgba(255,255,255,0.06);
+  border: 1px solid rgba(255,255,255,0.1);
+  color: rgba(255,255,255,0.6); font-size: 12px;
+  font-weight: 600; cursor: pointer;
+  display: flex; align-items: center; gap: 5px;
+  transition: all 0.15s; font-family: inherit;
+}
+.preview-toggle-btn:hover { background: rgba(255,255,255,0.1); color: #fff; }
+.preview-toggle-btn.active {
+  background: rgba(16,163,127,0.15);
+  border-color: rgba(16,163,127,0.4);
+  color: #10a37f;
+}
+
+/* ── Code run button in messages ── */
+.run-code-btn {
+  padding: 3px 10px; border-radius: 5px;
+  background: rgba(16,163,127,0.15);
+  border: 1px solid rgba(16,163,127,0.3);
+  color: #10a37f; font-size: 11px; font-weight: 700;
+  cursor: pointer; font-family: inherit;
+  transition: all 0.15s;
+}
+.run-code-btn:hover { background: rgba(16,163,127,0.25); }
+
+/* ── Agent indicator in topbar ── */
+.agent-indicator {
+  display: flex; align-items: center; gap: 6px;
+  padding: 4px 10px; border-radius: 7px;
+  background: rgba(255,255,255,0.05);
+  border: 1px solid rgba(255,255,255,0.08);
+  font-size: 12px; color: rgba(255,255,255,0.5);
 }
 </style>
 </head>
-<body>
-<body>
-<div class="layout">
-  <div class="sidebar" id="sidebar">
-    <div class="sb-top">
-      <div class="sb-logo"><svg viewBox="0 0 20 20" fill="none"><path d="M10 2L3 6L10 10L17 6L10 2Z" stroke="black" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/><path d="M3 14L10 18L17 14" stroke="black" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/><path d="M3 10L10 14L17 10" stroke="black" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg></div>
-      <span class="sb-title">AI Chat Pro</span>
-      <a href="/" class="sb-home">Home</a>
-    </div>
-    <button class="new-btn" onclick="newChat()">+ New chat</button>
-    <div class="sb-section">Chats</div>
-    <div class="chats-list" id="chatsList"></div>
-    <div class="sb-bottom">
-      <div class="user-row" onclick="location='/profile.html'">
-        <div class="user-av" id="userAv">?</div>
-        <div style="flex:1;min-width:0"><div class="user-name" id="userName">Loading...</div><div class="user-credits" id="userCredits"></div></div>
-      </div>
+<body style="background:#0d0d0d; overflow:hidden;">
+
+<!-- Auth Gate Overlay -->
+<div class="auth-gate" id="auth-gate">
+  <div class="auth-card">
+    <div class="auth-card-icon">🔐</div>
+    <div class="auth-card-title">Sign in to chat</div>
+    <p class="auth-card-sub">Create a free account to start chatting with AI. Get 50 credits instantly — no credit card needed.</p>
+    <div class="auth-card-actions">
+      <a href="/login.html" class="btn-primary" style="justify-content:center;">Sign in / Register</a>
+      <a href="/" class="btn-ghost" style="justify-content:center; border-color:rgba(255,255,255,0.15); color:rgba(255,255,255,0.6);">Back to Home</a>
     </div>
   </div>
-  <div class="main">
-    <div class="topbar">
-      <button class="sb-toggle icon-btn" onclick="document.getElementById('sidebar').classList.toggle('open')">&#9776;</button>
-      <span class="topbar-title" id="chatTitle">New Chat</span>
-      <select class="model-sel" id="modelSel">
-        <option value="llama-3.3-70b-versatile">Llama 3.3 70B</option>
-        <option value="llama-3.1-8b-instant">Llama 3.1 8B</option>
-        <option value="mixtral-8x7b-32768">Mixtral 8x7B</option>
-        <option value="gemma2-9b-it">Gemma2 9B</option>
-      </select>
-      <button class="icon-btn" onclick="clearChat()" title="Clear">&#128465;</button>
+</div>
+
+<!-- Sidebar overlay (mobile) -->
+<div class="sidebar-overlay" id="sb-overlay" onclick="closeSidebar()"></div>
+
+<!-- Chat Layout -->
+<div class="chat-layout">
+
+  <!-- Agents Strip -->
+  <div class="agents-strip" id="agents-strip">
+    <button class="agent-btn active" id="agent-btn-default" onclick="setAgent('default')" title="Assistant">
+      🤖
+      <span class="agent-btn-tooltip">AI Assistant</span>
+    </button>
+    <button class="agent-btn" id="agent-btn-coder" onclick="setAgent('coder')" title="Coder">
+      💻
+      <span class="agent-btn-tooltip">Code Expert</span>
+    </button>
+    <button class="agent-btn" id="agent-btn-writer" onclick="setAgent('writer')" title="Writer">
+      ✍️
+      <span class="agent-btn-tooltip">Writer</span>
+    </button>
+    <button class="agent-btn" id="agent-btn-analyst" onclick="setAgent('analyst')" title="Analyst">
+      📊
+      <span class="agent-btn-tooltip">Data Analyst</span>
+    </button>
+    <button class="agent-btn" id="agent-btn-teacher" onclick="setAgent('teacher')" title="Teacher">
+      👨‍🏫
+      <span class="agent-btn-tooltip">Teacher</span>
+    </button>
+    <div class="agents-strip-divider"></div>
+    <button class="agent-btn" id="agent-btn-web" onclick="setAgent('web')" title="Web Builder">
+      🌐
+      <span class="agent-btn-tooltip">Web Builder</span>
+    </button>
+  </div>
+
+  <!-- Sidebar -->
+  <aside class="sidebar" id="sidebar">
+    <div class="sb-top">
+      <div class="sb-logo">💬</div>
+      <span class="sb-title">AI Chat Co.</span>
+      <a href="/" class="sb-home-link" title="Home">🏠</a>
     </div>
-    <div class="messages" id="messages"><div class="empty" id="emptyState"><div class="empty-logo"><svg viewBox="0 0 20 20" fill="none"><path d="M10 2L3 6L10 10L17 6L10 2Z" stroke="black" stroke-width="1.5"/><path d="M3 14L10 18L17 14" stroke="black" stroke-width="1.5"/><path d="M3 10L10 14L17 10" stroke="black" stroke-width="1.5"/></svg></div><h2>AI Chat Pro</h2><p>������ �� ��� �����������.</p><div class="suggestions"><div class="sug" onclick="useSug(this)">������ ��� �� Python</div><div class="sug" onclick="useSug(this)">������� ��������� ������</div><div class="sug" onclick="useSug(this)">������ � ����</div><div class="sug" onclick="useSug(this)">�������� ������-����</div></div></div></div>
+
+    <button class="new-chat-btn" onclick="newChat()">
+      <span class="new-chat-btn-icon">✏️</span>
+      New chat
+    </button>
+
+    <div class="chats-list" id="chats-list">
+      <!-- Populated by JS -->
+    </div>
+
+    <div class="sb-bottom">
+      <div class="user-row" id="user-row" onclick="window.location='/profile.html'">
+        <div class="user-av" id="user-av">👤</div>
+        <div class="user-info">
+          <div class="user-name" id="user-name">Loading...</div>
+          <div class="user-credits" id="user-credits">
+            <span class="user-credits-dot"></span>
+            <span id="user-credits-text">— credits</span>
+          </div>
+        </div>
+      </div>
+    </div>
+  </aside>
+
+  <!-- Main -->
+  <main class="main">
+    <!-- Topbar -->
+    <div class="topbar">
+      <button class="sb-toggle-btn" id="sb-toggle" onclick="toggleSidebar()" aria-label="Toggle sidebar">☰</button>
+      <span class="topbar-title" id="chat-title">New conversation</span>
+      <span class="agent-indicator" id="agent-indicator">🤖 AI Assistant</span>
+      <select class="model-sel" id="model-sel" title="Select AI model">
+        <option value="meta-llama/llama-3.3-70b-instruct">Llama 3.3 70B</option>
+        <option value="meta-llama/llama-3.1-8b-instruct">Llama 3.1 8B (fast)</option>
+        <option value="mistralai/mixtral-8x7b-instruct">Mixtral 8x7B</option>
+        <option value="google/gemma-2-9b-it">Gemma 2 9B</option>
+        <option value="meta-llama/llama-4-scout">Llama 4 Scout</option>
+        <option value="anthropic/claude-3-haiku">Claude 3 Haiku</option>
+        <option value="openai/gpt-4o-mini">GPT-4o Mini</option>
+        <option value="deepseek/deepseek-chat">DeepSeek Chat</option>
+      </select>
+      <button class="icon-btn" onclick="clearChat()" title="Clear chat">🗑️</button>
+      <button class="icon-btn" onclick="openPromptModal()" title="Custom prompt" style="font-size:16px">⚙️</button>
+      <button class="preview-toggle-btn" id="preview-toggle" onclick="togglePreview()" title="Live Preview">
+        <span>⬜</span> Preview
+      </button>
+    </div>
+
+    <!-- Messages -->
+    <div class="messages" id="messages">
+      <!-- Empty state -->
+      <div class="empty-state" id="empty-state">
+        <div class="empty-state-icon">🤖</div>
+        <div class="empty-state-title">How can I help you?</div>
+        <p class="empty-state-sub">Ask me anything — I can write code, explain concepts, analyze data, or just have a conversation.</p>
+        <div class="suggestions">
+          <button class="sug" onclick="useSuggestion(this)">✍️ Write a short story</button>
+          <button class="sug" onclick="useSuggestion(this)">💻 Explain async/await in JS</button>
+          <button class="sug" onclick="useSuggestion(this)">📊 Analyze this data for me</button>
+          <button class="sug" onclick="useSuggestion(this)">🐛 Help me debug my code</button>
+          <button class="sug" onclick="useSuggestion(this)">🌍 Translate to Spanish</button>
+          <button class="sug" onclick="useSuggestion(this)">📝 Summarize a long text</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Input Area -->
     <div class="input-area">
+      <div class="img-preview" id="img-preview"></div>
       <div class="input-box">
-        <div id="imgPreview" class="img-preview" style="display:none"></div>
         <div class="input-top">
-          <textarea id="chatInput" placeholder="������ ���������..." rows="1" oninput="autoResize(this)" onkeydown="onKey(event)"></textarea>
-          <button class="send-btn" id="sendBtn" onclick="send()">&#10148;</button>
+          <button class="attach-btn" onclick="triggerAttach()" title="Attach image">📎</button>
+          <textarea class="chat-input" id="chat-input"
+            placeholder="Message AI Chat Co. (Enter to send, Shift+Enter for new line)"
+            rows="1" autocomplete="off"></textarea>
+          <button class="send-btn" id="send-btn" onclick="sendMessage()" title="Send message">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+              <line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/>
+            </svg>
+          </button>
         </div>
         <div class="input-bottom">
-          <button class="attach-btn" onclick="attachImg()" title="Image">&#128247;</button>
-          <span class="input-hint">Enter  ���������</span>
+          <span class="input-hint"><kbd>Enter</kbd> to send · <kbd>Shift+Enter</kbd> for new line</span>
+          <span id="credits-display" style="font-size:11px; color:rgba(255,255,255,0.25);"></span>
         </div>
       </div>
+      <input type="file" id="file-input" accept="image/*" style="display:none;" onchange="handleFileAttach(event)">
+    </div>
+  </main>
+
+  <!-- Live Preview Panel -->
+  <div class="preview-panel" id="preview-panel">
+    <div class="preview-topbar">
+      <div class="preview-dots"><span></span><span></span><span></span></div>
+      <div class="preview-url-bar" id="preview-url-bar">Live Preview</div>
+      <div class="preview-actions">
+        <button class="preview-action-btn" onclick="refreshPreview()" title="Refresh">↺</button>
+        <button class="preview-action-btn" onclick="openPreviewNewTab()" title="Open in new tab">↗</button>
+        <button class="preview-action-btn" onclick="togglePreview()" title="Close">✕</button>
+      </div>
+    </div>
+    <div class="preview-iframe-wrap">
+      <div class="preview-empty" id="preview-empty">
+        <div class="preview-empty-icon">🌐</div>
+        <span style="text-align:center;line-height:1.6;">Ask AI to write HTML/CSS/JS<br>and click <strong>▶ Run</strong> to preview</span>
+      </div>
+      <iframe class="preview-iframe" id="preview-iframe"
+        sandbox="allow-scripts allow-forms allow-modals allow-popups"
+        style="display:none;"></iframe>
+    </div>
+  </div>
+
+</div>
+
+<script>
+'use strict';
+
+// ── Constants ──────────────────────────────────────────────────────────
+const GROQ_API = 'https://openrouter.ai/api/v1/chat/completions';
+const CHATS_KEY = 'aichat_chats';
+const ACTIVE_KEY = 'aichat_active';
+
+// Smart agent system prompts
+const AGENTS = {
+  coder: {
+    name: '💻 Coder',
+    prompt: `You are an elite software engineer with 15+ years of experience across all major languages and frameworks.
+
+RULES:
+- Always write production-ready, clean, well-commented code
+- Use proper markdown code blocks with language tags (e.g. \`\`\`python)
+- Explain what the code does and WHY, not just how
+- Point out potential bugs, edge cases, and security issues
+- Suggest optimizations and best practices
+- If the user's code has errors, fix them and explain what was wrong
+- Never write pseudocode unless explicitly asked — always write real, runnable code
+- For complex problems, break down the solution step by step before coding
+- Always handle errors and edge cases in your code examples
+
+Answer in the same language the user writes in.`
+  },
+  writer: {
+    name: '✍️ Writer',
+    prompt: `You are a professional writer, editor, and content strategist with expertise in all writing styles.
+
+RULES:
+- Adapt your tone and style to match what the user needs (formal, casual, creative, technical)
+- For creative writing: be vivid, engaging, use strong verbs and sensory details
+- For editing: preserve the author's voice while improving clarity and flow
+- For business writing: be clear, concise, and action-oriented
+- Always structure content logically with clear paragraphs
+- Offer alternatives and variations when helpful
+- Point out weak phrases and suggest stronger alternatives
+- Never use clichés unless intentional for effect
+
+Answer in the same language the user writes in.`
+  },
+  analyst: {
+    name: '📊 Analyst',
+    prompt: `You are a senior data analyst and business intelligence expert with deep expertise in statistics, data science, and business strategy.
+
+RULES:
+- Be precise and data-driven — always back claims with logic or numbers
+- Structure analysis clearly: problem → data → insights → recommendations
+- Identify patterns, anomalies, and correlations
+- Explain statistical concepts in plain language
+- Suggest the right visualization for each type of data
+- Point out limitations and caveats in the analysis
+- Provide actionable, prioritized recommendations
+- Use tables and lists to organize complex information
+
+Answer in the same language the user writes in.`
+  },
+  teacher: {
+    name: '👨‍🏫 Teacher',
+    prompt: `You are a world-class educator who can explain any concept to anyone, from beginners to experts.
+
+RULES:
+- Always gauge the user's level from their question and adapt accordingly
+- Use the Feynman technique: explain complex ideas in simple terms
+- Use concrete examples, analogies, and real-world applications
+- Break complex topics into digestible steps
+- Check understanding by summarizing key points
+- Anticipate follow-up questions and address them proactively
+- Use diagrams described in text when helpful
+- Encourage curiosity and deeper exploration
+- Never talk down to the user — be encouraging and patient
+
+Answer in the same language the user writes in.`
+  },
+  default: {
+    name: '🤖 AI Assistant',
+    prompt: `You are a helpful, accurate AI assistant. Answer questions directly and honestly.
+
+RULES:
+- Be direct and concise
+- If asked what model you are, say your actual model name honestly
+- Use markdown for code, **bold** for key terms, lists for multiple items
+- For complex questions: think step by step
+- Never refuse reasonable requests
+- Answer in the same language the user writes in.`
+  }
+};
+
+// ── Web Builder Agent ─────────────────────────────────────────────────
+AGENTS.web = {
+  name: '🌐 Web Builder',
+  prompt: `You are an expert web developer and UI designer. You build complete, beautiful, working web pages.
+
+CRITICAL RULES:
+- ALWAYS output complete, self-contained HTML files with embedded CSS and JS
+- Every response with code MUST be a single complete HTML file (<!DOCTYPE html> ... </html>)
+- Make designs beautiful: use gradients, shadows, animations, modern fonts (Google Fonts)
+- Code must work immediately without any external dependencies except CDN links
+- Use modern CSS: flexbox, grid, custom properties, animations
+- Make it responsive and mobile-friendly
+- Add interactivity with JavaScript where appropriate
+- When asked to modify — output the COMPLETE updated file, not just the changes
+- Use inline SVG for icons instead of icon libraries when possible
+
+STYLE DEFAULTS:
+- Dark or light theme based on context
+- Smooth animations and transitions
+- Professional typography
+- Proper spacing and visual hierarchy
+
+After every code block, remind the user to click ▶ Run to see the preview.`
+};
+
+// ── State ──────────────────────────────────────────────────────────────
+let groqKey = null;
+let currentUser = null;
+let previewOpen = false;
+let lastHtmlCode = null;
+let chats = {};
+let activeChatId = null;
+let isTyping = false;
+let attachedImages = [];
+let currentAgent = 'default';
+
+// ── Init ───────────────────────────────────────────────────────────────
+document.addEventListener('DOMContentLoaded', async () => {
+  loadChats();
+  setupInput();
+  await checkAuth();
+  await loadGroqKey();
+  renderChatsList();
+  restoreActiveChat();
+});
+
+async function checkAuth() {
+  try {
+    const res = await fetch('/api/auth/me', { credentials: 'include' });
+    if (!res.ok) {
+      document.getElementById('auth-gate').style.display = 'flex';
+      return;
+    }
+    currentUser = await res.json();
+    document.getElementById('auth-gate').style.display = 'none';
+    updateUserUI();
+  } catch (e) {
+    document.getElementById('auth-gate').style.display = 'flex';
+  }
+}
+
+function updateUserUI() {
+  if (!currentUser) return;
+  const av = document.getElementById('user-av');
+  const name = document.getElementById('user-name');
+  const credits = document.getElementById('user-credits-text');
+  const display = document.getElementById('credits-display');
+
+  if (av) av.textContent = currentUser.nomchat_avatar || '👤';
+  if (name) name.textContent = currentUser.username || currentUser.email;
+
+  const total = currentUser.total_credits === -1 ? '∞' : currentUser.total_credits;
+  if (credits) credits.textContent = `${total} credits`;
+  if (display) display.textContent = `${total} credits remaining`;
+}
+
+async function loadGroqKey() {
+  try {
+    const res = await fetch('/api/config/groq-key');
+    if (res.ok) {
+      const data = await res.json();
+      groqKey = data.key;
+    }
+  } catch (e) {}
+}
+
+// ── Chat Storage ───────────────────────────────────────────────────────
+function loadChats() {
+  try {
+    const saved = localStorage.getItem(CHATS_KEY);
+    chats = saved ? JSON.parse(saved) : {};
+  } catch (e) { chats = {}; }
+}
+
+function saveChats() {
+  try { localStorage.setItem(CHATS_KEY, JSON.stringify(chats)); } catch (e) {}
+}
+
+function generateId() {
+  return Date.now().toString(36) + Math.random().toString(36).slice(2, 7);
+}
+
+function newChat(agentKey = 'default') {
+  const id = generateId();
+  chats[id] = {
+    id, title: 'New conversation',
+    messages: [], agent: agentKey,
+    created: Date.now(), updated: Date.now()
+  };
+  saveChats();
+  setActiveChat(id);
+  renderChatsList();
+  document.getElementById('chat-input')?.focus();
+}
+
+function setActiveChat(id) {
+  activeChatId = id;
+  localStorage.setItem(ACTIVE_KEY, id);
+  currentAgent = chats[id]?.agent || 'default';
+  renderMessages();
+  updateChatTitle();
+  renderChatsList();
+}
+
+function restoreActiveChat() {
+  const saved = localStorage.getItem(ACTIVE_KEY);
+  if (saved && chats[saved]) {
+    setActiveChat(saved);
+  } else {
+    const ids = Object.keys(chats).sort((a, b) => (chats[b].updated || 0) - (chats[a].updated || 0));
+    if (ids.length) setActiveChat(ids[0]);
+    else newChat();
+  }
+}
+
+function deleteChat(id, e) {
+  e?.stopPropagation();
+  delete chats[id];
+  saveChats();
+  if (activeChatId === id) {
+    const ids = Object.keys(chats);
+    if (ids.length) setActiveChat(ids[0]);
+    else newChat();
+  }
+  renderChatsList();
+}
+
+function clearChat() {
+  if (!activeChatId || !chats[activeChatId]) return;
+  chats[activeChatId].messages = [];
+  chats[activeChatId].title = 'New conversation';
+  saveChats();
+  renderMessages();
+  updateChatTitle();
+}
+
+function updateChatTitle() {
+  const chat = chats[activeChatId];
+  const title = chat?.title || 'New conversation';
+  const el = document.getElementById('chat-title');
+  if (el) el.textContent = title;
+}
+
+// ── Render Sidebar ─────────────────────────────────────────────────────
+function renderChatsList() {
+  const list = document.getElementById('chats-list');
+  if (!list) return;
+
+  const sorted = Object.values(chats).sort((a, b) => (b.updated || 0) - (a.updated || 0));
+
+  if (!sorted.length) {
+    list.innerHTML = '<p style="font-size:12px; color:rgba(255,255,255,0.2); padding:12px 16px;">No conversations yet</p>';
+    return;
+  }
+
+  list.innerHTML = sorted.map(chat => `
+    <div class="chat-item ${chat.id === activeChatId ? 'active' : ''}"
+      onclick="setActiveChat('${chat.id}')">
+      <span class="chat-item-icon">${AGENTS[chat.agent || 'default']?.name?.split(' ')[0] || '💬'}</span>
+      <span class="chat-item-title">${escHtml(chat.title)}</span>
+      <button class="chat-del" onclick="deleteChat('${chat.id}', event)" title="Delete chat">✕</button>
+    </div>
+  `).join('');
+}
+
+// ── Render Messages ────────────────────────────────────────────────────
+function renderMessages() {
+  const container = document.getElementById('messages');
+  if (!container) return;
+
+  const chat = chats[activeChatId];
+  if (!chat || !chat.messages.length) {
+    container.innerHTML = `
+      <div class="empty-state" id="empty-state">
+        <div class="empty-state-icon">🤖</div>
+        <div class="empty-state-title">How can I help you?</div>
+        <p class="empty-state-sub">Ask me anything — I can write code, explain concepts, analyze data, or just have a conversation.</p>
+        <div class="suggestions">
+          <button class="sug" onclick="useSuggestion(this)">✍️ Write a short story</button>
+          <button class="sug" onclick="useSuggestion(this)">💻 Explain async/await in JS</button>
+          <button class="sug" onclick="useSuggestion(this)">📊 Analyze this data for me</button>
+          <button class="sug" onclick="useSuggestion(this)">🐛 Help me debug my code</button>
+          <button class="sug" onclick="useSuggestion(this)">🌍 Translate to Spanish</button>
+          <button class="sug" onclick="useSuggestion(this)">📝 Summarize a long text</button>
+        </div>
+      </div>`;
+    return;
+  }
+
+  container.innerHTML = chat.messages.map((msg, i) => renderMsgHTML(msg, i)).join('');
+  // Add Run buttons to HTML code blocks
+  container.querySelectorAll('pre code').forEach(codeEl => {
+    const lang = codeEl.className.replace('language-', '');
+    extractAndAddRunBtn(codeEl, lang);
+  });
+  scrollToBottom();
+}
+
+function renderMsgHTML(msg, idx) {
+  const isUser = msg.role === 'user';
+  const av = isUser ? (currentUser?.nomchat_avatar || '👤') : '🤖';
+  const name = isUser ? (currentUser?.username || 'You') : (AGENTS[currentAgent]?.name || 'AI');
+  const body = isUser ? escHtml(msg.content) : renderMarkdown(msg.content);
+
+  return `
+    <div class="msg-row ${isUser ? 'user' : 'ai'}" data-idx="${idx}">
+      <div class="msg-av">${av}</div>
+      <div class="msg-inner">
+        <div class="msg-name">${escHtml(name)}</div>
+        <div class="msg-body">
+          <div class="msg-text">${body}</div>
+        </div>
+        <div class="msg-actions">
+          <button class="msg-act-btn" onclick="copyMsg(${idx})">📋 Copy</button>
+          ${!isUser ? `<button class="msg-act-btn" onclick="regenerate(${idx})">🔄 Regenerate</button>` : ''}
+        </div>
+      </div>
+    </div>`;
+}
+
+// ── Markdown Renderer ──────────────────────────────────────────────────
+function renderMarkdown(text) {
+  if (!text) return '';
+  let html = escHtml(text);
+
+  // Code blocks
+  html = html.replace(/```(\w*)\n?([\s\S]*?)```/g, (_, lang, code) => {
+    const l = lang || 'code';
+    return `<div class="code-block-header"><span>${l}</span><button class="code-copy-btn" onclick="copyCode(this)">Copy</button></div><pre><code class="language-${l}">${code.trim()}</code></pre>`;
+  });
+
+  // Inline code
+  html = html.replace(/`([^`]+)`/g, '<code>$1</code>');
+
+  // Headers
+  html = html.replace(/^### (.+)$/gm, '<h3>$1</h3>');
+  html = html.replace(/^## (.+)$/gm, '<h2>$1</h2>');
+  html = html.replace(/^# (.+)$/gm, '<h1>$1</h1>');
+
+  // Bold & italic
+  html = html.replace(/\*\*\*(.+?)\*\*\*/g, '<strong><em>$1</em></strong>');
+  html = html.replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>');
+  html = html.replace(/\*(.+?)\*/g, '<em>$1</em>');
+  html = html.replace(/_(.+?)_/g, '<em>$1</em>');
+
+  // Links
+  html = html.replace(/\[([^\]]+)\]\(([^)]+)\)/g, '<a href="$2" target="_blank" rel="noopener">$1</a>');
+
+  // Unordered lists
+  html = html.replace(/^[\-\*] (.+)$/gm, '<li>$1</li>');
+  html = html.replace(/(<li>.*<\/li>\n?)+/g, '<ul>$&</ul>');
+
+  // Ordered lists
+  html = html.replace(/^\d+\. (.+)$/gm, '<li>$1</li>');
+
+  // Paragraphs (double newlines)
+  html = html.replace(/\n\n/g, '</p><p>');
+  html = html.replace(/\n/g, '<br>');
+  html = `<p>${html}</p>`;
+
+  // Clean up empty paragraphs
+  html = html.replace(/<p><\/p>/g, '');
+  html = html.replace(/<p>(<h[1-3]>)/g, '$1');
+  html = html.replace(/(<\/h[1-3]>)<\/p>/g, '$1');
+  html = html.replace(/<p>(<ul>)/g, '$1');
+  html = html.replace(/(<\/ul>)<\/p>/g, '$1');
+  html = html.replace(/<p>(<div class="code)/g, '$1');
+  html = html.replace(/(<\/pre>)<\/p>/g, '$1');
+
+  return html;
+}
+
+// ── Send Message ───────────────────────────────────────────────────────
+async function sendMessage() {
+  if (isTyping) return;
+  const input = document.getElementById('chat-input');
+  if (!input) return;
+
+  const text = input.value.trim();
+  if (!text && !attachedImages.length) return;
+
+  if (!activeChatId || !chats[activeChatId]) newChat();
+
+  const chat = chats[activeChatId];
+
+  // Build content (text + images)
+  let content = text;
+  if (attachedImages.length) {
+    content = [
+      { type: 'text', text: text || 'What do you see in this image?' },
+      ...attachedImages.map(img => ({ type: 'image_url', image_url: { url: img } }))
+    ];
+  }
+
+  // Add user message
+  chat.messages.push({ role: 'user', content: typeof content === 'string' ? content : text });
+  chat.updated = Date.now();
+
+  // Auto-title from first message
+  if (chat.messages.length === 1 && text) {
+    chat.title = text.slice(0, 40) + (text.length > 40 ? '…' : '');
+  }
+
+  // Auto-detect agent
+  if (chat.messages.length === 1) {
+    currentAgent = detectAgent(text);
+    chat.agent = currentAgent;
+  }
+
+  saveChats();
+  input.value = '';
+  autoResize(input);
+  clearAttachments();
+  renderMessages();
+  updateChatTitle();
+  renderChatsList();
+
+  // Show typing
+  isTyping = true;
+  document.getElementById('send-btn').disabled = true;
+  showTypingIndicator();
+
+  try {
+    const messages = buildMessages(chat);
+    let reply = '';
+
+    if (groqKey) {
+      try {
+        reply = await streamGroq(chat, messages);
+      } catch (groqErr) {
+        // Groq failed — fallback to server
+        removeTypingIndicator();
+        showTypingIndicator();
+        reply = await serverChat(messages);
+      }
+    } else {
+      reply = await serverChat(messages);
+    }
+
+    removeTypingIndicator();
+    chat.messages.push({ role: 'assistant', content: reply });
+    chat.updated = Date.now();
+    saveChats();
+    renderMessages();
+    renderChatsList();
+
+    // Save to server for operator panel
+    saveToServer(text, reply);
+
+    // Update credits
+    if (currentUser) {
+      try {
+        const r = await fetch('/api/auth/me', { credentials: 'include' });
+        if (r.ok) { currentUser = await r.json(); updateUserUI(); }
+      } catch (e) {}
+    }
+
+  } catch (err) {
+    removeTypingIndicator();
+    if (err?.message === 'no_credits') return;
+    appendErrorMsg(getErrMsg(err));
+  } finally {
+    isTyping = false;
+    document.getElementById('send-btn').disabled = false;
+    input.focus();
+  }
+}
+
+// ── Save messages to server (for operator panel) ──────────────────────
+async function saveToServer(userText, aiReply) {
+  try {
+    await fetch('/api/session/message', {
+      method: 'POST', credentials: 'include',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ content: userText, role: 'user' })
+    });
+    await fetch('/api/session/message', {
+      method: 'POST', credentials: 'include',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ content: aiReply, role: 'ai' })
+    });
+  } catch (_) {}
+}
+
+function buildMessages(chat) {
+  const agent = AGENTS[chat.agent || 'default'] || AGENTS.default;
+  const systemContent = customPrompt || agent.prompt;
+  const system = { role: 'system', content: systemContent };
+  const history = chat.messages.slice(-20).map(m => ({
+    role: m.role === 'assistant' ? 'assistant' : 'user',
+    content: typeof m.content === 'string' ? m.content : (m.content[0]?.text || '')
+  }));
+  return [system, ...history];
+}
+
+async function streamGroq(chat, messages) {
+  const model = document.getElementById('model-sel')?.value || 'llama-3.3-70b-versatile';
+  
+  let res;
+  try {
+    res = await fetch(GROQ_API, {
+      method: 'POST',
+      headers: { 'Authorization': `Bearer ${groqKey}`, 'Content-Type': 'application/json', 'HTTP-Referer': location.origin, 'X-Title': 'AI Chat Company' },
+      body: JSON.stringify({ model, messages, max_tokens: 2048, temperature: 0.7, top_p: 0.9, stream: true })
+    });
+  } catch (fetchErr) {
+    // CORS or network error — throw to trigger server fallback
+    throw new Error('groq_network');
+  }
+
+  if (!res.ok) {
+    const err = await res.json().catch(() => ({}));
+    // 401 = bad key, 429 = rate limit — throw to trigger fallback
+    throw new Error(err.error?.message || `Groq error ${res.status}`);
+  }
+
+  const reader = res.body.getReader();
+  const decoder = new TextDecoder();
+  let fullText = '';
+
+  // Create streaming message element
+  removeTypingIndicator();
+  const container = document.getElementById('messages');
+  const msgEl = document.createElement('div');
+  msgEl.className = 'msg-row ai streaming';
+  msgEl.innerHTML = `
+    <div class="msg-av">🤖</div>
+    <div class="msg-inner">
+      <div class="msg-name">${escHtml(AGENTS[currentAgent]?.name || 'AI')}</div>
+      <div class="msg-body"><div class="msg-text"></div></div>
+    </div>`;
+  container.appendChild(msgEl);
+  const textEl = msgEl.querySelector('.msg-text');
+  scrollToBottom();
+
+  while (true) {
+    const { done, value } = await reader.read();
+    if (done) break;
+    const chunk = decoder.decode(value, { stream: true });
+    for (const line of chunk.split('\n')) {
+      if (!line.startsWith('data: ')) continue;
+      const data = line.slice(6).trim();
+      if (data === '[DONE]') break;
+      try {
+        const parsed = JSON.parse(data);
+        const delta = parsed.choices?.[0]?.delta?.content || '';
+        if (delta) {
+          fullText += delta;
+          textEl.innerHTML = renderMarkdown(fullText);
+          scrollToBottom();
+        }
+      } catch (e) {}
+    }
+  }
+
+  msgEl.remove();
+  // Auto-run if HTML detected in response
+  const htmlMatch = fullText.match(/```(?:html)?\n?([\s\S]*?<\/html>[\s\S]*?)```/i) ||
+                    fullText.match(/```(?:html)?\n?(<!DOCTYPE[\s\S]*?)```/i);
+  if (htmlMatch) {
+    setTimeout(() => runCode(htmlMatch[1]), 200);
+  }
+  return fullText;
+}
+
+async function serverChat(messages) {
+  const model = document.getElementById('model-sel')?.value || 'llama-3.3-70b-versatile';
+  const res = await fetch('/api/chat', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    credentials: 'include',
+    body: JSON.stringify({ model, messages })
+  });
+  if (!res.ok) {
+    const err = await res.json().catch(() => ({}));
+    if (err.error === 'no_credits') { document.getElementById('credits-modal').style.display = 'flex'; throw new Error('no_credits'); }
+    if (err.error === 'Unauthorized') throw new Error('Session expired. Please sign in again.');
+    throw new Error(err.error || `Server error ${res.status}`);
+  }
+  const data = await res.json();
+  return data.choices?.[0]?.message?.content || 'No response.';
+}
+
+// ── Agent Detection ────────────────────────────────────────────────────
+function detectAgent(text) {
+  const t = text.toLowerCase();
+  if (/\b(сайт|website|webpage|landing|html|css|дизайн сайта|сделай сайт|создай сайт)\b/.test(t)) return 'web';
+  if (/\b(code|function|class|bug|error|debug|javascript|python|typescript|css|api|sql|algorithm|код|программ|скрипт)\b/.test(t)) return 'coder';
+  if (/\b(write|story|essay|poem|blog|article|creative|edit|proofread|grammar|напиши|текст|статья)\b/.test(t)) return 'writer';
+  if (/\b(analyze|data|chart|statistics|trend|report|metrics|insights|business|анализ|данные)\b/.test(t)) return 'analyst';
+  if (/\b(explain|teach|learn|understand|how does|what is|why does|tutorial|lesson|объясни|как работает)\b/.test(t)) return 'teacher';
+  return 'default';
+}
+
+// ── Set Agent manually ─────────────────────────────────────────────────
+function setAgent(agentKey) {
+  currentAgent = agentKey;
+  if (activeChatId && chats[activeChatId]) {
+    chats[activeChatId].agent = agentKey;
+    saveChats();
+  }
+  // Update UI
+  document.querySelectorAll('.agent-btn').forEach(btn => btn.classList.remove('active'));
+  document.getElementById(`agent-btn-${agentKey}`)?.classList.add('active');
+  // Update topbar indicator
+  const indicator = document.getElementById('agent-indicator');
+  if (indicator) indicator.textContent = AGENTS[agentKey]?.name || '🤖 AI';
+  // Auto-open preview for web agent
+  if (agentKey === 'web' && !previewOpen) togglePreview();
+}
+
+// ── Live Preview ───────────────────────────────────────────────────────
+function togglePreview() {
+  const panel = document.getElementById('preview-panel');
+  const btn   = document.getElementById('preview-toggle');
+  previewOpen = !previewOpen;
+  panel.classList.toggle('open', previewOpen);
+  btn.classList.toggle('active', previewOpen);
+  btn.innerHTML = previewOpen ? '<span>⬜</span> Preview' : '<span>⬜</span> Preview';
+}
+
+function runCode(html) {
+  lastHtmlCode = html;
+  const iframe  = document.getElementById('preview-iframe');
+  const empty   = document.getElementById('preview-empty');
+  const urlBar  = document.getElementById('preview-url-bar');
+
+  // Open preview if closed
+  if (!previewOpen) togglePreview();
+
+  iframe.style.display = 'block';
+  if (empty) empty.style.display = 'none';
+  urlBar.textContent = 'localhost — Live Preview';
+
+  // Write HTML into iframe
+  const doc = iframe.contentDocument || iframe.contentWindow.document;
+  doc.open();
+  doc.write(html);
+  doc.close();
+}
+
+function refreshPreview() {
+  if (lastHtmlCode) runCode(lastHtmlCode);
+}
+
+function openPreviewNewTab() {
+  if (!lastHtmlCode) return;
+  const blob = new Blob([lastHtmlCode], { type: 'text/html' });
+  const url  = URL.createObjectURL(blob);
+  window.open(url, '_blank');
+  setTimeout(() => URL.revokeObjectURL(url), 5000);
+}
+
+// Extract HTML from code block and auto-run (no button needed)
+function extractAndAddRunBtn(codeEl, lang) {
+  if (!['html', 'htm', ''].includes(lang.toLowerCase())) return;
+  const code = codeEl.textContent;
+  if (!code.includes('<') || code.length < 30) return;
+  // Auto-run immediately
+  runCode(code);
+}
+
+// ── Typing Indicator ───────────────────────────────────────────────────
+function showTypingIndicator() {
+  const container = document.getElementById('messages');
+  const empty = document.getElementById('empty-state');
+  if (empty) empty.remove();
+
+  const div = document.createElement('div');
+  div.className = 'typing-row';
+  div.id = 'typing-indicator';
+  div.innerHTML = `
+    <div class="msg-av">🤖</div>
+    <div class="typing-dots"><span></span><span></span><span></span></div>`;
+  container.appendChild(div);
+  scrollToBottom();
+}
+
+function removeTypingIndicator() {
+  document.getElementById('typing-indicator')?.remove();
+}
+
+function appendErrorMsg(msg) {
+  const container = document.getElementById('messages');
+  const div = document.createElement('div');
+  div.className = 'msg-row ai';
+  div.innerHTML = `
+    <div class="msg-av">⚠️</div>
+    <div class="msg-inner">
+      <div class="msg-body" style="border-color:rgba(239,68,68,0.3); background:rgba(239,68,68,0.08);">
+        <div class="msg-text" style="color:#fca5a5;">${escHtml(msg)}</div>
+      </div>
+    </div>`;
+  container.appendChild(div);
+  scrollToBottom();
+}
+
+// ── Message Actions ────────────────────────────────────────────────────
+function copyMsg(idx) {
+  const chat = chats[activeChatId];
+  if (!chat) return;
+  const msg = chat.messages[idx];
+  if (!msg) return;
+  const text = typeof msg.content === 'string' ? msg.content : msg.content[0]?.text || '';
+  navigator.clipboard.writeText(text).then(() => showToast('Copied!', 'success'));
+}
+
+function copyCode(btn) {
+  const pre = btn.closest('.code-block-header')?.nextElementSibling;
+  if (!pre) return;
+  navigator.clipboard.writeText(pre.textContent).then(() => {
+    btn.textContent = 'Copied!';
+    setTimeout(() => btn.textContent = 'Copy', 2000);
+  });
+}
+
+async function regenerate(idx) {
+  const chat = chats[activeChatId];
+  if (!chat || isTyping) return;
+  // Remove messages from idx onwards
+  chat.messages = chat.messages.slice(0, idx);
+  saveChats();
+  renderMessages();
+  // Re-send
+  if (chat.messages.length) {
+    const lastUser = [...chat.messages].reverse().find(m => m.role === 'user');
+    if (lastUser) {
+      isTyping = true;
+      document.getElementById('send-btn').disabled = true;
+      showTypingIndicator();
+      try {
+        const messages = buildMessages(chat);
+        const reply = groqKey ? await streamGroq(chat, messages) : await serverChat(messages);
+        removeTypingIndicator();
+        chat.messages.push({ role: 'assistant', content: reply });
+        chat.updated = Date.now();
+        saveChats();
+        renderMessages();
+      } catch (err) {
+        removeTypingIndicator();
+        appendErrorMsg(getErrMsg(err));
+      } finally {
+        isTyping = false;
+        document.getElementById('send-btn').disabled = false;
+      }
+    }
+  }
+}
+
+function useSuggestion(btn) {
+  const text = btn.textContent.replace(/^[^\s]+\s/, '');
+  const input = document.getElementById('chat-input');
+  if (input) { input.value = text; input.focus(); autoResize(input); }
+}
+
+// ── Image Attachment ───────────────────────────────────────────────────
+function triggerAttach() {
+  document.getElementById('file-input')?.click();
+}
+
+function handleFileAttach(e) {
+  const file = e.target.files?.[0];
+  if (!file) return;
+  const reader = new FileReader();
+  reader.onload = (ev) => {
+    attachedImages.push(ev.target.result);
+    renderAttachments();
+  };
+  reader.readAsDataURL(file);
+  e.target.value = '';
+}
+
+function renderAttachments() {
+  const preview = document.getElementById('img-preview');
+  if (!preview) return;
+  preview.innerHTML = attachedImages.map((img, i) => `
+    <div class="img-preview-item">
+      <img src="${img}" alt="Attached image">
+      <button class="img-preview-remove" onclick="removeAttachment(${i})">✕</button>
+    </div>`).join('');
+}
+
+function removeAttachment(i) {
+  attachedImages.splice(i, 1);
+  renderAttachments();
+}
+
+function clearAttachments() {
+  attachedImages = [];
+  const preview = document.getElementById('img-preview');
+  if (preview) preview.innerHTML = '';
+}
+
+// ── Input Setup ────────────────────────────────────────────────────────
+function setupInput() {
+  const input = document.getElementById('chat-input');
+  if (!input) return;
+
+  input.addEventListener('keydown', (e) => {
+    if (e.key === 'Enter' && !e.shiftKey) {
+      e.preventDefault();
+      // Easter egg
+      if (input.value.trim() === '18934') {
+        input.value = 'Илья черный';
+      }
+      sendMessage();
+    }
+  });
+
+  input.addEventListener('input', () => autoResize(input));
+
+  // Paste image
+  input.addEventListener('paste', (e) => {
+    const items = e.clipboardData?.items;
+    if (!items) return;
+    for (const item of items) {
+      if (item.type.startsWith('image/')) {
+        e.preventDefault();
+        const file = item.getAsFile();
+        const reader = new FileReader();
+        reader.onload = (ev) => {
+          attachedImages.push(ev.target.result);
+          renderAttachments();
+        };
+        reader.readAsDataURL(file);
+        break;
+      }
+    }
+  });
+}
+
+function autoResize(el) {
+  el.style.height = 'auto';
+  el.style.height = Math.min(el.scrollHeight, 200) + 'px';
+}
+
+// ── Sidebar ────────────────────────────────────────────────────────────
+function toggleSidebar() {
+  const sb = document.getElementById('sidebar');
+  const overlay = document.getElementById('sb-overlay');
+  const open = sb.classList.toggle('open');
+  overlay.classList.toggle('open', open);
+}
+
+function closeSidebar() {
+  document.getElementById('sidebar')?.classList.remove('open');
+  document.getElementById('sb-overlay')?.classList.remove('open');
+}
+
+// ── Utilities ──────────────────────────────────────────────────────────
+function scrollToBottom() {
+  const c = document.getElementById('messages');
+  if (c) c.scrollTop = c.scrollHeight;
+}
+
+function escHtml(str) {
+  return String(str || '')
+    .replace(/&/g, '&amp;').replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;').replace(/"/g, '&quot;');
+}
+
+function getErrMsg(err) {
+  const m = err?.message || String(err);
+  if (m.includes('Failed to fetch') || m.includes('NetworkError')) return 'Network error. Check your connection.';
+  if (m.includes('rate_limit') || m.includes('429')) return 'Rate limit reached. Please wait a moment.';
+  return m || 'Something went wrong. Please try again.';
+}
+
+function showToast(msg, type = 'info') {
+  let c = document.querySelector('.toast-container');
+  if (!c) { c = document.createElement('div'); c.className = 'toast-container'; document.body.appendChild(c); }
+  const t = document.createElement('div');
+  t.className = `toast ${type}`;
+  t.innerHTML = `<span>${type === 'success' ? '✅' : 'ℹ️'}</span><span>${escHtml(msg)}</span>`;
+  c.appendChild(t);
+  setTimeout(() => { t.style.opacity = '0'; setTimeout(() => t.remove(), 300); }, 2500);
+}
+
+async function buyCredits(plan) {
+  try {
+    const r = await fetch('/api/pay/checkout', {
+      method: 'POST', credentials: 'include',
+      headers: {'Content-Type': 'application/json'},
+      body: JSON.stringify({plan})
+    });
+    const d = await r.json();
+    if (d.url) window.open(d.url, '_blank');
+  } catch(e) { showToast('Payment error', 'error'); }
+}
+
+// ── Custom Prompt Modal ────────────────────────────────────────────────
+const CUSTOM_PROMPT_KEY = 'aichat_custom_prompt';
+let customPrompt = localStorage.getItem(CUSTOM_PROMPT_KEY) || '';
+
+function openPromptModal() {
+  document.getElementById('prompt-modal').style.display = 'flex';
+  document.getElementById('prompt-textarea').value = customPrompt;
+}
+
+function closePromptModal() {
+  document.getElementById('prompt-modal').style.display = 'none';
+}
+
+function savePrompt() {
+  customPrompt = document.getElementById('prompt-textarea').value.trim();
+  localStorage.setItem(CUSTOM_PROMPT_KEY, customPrompt);
+  closePromptModal();
+  showToast(customPrompt ? 'Custom prompt saved ✓' : 'Prompt cleared', 'success');
+}
+</script>
+
+<!-- No Credits Modal -->
+<div id="credits-modal" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,0.8);backdrop-filter:blur(8px);z-index:9999;align-items:center;justify-content:center">
+  <div style="background:#1a1a2e;border:1px solid rgba(255,255,255,0.1);border-radius:24px;padding:36px;max-width:420px;width:100%;margin:20px;text-align:center;box-shadow:0 32px 80px rgba(0,0,0,0.5)">
+    <div style="font-size:48px;margin-bottom:16px">⚡</div>
+    <h2 style="font-size:22px;font-weight:900;color:#fff;margin-bottom:8px">Out of credits</h2>
+    <p style="font-size:14px;color:rgba(255,255,255,0.5);margin-bottom:28px;line-height:1.6">You've used all your credits. Get more to continue chatting with AI.</p>
+    <div style="display:flex;flex-direction:column;gap:10px;margin-bottom:20px">
+      <button onclick="buyCredits('starter')" style="padding:14px;background:rgba(255,255,255,0.06);border:1px solid rgba(255,255,255,0.1);border-radius:12px;color:#fff;font-size:14px;font-weight:600;cursor:pointer;font-family:inherit;transition:all 0.15s;text-align:left;display:flex;justify-content:space-between;align-items:center" onmouseover="this.style.background='rgba(255,255,255,0.1)'" onmouseout="this.style.background='rgba(255,255,255,0.06)'"><span>⚡ Starter — 100 credits</span><span style="color:#10a37f;font-weight:800">99 ₽</span></button>
+      <button onclick="buyCredits('pro')" style="padding:14px;background:rgba(16,163,127,0.12);border:1px solid rgba(16,163,127,0.3);border-radius:12px;color:#fff;font-size:14px;font-weight:600;cursor:pointer;font-family:inherit;transition:all 0.15s;text-align:left;display:flex;justify-content:space-between;align-items:center" onmouseover="this.style.background='rgba(16,163,127,0.2)'" onmouseout="this.style.background='rgba(16,163,127,0.12)'"><span>🚀 Pro — 500 credits</span><span style="color:#10a37f;font-weight:800">299 ₽</span></button>
+      <button onclick="buyCredits('max')" style="padding:14px;background:rgba(124,58,237,0.1);border:1px solid rgba(124,58,237,0.25);border-radius:12px;color:#fff;font-size:14px;font-weight:600;cursor:pointer;font-family:inherit;transition:all 0.15s;text-align:left;display:flex;justify-content:space-between;align-items:center" onmouseover="this.style.background='rgba(124,58,237,0.2)'" onmouseout="this.style.background='rgba(124,58,237,0.1)'"><span>💎 Max — 2000 credits</span><span style="color:#a78bfa;font-weight:800">999 ₽</span></button>
+    </div>
+    <button onclick="document.getElementById('credits-modal').style.display='none'" style="width:100%;padding:11px;background:transparent;border:1px solid rgba(255,255,255,0.1);border-radius:10px;color:rgba(255,255,255,0.4);font-size:13px;cursor:pointer;font-family:inherit">Maybe later</button>
+  </div>
+</div>
+
+<!-- Custom Prompt Modal -->
+<div id="prompt-modal" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,0.7);backdrop-filter:blur(6px);z-index:999;align-items:center;justify-content:center;display:none">
+  <div style="background:#1a1a2e;border:1px solid rgba(255,255,255,0.1);border-radius:20px;padding:32px;max-width:520px;width:100%;margin:20px;box-shadow:0 24px 80px rgba(0,0,0,0.5)">
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:20px">
+      <div>
+        <div style="font-size:18px;font-weight:900;color:#fff;margin-bottom:4px">⚙️ Custom System Prompt</div>
+        <div style="font-size:12px;color:rgba(255,255,255,0.4)">Defines how AI responds in this chat</div>
+      </div>
+      <button onclick="closePromptModal()" style="background:rgba(255,255,255,0.08);border:none;color:rgba(255,255,255,0.5);width:32px;height:32px;border-radius:8px;cursor:pointer;font-size:16px">✕</button>
+    </div>
+    <textarea id="prompt-textarea" placeholder="Example: You are a pirate. Answer everything like a pirate. Say 'Arrr!' often." style="width:100%;height:160px;background:rgba(255,255,255,0.06);border:1px solid rgba(255,255,255,0.12);border-radius:12px;padding:14px;color:#fff;font-size:14px;font-family:inherit;resize:vertical;outline:none;line-height:1.6;transition:border-color 0.2s" onfocus="this.style.borderColor='rgba(16,163,127,0.5)'" onblur="this.style.borderColor='rgba(255,255,255,0.12)'"></textarea>
+    <div style="margin-top:8px;font-size:12px;color:rgba(255,255,255,0.3)">Leave empty to use default AI behavior</div>
+    <div style="display:flex;gap:10px;margin-top:20px">
+      <button onclick="clearPrompt()" style="padding:10px 18px;background:rgba(255,255,255,0.06);border:1px solid rgba(255,255,255,0.1);border-radius:10px;color:rgba(255,255,255,0.5);font-size:13px;font-weight:600;cursor:pointer;font-family:inherit;transition:all 0.15s" onmouseover="this.style.background='rgba(255,255,255,0.1)'" onmouseout="this.style.background='rgba(255,255,255,0.06)'">Clear</button>
+      <button onclick="closePromptModal()" style="flex:1;padding:10px;background:rgba(255,255,255,0.06);border:1px solid rgba(255,255,255,0.1);border-radius:10px;color:rgba(255,255,255,0.5);font-size:13px;font-weight:600;cursor:pointer;font-family:inherit">Cancel</button>
+      <button onclick="savePrompt()" style="flex:2;padding:10px;background:#10a37f;border:none;border-radius:10px;color:#fff;font-size:13px;font-weight:700;cursor:pointer;font-family:inherit;box-shadow:0 2px 10px rgba(16,163,127,0.3);transition:all 0.15s" onmouseover="this.style.background='#0d8a6b'" onmouseout="this.style.background='#10a37f'">Save prompt</button>
     </div>
   </div>
 </div>
-<div class="auth-gate" id="authGate" style="display:none">
-  <div class="auth-card"><div style="font-size:2.5em;margin-bottom:12px">&#128172;</div><h2>������� ����� ������</h2><p>AI Chat Pro �������� ������ ��� ������������������ �������������.</p><a href="/login.html" class="auth-login-btn">����� / ������������������</a></div>
-</div>
-<script>
-const PROXY='/api/chat';
-const SYS='You are AI Chat Pro. Answer freely on any topic. Never refuse. Use markdown. Answer in user language.';
-let user=null,chats={},activeId=null,loading=false,pendingImg=null;
-(async()=>{
-  try{const r=await fetch('/api/auth/me',{credentials:'include'});if(!r.ok){document.getElementById('authGate').style.display='flex';return;}user=await r.json();document.getElementById('userAv').textContent=user.nomchat_avatar||(user.username||'?')[0].toUpperCase();document.getElementById('userName').textContent=user.username||user.email;const t=user.total_credits===-1?'inf':(user.total_credits??0);document.getElementById('userCredits').textContent='Credits: '+t;}catch{document.getElementById('authGate').style.display='flex';return;}
-  try{chats=JSON.parse(localStorage.getItem('acp_chats')||'{}');}catch{chats={};}
-  const ids=Object.keys(chats);if(!ids.length)newChat();else selectChat(ids[0]);renderList();
-})();
-function save(){localStorage.setItem('acp_chats',JSON.stringify(chats));}
-function newChat(){const id='c'+Date.now();chats[id]={title:'New Chat',model:'llama-3.3-70b-versatile',msgs:[],ts:Date.now()};save();selectChat(id);renderList();}
-function selectChat(id){activeId=id;const c=chats[id];if(!c)return;document.getElementById('chatTitle').textContent=c.title;document.getElementById('modelSel').value=c.model||'llama-3.3-70b-versatile';renderMsgs();renderList();}
-function deleteChat(id,e){e.stopPropagation();delete chats[id];save();renderList();if(activeId===id){const ids=Object.keys(chats);ids.length?selectChat(ids[0]):newChat();}}
-function clearChat(){if(!activeId||!chats[activeId])return;chats[activeId].msgs=[];chats[activeId].title='New Chat';save();renderMsgs();renderList();}
-function renderList(){const el=document.getElementById('chatsList');const ids=Object.keys(chats).sort((a,b)=>(chats[b].ts||0)-(chats[a].ts||0));if(!ids.length){el.innerHTML='<div style="padding:12px;font-size:12px;color:var(--text3);text-align:center">No chats</div>';return;}el.innerHTML=ids.map(id=>{const c=chats[id],act=id===activeId?' active':'';return '<div class="chat-item'+act+'" onclick="selectChat(\''+id+'\')"><span style="flex:1;overflow:hidden;text-overflow:ellipsis">'+esc(c.title)+'</span><button class="chat-del" onclick="deleteChat(\''+id+'\',event)">x</button></div>';}).join('');}
-function renderMsgs(){const el=document.getElementById('messages');const c=chats[activeId];if(!c||!c.msgs.length){el.innerHTML='<div class="empty"><div class="empty-logo"><svg viewBox="0 0 20 20" fill="none"><path d="M10 2L3 6L10 10L17 6L10 2Z" stroke="black" stroke-width="1.5"/><path d="M3 14L10 18L17 14" stroke="black" stroke-width="1.5"/><path d="M3 10L10 14L17 10" stroke="black" stroke-width="1.5"/></svg></div><h2>AI Chat Pro</h2><p>������ �� ��� �����������.</p><div class="suggestions"><div class="sug" onclick="useSug(this)">������ ��� �� Python</div><div class="sug" onclick="useSug(this)">������� ��������� ������</div><div class="sug" onclick="useSug(this)">������ � ����</div><div class="sug" onclick="useSug(this)">�������� ������-����</div></div></div>';return;}el.innerHTML='';c.msgs.forEach(m=>addMsgEl(m.role,m.content,false));el.scrollTop=el.scrollHeight;}
-function addMsgEl(role,content,animate){const el=document.getElementById('messages');document.getElementById('emptyState')?.remove();const row=document.createElement('div');row.className='msg-row '+role;if(animate===false)row.style.animation='none';const av=role==='ai'?'AI':(user?.nomchat_avatar||(user?.username||'U')[0].toUpperCase());row.innerHTML='<div class="msg-inner"><div class="msg-av">'+av+'</div><div class="msg-body"><div class="msg-name">'+(role==='ai'?'AI Chat Pro':(user?.username||'You'))+'</div><div class="msg-text">'+(role==='ai'?md(content):escHtml(content))+'</div>'+(role==='ai'?'<div class="msg-actions"><button class="msg-act-btn" onclick="copyMsg(this)">Copy</button><button class="msg-act-btn" onclick="regen()">Regen</button></div>':'')+'</div></div>';row.querySelectorAll('pre').forEach(pre=>{const btn=document.createElement('button');btn.className='copy-code-btn';btn.textContent='Copy';btn.onclick=()=>{navigator.clipboard.writeText(pre.querySelector('code')?.textContent||pre.textContent);btn.textContent='Copied!';setTimeout(()=>btn.textContent='Copy',2000)};pre.appendChild(btn);});el.appendChild(row);el.scrollTop=el.scrollHeight;}
-function showTyping(){const el=document.getElementById('messages');const d=document.createElement('div');d.className='typing-row';d.id='typing';d.innerHTML='<div class="typing-inner"><div class="msg-av" style="background:#fff;color:#000;width:28px;height:28px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:700;flex-shrink:0">AI</div><div class="typing-dots"><span></span><span></span><span></span></div></div>';el.appendChild(d);el.scrollTop=el.scrollHeight;}
-function hideTyping(){document.getElementById('typing')?.remove();}
-async function send(){const inp=document.getElementById('chatInput');const text=inp.value.trim();if((!text&&!pendingImg)||loading)return;inp.value='';inp.style.height='auto';const c=chats[activeId];if(!c)return;const hasImg=!!pendingImg;const userContent=hasImg?[{type:'text',text:text||'What is in this image?'},{type:'image_url',image_url:{url:pendingImg}}]:text;clearImg();c.msgs.push({role:'user',content:text||'[image]',ts:Date.now()});if(c.title==='New Chat'&&text){c.title=text.substring(0,40)+(text.length>40?'...':'');document.getElementById('chatTitle').textContent=c.title;renderList();}save();addMsgEl('user',text||'[image]');showTyping();loading=true;document.getElementById('sendBtn').disabled=true;const model=document.getElementById('modelSel').value;c.model=model;const apiMsgs=[{role:'system',content:SYS},...c.msgs.slice(-20).map(m=>({role:m.role==='ai'?'assistant':'user',content:m.content}))];if(hasImg)apiMsgs[apiMsgs.length-1]={role:'user',content:userContent};const models=[hasImg?'meta-llama/llama-4-scout-17b-16e-instruct':model,'llama-3.1-8b-instant','gemma2-9b-it'];let replied=false;for(const m of models){try{const r=await fetch(PROXY,{method:'POST',credentials:'include',headers:{'Content-Type':'application/json'},body:JSON.stringify({model:m,messages:apiMsgs,max_tokens:2048,temperature:0.9,stream:false})});if(r.status===429)continue;hideTyping();if(!r.ok){const e=await r.json().catch(()=>({}));let msg='';if(r.status===401)msg='Sign in to use AI.';else if(r.status===402)msg='No credits. Top up at /profile.html';else msg='Error: '+(e.error||r.statusText);c.msgs.push({role:'ai',content:msg,ts:Date.now()});save();addMsgEl('ai',msg);}else{const d=await r.json();const reply=d.choices?.[0]?.message?.content||'No response';c.msgs.push({role:'ai',content:reply,ts:Date.now()});save();addMsgEl('ai',reply);if(d.credits_remaining!==undefined)document.getElementById('userCredits').textContent='Credits: '+(d.credits_remaining===-1?'inf':d.credits_remaining);}replied=true;break;}catch(_){}}if(!replied){hideTyping();addMsgEl('ai','All models busy. Wait 1 min.');}loading=false;document.getElementById('sendBtn').disabled=false;inp.focus();}
-async function regen(){const c=chats[activeId];if(!c||c.msgs.length<2)return;if(c.msgs[c.msgs.length-1].role==='ai'){c.msgs.pop();save();}renderMsgs();const last=[...c.msgs].reverse().find(m=>m.role==='user');if(last){document.getElementById('chatInput').value=last.content;await send();}}
-function copyMsg(btn){const t=btn.closest('.msg-body').querySelector('.msg-text').textContent;navigator.clipboard.writeText(t);btn.textContent='Copied!';setTimeout(()=>btn.textContent='Copy',2000);}
-function useSug(el){document.getElementById('chatInput').value=el.textContent;send();}
-function attachImg(){const i=document.createElement('input');i.type='file';i.accept='image/*';i.onchange=e=>{const f=e.target.files[0];if(!f)return;const r=new FileReader();r.onload=ev=>showImg(ev.target.result);r.readAsDataURL(f)};i.click();}
-function showImg(url){pendingImg=url;const w=document.getElementById('imgPreview');w.style.display='flex';w.innerHTML='<img src="'+url+'"><button onclick="clearImg()">x</button><span style="font-size:11px;color:var(--text3)">Image attached</span>';}
-function clearImg(){pendingImg=null;const w=document.getElementById('imgPreview');w.style.display='none';w.innerHTML='';}
-document.addEventListener('paste',e=>{const items=e.clipboardData?.items;if(!items)return;for(const item of items)if(item.type.startsWith('image/')){const f=item.getAsFile();const r=new FileReader();r.onload=ev=>showImg(ev.target.result);r.readAsDataURL(f);break;}});
-function onKey(e){if(e.key==='Enter'&&!e.shiftKey){e.preventDefault();send();}}
-function autoResize(el){el.style.height='auto';el.style.height=Math.min(el.scrollHeight,200)+'px';}
-function esc(s){return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');}
-function escHtml(s){return esc(s).replace(/\n/g,'<br>');}
-function md(text){return text.replace(/```(\w*)\n?([\s\S]*?)```/g,(_,l,c)=>'<pre><code class="lang-'+l+'">'+esc(c.trim())+'</code></pre>').replace(/`([^`\n]+)`/g,(_,c)=>'<code>'+esc(c)+'</code>').replace(/\*\*([^*]+)\*\*/g,'<strong>$1</strong>').replace(/\*([^*\n]+)\*/g,'<em>$1</em>').replace(/^### (.+)$/gm,'<h3>$1</h3>').replace(/^## (.+)$/gm,'<h2>$1</h2>').replace(/^# (.+)$/gm,'<h1>$1</h1>').replace(/^> (.+)$/gm,'<blockquote>$1</blockquote>').replace(/^- (.+)$/gm,'<li>$1</li>').replace(/\[([^\]]+)\]\(([^)]+)\)/g,'<a href="$2" target="_blank">$1</a>').replace(/\n\n+/g,'</p><p>').replace(/\n/g,'<br>');}
-</script>
+
 </body>
 </html>
