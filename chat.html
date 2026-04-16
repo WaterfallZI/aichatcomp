@@ -6,6 +6,31 @@
 <title>Chat — AI Chat Company</title>
 <link rel="stylesheet" href="style.css">
 <style>
+/* ── Page load animation ── */
+@keyframes fadeInUp {
+  from { opacity: 0; transform: translateY(12px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+.chat-layout {
+  animation: fadeInUp 0.3s cubic-bezier(0.4,0,0.2,1) both;
+}
+.sidebar {
+  animation: fadeInUp 0.35s cubic-bezier(0.4,0,0.2,1) 0.05s both;
+}
+.main {
+  animation: fadeInUp 0.35s cubic-bezier(0.4,0,0.2,1) 0.1s both;
+}
+/* ── Smooth msg appear ── */
+.msg-row {
+  animation: fadeInUp 0.25s cubic-bezier(0.4,0,0.2,1) both;
+}
+/* ── Model select styling ── */
+.model-sel optgroup { font-weight: 700; }
+/* ── Pro badge on locked models ── */
+.model-sel option[value="danya-coala-5.0"],
+.model-sel option[value="danya-5.5-pro"] {
+  color: #f59e0b;
+}
 /* ── Live Preview Panel ── */
 .preview-panel {
   width: 0; flex-shrink: 0;
@@ -190,11 +215,16 @@
       <span class="topbar-title" id="chat-title">New conversation</span>
       <span class="agent-indicator" id="agent-indicator">🤖 AI Assistant</span>
       <select class="model-sel" id="model-sel" title="Select AI model">
-        <optgroup label="✦ Danya AI">
+        <optgroup label="✦ Danya AI — Free">
           <option value="danya-1.0">Danya 1.0</option>
           <option value="danya-1.7-mj">Danya 1.7 MJ</option>
           <option value="danya-2.5-turbo">Danya 2.5 Turbo</option>
-          <option value="danya-coala-5.0">Danya Coala 5.0</option>
+          <option value="danya-g-4.4">Danya G 4.4 · 5cr</option>
+          <option value="danya-coala-4.8">Danya Coala 4.8 · 10cr</option>
+        </optgroup>
+        <optgroup label="✦ Danya AI — Pro">
+          <option value="danya-coala-5.0">Danya Coala 5.0 · 50cr 🔒</option>
+          <option value="danya-5.5-pro">Danya 5.5 Pro · 100cr 🔒</option>
         </optgroup>
         <optgroup label="Google Gemini">
           <option value="gemini-2.0-flash" selected>Gemini 2.0 Flash</option>
@@ -796,6 +826,11 @@ async function streamCursor(chat, messages) {
         msgEl.remove();
         document.getElementById('credits-modal').style.display = 'flex';
         throw new Error('no_credits');
+      }
+      if (err.error === 'pro_required') {
+        msgEl.remove();
+        appendErrorMsg('🔒 ' + (err.message || 'This model requires Pro plan.'));
+        throw new Error('pro_required');
       }
       throw new Error(err.error || `Server error ${res.status}`);
     }

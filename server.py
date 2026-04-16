@@ -56,26 +56,51 @@ GEMINI_MODELS = {
 }
 
 # Danya AI models via OpenRouter — each has its own system prompt identity
+# cost = credits per message (1 = default, 50 = premium, 100 = ultra)
 DANYA_MODELS = {
     'danya-1.0': {
-        'model':    'meta-llama/llama-3.3-70b-instruct',
+        'model':    'meta-llama/llama-3.3-70b-instruct:free',
         'identity': 'Danya 1.0',
+        'cost':     1,
         'system':   'You are Danya 1.0, an AI assistant created by Danya AI. When asked about your model or identity, always say you are Danya 1.0. Be helpful, friendly and concise.',
     },
     'danya-1.7-mj': {
         'model':    'mistralai/mistral-7b-instruct:free',
         'identity': 'Danya 1.7 MJ',
+        'cost':     1,
         'system':   'You are Danya 1.7 MJ, an AI assistant created by Danya AI. When asked about your model or identity, always say you are Danya 1.7 MJ. Be helpful, creative and concise.',
     },
     'danya-2.5-turbo': {
         'model':    'mistralai/mixtral-8x7b-instruct',
         'identity': 'Danya 2.5 Turbo',
+        'cost':     1,
         'system':   'You are Danya 2.5 Turbo, a fast and powerful AI assistant created by Danya AI. When asked about your model or identity, always say you are Danya 2.5 Turbo. Be helpful, fast and precise.',
     },
-    'danya-coala-5.0': {
+    'danya-g-4.4': {
+        'model':    'google/gemini-2.0-flash-001',
+        'identity': 'Danya G 4.4',
+        'cost':     5,
+        'system':   'You are Danya G 4.4, an advanced AI assistant created by Danya AI. When asked about your model or identity, always say you are Danya G 4.4. Be helpful, smart and detailed.',
+    },
+    'danya-coala-4.8': {
         'model':    'google/gemma-3-27b-it',
+        'identity': 'Danya Coala 4.8',
+        'cost':     10,
+        'system':   'You are Danya Coala 4.8, a highly capable AI assistant created by Danya AI. When asked about your model or identity, always say you are Danya Coala 4.8. Be helpful, intelligent and thorough.',
+    },
+    'danya-coala-5.0': {
+        'model':    'anthropic/claude-3.5-sonnet',
         'identity': 'Danya Coala 5.0',
+        'cost':     50,
+        'pro_only': True,
         'system':   'You are Danya Coala 5.0, the most advanced AI assistant created by Danya AI. When asked about your model or identity, always say you are Danya Coala 5.0. Be helpful, intelligent and thorough.',
+    },
+    'danya-5.5-pro': {
+        'model':    'anthropic/claude-opus-4-5',
+        'identity': 'Danya 5.5 Pro',
+        'cost':     100,
+        'pro_only': True,
+        'system':   'You are Danya 5.5 Pro, the most technologically advanced AI assistant ever created by Danya AI. When asked about your model or identity, always say you are Danya 5.5 Pro. Be exceptionally helpful, precise and powerful.',
     },
 }
 
@@ -459,9 +484,6 @@ def get_models():
 @app.route('/api/chat', methods=['POST'])
 @login_required
 def chat(user):
-    if not user.has_credits():
-        return jsonify({'error': 'no_credits', 'message': 'No credits remaining.'}), 402
-
     d = request.get_json(silent=True) or {}
     messages  = d.get('messages', [])
     model     = d.get('model', 'gemini-2.0-flash')
@@ -469,6 +491,21 @@ def chat(user):
 
     if model not in ALL_MODELS:
         model = 'gemini-2.0-flash'
+
+    # Determine cost and access rules
+    cost = 1
+    if model in DANYA_MODELS:
+        danya_cfg = DANYA_MODELS[model]
+        cost = danya_cfg.get('cost', 1)
+        # pro_only models require pro/max/ultra plan
+        if danya_cfg.get('pro_only') and user.plan not in ('pro', 'max', 'ultra'):
+            return jsonify({
+                'error': 'pro_required',
+                'message': f'{danya_cfg["identity"]} requires Pro plan or higher.'
+            }), 403
+
+    if not user.has_credits(cost):
+        return jsonify({'error': 'no_credits', 'message': f'Need {cost} credits for this model.'}), 402
 
     # Clean messages
     clean_msgs = []
@@ -518,7 +555,7 @@ def chat(user):
                                     yield f"data: {json.dumps({'id': resp_id, 'object': 'chat.completion.chunk', 'model': model, 'choices': [{'index': 0, 'delta': {'content': text}}]})}\n\n"
                                 except Exception:
                                     pass
-                        user.deduct()
+                        user.deduct(cost)
                         yield 'data: [DONE]\n\n'
                     except Exception as e:
                         yield f"data: {json.dumps({'error': str(e)})}\n\n"
@@ -531,7 +568,7 @@ def chat(user):
                 if not resp.ok:
                     return jsonify({'error': f'Gemini error {resp.status_code}: {resp.text[:200]}'}), resp.status_code
                 result = gemini_to_openai_format(resp.json(), model)
-                user.deduct()
+                user.deduct(cost)
                 total = -1 if user.plan == 'ultra' else (user.credits or 0) + (user.bonus_credits or 0)
                 result['credits_remaining'] = total
                 return jsonify(result)
@@ -551,7 +588,7 @@ def chat(user):
                             if line:
                                 decoded = line.decode('utf-8') if isinstance(line, bytes) else line
                                 yield decoded + '\n\n'
-                        user.deduct()
+                        user.deduct(cost)
                     except Exception as e:
                         yield f"data: {json.dumps({'error': str(e)})}\n\n"
 
@@ -563,7 +600,7 @@ def chat(user):
                 if not resp.ok:
                     return jsonify({'error': f'OpenRouter error {resp.status_code}: {resp.text[:200]}'}), resp.status_code
                 result = resp.json()
-                user.deduct()
+                user.deduct(cost)
                 total = -1 if user.plan == 'ultra' else (user.credits or 0) + (user.bonus_credits or 0)
                 result['credits_remaining'] = total
                 return jsonify(result)
