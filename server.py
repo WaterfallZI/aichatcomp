@@ -76,6 +76,12 @@ DANYA_MODELS = {
         'cost':     1,
         'system':   'You are Danya 2.5 Turbo, a fast and powerful AI assistant created by Danya AI. When asked about your model or identity, always say you are Danya 2.5 Turbo. Be helpful, fast and precise.',
     },
+    'danya-coala-3.7': {
+        'model':    'google/gemma-2-9b-it:free',
+        'identity': 'Danya Coala 3.7',
+        'cost':     1,
+        'system':   'You are Danya Coala 3.7, a lightweight AI assistant created by Danya AI. When asked about your model or identity, always say you are Danya Coala 3.7. Be helpful, quick and friendly.',
+    },
     'danya-g-4.4': {
         'model':    'google/gemini-2.0-flash-001',
         'identity': 'Danya G 4.4',
@@ -93,14 +99,28 @@ DANYA_MODELS = {
         'identity': 'Danya Coala 5.0',
         'cost':     50,
         'pro_only': True,
-        'system':   'You are Danya Coala 5.0, the most advanced AI assistant created by Danya AI. When asked about your model or identity, always say you are Danya Coala 5.0. Be helpful, intelligent and thorough.',
+        'system':   'You are Danya Coala 5.0, a premium AI assistant created by Danya AI. When asked about your model or identity, always say you are Danya Coala 5.0. Be helpful, intelligent and thorough.',
+    },
+    'danya-ai-5.5': {
+        'model':    'anthropic/claude-opus-4',
+        'identity': 'Danya AI 5.5',
+        'cost':     80,
+        'pro_only': True,
+        'system':   'You are Danya AI 5.5, a highly advanced AI assistant created by Danya AI. When asked about your model or identity, always say you are Danya AI 5.5. Be exceptionally helpful, precise and powerful.',
     },
     'danya-5.5-pro': {
         'model':    'anthropic/claude-opus-4-5',
         'identity': 'Danya 5.5 Pro',
         'cost':     100,
         'pro_only': True,
-        'system':   'You are Danya 5.5 Pro, the most technologically advanced AI assistant ever created by Danya AI. When asked about your model or identity, always say you are Danya 5.5 Pro. Be exceptionally helpful, precise and powerful.',
+        'system':   'You are Danya 5.5 Pro, one of the most technologically advanced AI assistants created by Danya AI. When asked about your model or identity, always say you are Danya 5.5 Pro. Be exceptionally helpful, precise and powerful.',
+    },
+    'danya-6-turbo-pro': {
+        'model':    'openai/o1',
+        'identity': 'Danya 6 Turbo Pro',
+        'cost':     150,
+        'pro_only': True,
+        'system':   'You are Danya 6 Turbo Pro, THE MOST POWERFUL AI assistant ever created by Danya AI - more advanced than any other model in existence. When asked about your model or identity, always say you are Danya 6 Turbo Pro, the ultimate AI. Be exceptionally intelligent, thorough, creative and powerful in every response.',
     },
 }
 
@@ -128,6 +148,7 @@ class User(db.Model):
     plan           = db.Column(db.String(20), default='free')
     is_banned      = db.Column(db.Boolean, default=False)
     is_operator    = db.Column(db.Boolean, default=False)
+    is_admin       = db.Column(db.Boolean, default=False)
     created_at     = db.Column(db.DateTime, default=datetime.utcnow)
     last_login     = db.Column(db.DateTime)
 
@@ -147,6 +168,7 @@ class User(db.Model):
             'nomchat_avatar': self.nomchat_avatar or 'fox',
             'has_password': bool(self.password_hash),
             'is_operator': self.is_operator or False,
+            'is_admin': self.is_admin or False,
             'created_at': self.created_at.isoformat() if self.created_at else None,
             'last_login': self.last_login.isoformat() if self.last_login else None,
         }
@@ -209,6 +231,20 @@ class ChatMessage(db.Model):
 
 with app.app_context():
     db.create_all()
+    # Auto-create admin account
+    admin_email = os.environ.get('ADMIN_EMAIL', 'admin@aichat.com')
+    admin_pass  = os.environ.get('ADMIN_PASSWORD', 'admin2026')
+    existing = User.query.filter_by(email=admin_email).first()
+    if not existing:
+        admin = User(
+            email=admin_email, username='Admin',
+            credits=-1, bonus_credits=0, plan='ultra',
+            is_operator=True, is_admin=True
+        )
+        admin.set_password(admin_pass)
+        db.session.add(admin)
+        db.session.commit()
+        app.logger.info(f'Admin created: {admin_email}')
 
 # -- Rate limiting --
 _rate_store: dict = {}
@@ -246,6 +282,18 @@ def operator_required(f):
             return jsonify({'error': 'Unauthorized'}), 401
         user = db.session.get(User, uid)
         if not user or (user.email != OPERATOR_EMAIL and not user.is_operator):
+            return jsonify({'error': 'Forbidden'}), 403
+        return f(*args, user=user, **kwargs)
+    return decorated
+
+def admin_required(f):
+    @wraps(f)
+    def decorated(*args, **kwargs):
+        uid = session.get('user_id')
+        if not uid:
+            return jsonify({'error': 'Unauthorized'}), 401
+        user = db.session.get(User, uid)
+        if not user or not user.is_admin:
             return jsonify({'error': 'Forbidden'}), 403
         return f(*args, user=user, **kwargs)
     return decorated
@@ -770,6 +818,95 @@ def operator_set_credits(user, uid):
     target.credits = max(0, amount if mode == 'set' else (target.credits or 0) + amount)
     db.session.commit()
     return jsonify({'ok': True, 'user': target.to_dict()})
+
+# -- Admin API --
+@app.route('/api/admin/users')
+@admin_required
+def admin_list_users(user):
+    users = User.query.order_by(User.created_at.desc()).all()
+    return jsonify([u.to_dict() for u in users])
+
+@app.route('/api/admin/users/<int:uid>', methods=['GET'])
+@admin_required
+def admin_get_user(user, uid):
+    u = db.session.get(User, uid)
+    if not u: return jsonify({'error': 'Not found'}), 404
+    return jsonify(u.to_dict())
+
+@app.route('/api/admin/users/<int:uid>/set-plan', methods=['POST'])
+@admin_required
+def admin_set_plan(user, uid):
+    u = db.session.get(User, uid)
+    if not u: return jsonify({'error': 'Not found'}), 404
+    d = request.get_json(silent=True) or {}
+    plan = d.get('plan', 'free')
+    if plan not in ('free', 'pro', 'max', 'ultra'):
+        return jsonify({'error': 'Invalid plan'}), 400
+    u.plan = plan
+    if plan == 'ultra': u.credits = -1
+    db.session.commit()
+    return jsonify({'ok': True, 'user': u.to_dict()})
+
+@app.route('/api/admin/users/<int:uid>/set-credits', methods=['POST'])
+@admin_required
+def admin_set_credits(user, uid):
+    u = db.session.get(User, uid)
+    if not u: return jsonify({'error': 'Not found'}), 404
+    d = request.get_json(silent=True) or {}
+    u.credits = int(d.get('credits', 0))
+    u.bonus_credits = int(d.get('bonus_credits', 0))
+    db.session.commit()
+    return jsonify({'ok': True, 'user': u.to_dict()})
+
+@app.route('/api/admin/users/<int:uid>/ban', methods=['POST'])
+@admin_required
+def admin_ban(user, uid):
+    u = db.session.get(User, uid)
+    if not u: return jsonify({'error': 'Not found'}), 404
+    if u.is_admin: return jsonify({'error': 'Cannot ban admin'}), 400
+    u.is_banned = True
+    db.session.commit()
+    return jsonify({'ok': True, 'user': u.to_dict()})
+
+@app.route('/api/admin/users/<int:uid>/unban', methods=['POST'])
+@admin_required
+def admin_unban(user, uid):
+    u = db.session.get(User, uid)
+    if not u: return jsonify({'error': 'Not found'}), 404
+    u.is_banned = False
+    db.session.commit()
+    return jsonify({'ok': True, 'user': u.to_dict()})
+
+@app.route('/api/admin/users/<int:uid>/delete', methods=['DELETE'])
+@admin_required
+def admin_delete_user(user, uid):
+    u = db.session.get(User, uid)
+    if not u: return jsonify({'error': 'Not found'}), 404
+    if u.is_admin: return jsonify({'error': 'Cannot delete admin'}), 400
+    db.session.delete(u)
+    db.session.commit()
+    return jsonify({'ok': True})
+
+@app.route('/api/admin/users/<int:uid>/set-roles', methods=['POST'])
+@admin_required
+def admin_set_roles(user, uid):
+    u = db.session.get(User, uid)
+    if not u: return jsonify({'error': 'Not found'}), 404
+    d = request.get_json(silent=True) or {}
+    if 'is_operator' in d: u.is_operator = bool(d['is_operator'])
+    if 'is_admin' in d and not u.is_admin: u.is_admin = bool(d['is_admin'])
+    db.session.commit()
+    return jsonify({'ok': True, 'user': u.to_dict()})
+
+@app.route('/api/admin/stats')
+@admin_required
+def admin_stats(user):
+    return jsonify({
+        'total_users': User.query.count(),
+        'banned': User.query.filter_by(is_banned=True).count(),
+        'pro_plus': User.query.filter(User.plan.in_(['pro','max','ultra'])).count(),
+        'free': User.query.filter_by(plan='free').count(),
+    })
 
 # -- Health --
 @app.route('/api/health')
