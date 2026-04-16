@@ -25,11 +25,29 @@
   animation: fadeInUp 0.25s cubic-bezier(0.4,0,0.2,1) both;
 }
 /* ── Model select styling ── */
-.model-sel optgroup { font-weight: 700; }
+.model-sel optgroup { 
+  font-weight: 700; 
+  font-size: 11px;
+  text-transform: uppercase;
+  letter-spacing: 0.8px;
+}
+.model-sel optgroup[label*="Pro"] {
+  background: linear-gradient(135deg, rgba(245,158,11,0.15), rgba(251,146,60,0.1));
+}
 /* ── Pro badge on locked models ── */
 .model-sel option[value="danya-coala-5.0"],
 .model-sel option[value="danya-5.5-pro"] {
-  color: #f59e0b;
+  color: #fbbf24;
+  font-weight: 700;
+}
+/* ── Cost indicators ── */
+.model-sel option[value*="g-4.4"]::after,
+.model-sel option[value*="coala-4.8"]::after {
+  content: " 💎";
+}
+.model-sel option[value*="coala-5.0"]::after,
+.model-sel option[value*="5.5-pro"]::after {
+  content: " 👑";
 }
 /* ── Live Preview Panel ── */
 .preview-panel {

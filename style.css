@@ -1316,14 +1316,35 @@ input, textarea, select { font-family: var(--font); }
 .model-sel {
   background: rgba(255,255,255,0.06);
   border: 1px solid rgba(255,255,255,0.1);
-  border-radius: 8px; padding: 6px 10px;
-  color: rgba(255,255,255,0.7); font-size: 12px;
+  border-radius: 8px; padding: 7px 12px;
+  color: rgba(255,255,255,0.85); font-size: 13px;
+  font-weight: 600;
   outline: none; cursor: pointer;
   font-family: var(--font);
   transition: all var(--transition);
+  min-width: 180px;
 }
-.model-sel:focus { border-color: var(--c); }
-.model-sel option { background: #1a1a2e; }
+.model-sel:hover { 
+  background: rgba(255,255,255,0.1); 
+  border-color: rgba(255,255,255,0.2);
+}
+.model-sel:focus { 
+  border-color: var(--c); 
+  box-shadow: 0 0 0 3px rgba(var(--c-rgb), 0.15);
+}
+.model-sel option { 
+  background: #1a1a2e; 
+  color: rgba(255,255,255,0.9);
+  padding: 8px;
+}
+.model-sel optgroup { 
+  background: #0d0d0d; 
+  color: rgba(255,255,255,0.5);
+  font-weight: 700;
+  font-size: 11px;
+  letter-spacing: 0.5px;
+  padding: 6px 0;
+}
 .icon-btn {
   width: 32px; height: 32px;
   background: transparent; border: 1px solid rgba(255,255,255,0.1);
