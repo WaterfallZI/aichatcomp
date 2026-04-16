@@ -1,6 +1,5 @@
 ﻿"""
 AI Chat Company - Flask Server with Cursor API
-Features: Auth, Cursor AI proxy, Sessions, Credits, Operator
 """
 from flask import Flask, request, jsonify, session, send_from_directory, Response, stream_with_context
 from flask_cors import CORS
@@ -12,7 +11,6 @@ import os, re, secrets, requests, traceback, json, time
 
 app = Flask(__name__, static_folder='.')
 
-# -- Config --
 app.secret_key = os.environ.get('SECRET_KEY', 'aichat-dev-secret-2026')
 app.config.update(
     SESSION_COOKIE_HTTPONLY=True,
@@ -24,39 +22,26 @@ app.config.update(
 _db_url = os.environ.get('DATABASE_URL', 'sqlite:///aichat.db')
 if _db_url.startswith('postgres://'):
     _db_url = _db_url.replace('postgres://', 'postgresql://', 1)
-_db_url = re.sub(r'[?&]channel_binding=[^&]*', '', _db_url)
-_db_url = re.sub(r'\?$|&$', '', _db_url)
 
 app.config.update(
     SQLALCHEMY_DATABASE_URI=_db_url,
     SQLALCHEMY_TRACK_MODIFICATIONS=False,
-    SQLALCHEMY_ENGINE_OPTIONS={
-        'pool_pre_ping': True,
-        'pool_recycle': 300,
-        'pool_size': 10,
-        'max_overflow': 20,
-    }
+    SQLALCHEMY_ENGINE_OPTIONS={'pool_pre_ping': True, 'pool_recycle': 300},
 )
 
 CORS(app, supports_credentials=True,
      origins=os.environ.get('ALLOWED_ORIGINS', '*').split(','))
 db = SQLAlchemy(app)
 
-# -- Cursor API Config --
-# Cursor API uses cookie-based auth to access claude/gpt-4o/etc models
-CURSOR_API_URL = 'https://api2.cursor.sh/aiserver.v1.AiService/StreamChat'
-CURSOR_CHAT_URL = 'https://api2.cursor.sh/v1/chat/completions'
+CURSOR_CHAT_URL = os.environ.get('CURSOR_PROXY_URL', 'https://api2.cursor.sh/v1/chat/completions')
 NOMCHAT_URL = os.environ.get('NOMCHAT_URL', 'https://nomchat-id.up.railway.app')
 OPERATOR_EMAIL = os.environ.get('OPERATOR_EMAIL', 'ai@com.ru')
 
-# Available Cursor models
 CURSOR_MODELS = {
     'claude-3-7-sonnet': 'claude-3-7-sonnet-20250219',
     'claude-3-5-sonnet': 'claude-3-5-sonnet-20241022',
     'gpt-4o': 'gpt-4o',
     'gpt-4o-mini': 'gpt-4o-mini',
-    'gpt-4-turbo': 'gpt-4-turbo',
-    'o1-mini': 'o1-mini',
     'o3-mini': 'o3-mini',
     'gemini-2.0-flash': 'gemini-2.0-flash-exp',
     'deepseek-v3': 'deepseek-chat',
@@ -70,7 +55,6 @@ PLANS = {
     'ultra': {'credits': -1,   'bonus': 0,    'label': 'Ultra'},
 }
 
-# -- Models --
 class User(db.Model):
     __tablename__ = 'users'
     id             = db.Column(db.Integer, primary_key=True)
@@ -79,7 +63,7 @@ class User(db.Model):
     password_hash  = db.Column(db.String(256))
     nomchat_id     = db.Column(db.String(64), index=True)
     nomchat_username = db.Column(db.String(80))
-    nomchat_avatar = db.Column(db.String(10), default='🦊')
+    nomchat_avatar = db.Column(db.String(10), default='fox')
     credits        = db.Column(db.Integer, default=50)
     bonus_credits  = db.Column(db.Integer, default=300)
     plan           = db.Column(db.String(20), default='free')
@@ -101,7 +85,7 @@ class User(db.Model):
             'credits': self.credits or 0, 'bonus_credits': self.bonus_credits or 0,
             'total_credits': total, 'plan': self.plan or 'free',
             'nomchat_id': self.nomchat_id, 'nomchat_username': self.nomchat_username,
-            'nomchat_avatar': self.nomchat_avatar or '🦊',
+            'nomchat_avatar': self.nomchat_avatar or 'fox',
             'has_password': bool(self.password_hash),
             'is_operator': self.is_operator or False,
             'created_at': self.created_at.isoformat() if self.created_at else None,
@@ -140,8 +124,7 @@ class ChatSession(db.Model):
     def to_dict(self, include_messages=False):
         d = {
             'id': self.id, 'session_key': self.session_key,
-            'user_id': self.user_id,
-            'operator_on': self.operator_on,
+            'user_id': self.user_id, 'operator_on': self.operator_on,
             'created_at': self.created_at.isoformat() if self.created_at else None,
             'updated_at': self.updated_at.isoformat() if self.updated_at else None,
         }
@@ -164,14 +147,13 @@ class ChatMessage(db.Model):
             'created_at': self.created_at.isoformat() if self.created_at else None,
         }
 
-# -- DB Init --
+
 with app.app_context():
     db.create_all()
 
-# -- Rate limiting --
-_rate_store: dict = {}
+_rate_store = {}
 
-def rate_limit(key: str, max_calls: int = 10, window: int = 60) -> bool:
+def rate_limit(key, max_calls=10, window=60):
     now = time.time()
     calls = [t for t in _rate_store.get(key, []) if now - t < window]
     if len(calls) >= max_calls:
@@ -180,7 +162,7 @@ def rate_limit(key: str, max_calls: int = 10, window: int = 60) -> bool:
     _rate_store[key] = calls
     return True
 
-# -- Auth decorators --
+
 def login_required(f):
     @wraps(f)
     def decorated(*args, **kwargs):
@@ -196,6 +178,7 @@ def login_required(f):
         return f(*args, user=user, **kwargs)
     return decorated
 
+
 def operator_required(f):
     @wraps(f)
     def decorated(*args, **kwargs):
@@ -208,7 +191,6 @@ def operator_required(f):
         return f(*args, user=user, **kwargs)
     return decorated
 
-# -- Static files --
 @app.route('/')
 def index():
     return send_from_directory('.', 'index.html')
@@ -229,7 +211,7 @@ def server_error(e):
     app.logger.error(f'500: {e}\n{traceback.format_exc()}')
     return jsonify({'error': 'Internal server error'}), 500
 
-# -- Auth: Register --
+
 @app.route('/api/auth/register', methods=['POST'])
 def register():
     d = request.get_json(silent=True) or {}
@@ -245,7 +227,6 @@ def register():
         return jsonify({'error': 'Password must be at least 6 characters'}), 400
     if len(username) < 2 or len(username) > 50:
         return jsonify({'error': 'Username must be 2-50 characters'}), 400
-
     if User.query.filter_by(email=email).first():
         return jsonify({'error': 'Email already registered'}), 409
 
@@ -281,7 +262,6 @@ def login():
             return jsonify({'error': 'Invalid email or password'}), 401
         if user.is_banned:
             return jsonify({'error': 'Account banned'}), 403
-
         user.last_login = datetime.utcnow()
         db.session.commit()
         session.clear()
@@ -290,7 +270,6 @@ def login():
         return jsonify({'success': True, 'user': user.to_dict()})
     except Exception as e:
         db.session.rollback()
-        app.logger.error(f'Login error: {e}')
         return jsonify({'error': 'Login failed'}), 500
 
 
@@ -300,7 +279,6 @@ def nomchat_auth():
     token = d.get('token', '').strip()
     if not token:
         return jsonify({'error': 'Token required'}), 400
-
     try:
         res = requests.post(
             f'{NOMCHAT_URL}/api/auth/token/verify',
@@ -328,17 +306,15 @@ def nomchat_auth():
                 username=nc_user.get('username', email.split('@')[0]),
                 nomchat_id=str(nc_user.get('id', '')),
                 nomchat_username=nc_user.get('username', ''),
-                nomchat_avatar=nc_user.get('avatar', '🦊'),
+                nomchat_avatar=nc_user.get('avatar', 'fox'),
             )
             db.session.add(user)
         else:
             user.nomchat_id       = str(nc_user.get('id', ''))
             user.nomchat_username = nc_user.get('username', user.nomchat_username)
-            user.nomchat_avatar   = nc_user.get('avatar', user.nomchat_avatar or '🦊')
-
+            user.nomchat_avatar   = nc_user.get('avatar', user.nomchat_avatar or 'fox')
         if user.is_banned:
             return jsonify({'error': 'Account banned'}), 403
-
         user.last_login = datetime.utcnow()
         db.session.commit()
         session.clear()
@@ -347,7 +323,6 @@ def nomchat_auth():
         return jsonify({'success': True, 'user': user.to_dict(), 'is_new': is_new})
     except Exception as e:
         db.session.rollback()
-        app.logger.error(f'Nomchat auth error: {e}')
         return jsonify({'error': 'Authentication failed'}), 500
 
 
@@ -362,36 +337,26 @@ def logout():
     session.clear()
     return jsonify({'success': True})
 
-# -- Cursor API proxy --
 def get_cursor_cookie():
-    """Get Cursor cookie from env. Supports comma-separated multiple cookies for rotation."""
     cookies = os.environ.get('CURSOR_COOKIE', '')
     if not cookies:
         return None
     cookie_list = [c.strip() for c in cookies.split(',') if c.strip()]
     if not cookie_list:
         return None
-    # Rotate cookies to distribute load
     idx = int(time.time()) % len(cookie_list)
     return cookie_list[idx]
 
 
 def call_cursor_api(messages, model='claude-3-7-sonnet', stream=False):
-    """Call Cursor API with OpenAI-compatible interface."""
     cookie = get_cursor_cookie()
     if not cookie:
         raise ValueError('CURSOR_COOKIE not configured')
-
-    # Map model name to Cursor model
     cursor_model = CURSOR_MODELS.get(model, model)
-
     headers = {
         'Content-Type': 'application/json',
         'Authorization': f'Bearer {cookie}',
-        'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36',
-        'Accept': 'application/json',
     }
-
     payload = {
         'model': cursor_model,
         'messages': messages,
@@ -399,24 +364,13 @@ def call_cursor_api(messages, model='claude-3-7-sonnet', stream=False):
         'temperature': 0.7,
         'max_tokens': 4096,
     }
-
-    resp = requests.post(
-        CURSOR_CHAT_URL,
-        headers=headers,
-        json=payload,
-        stream=stream,
-        timeout=60
-    )
+    resp = requests.post(CURSOR_CHAT_URL, headers=headers, json=payload, stream=stream, timeout=120)
     return resp
 
 
 @app.route('/api/config/models')
 def get_models():
-    """Return available models."""
-    return jsonify({
-        'models': list(CURSOR_MODELS.keys()),
-        'default': 'claude-3-7-sonnet'
-    })
+    return jsonify({'models': list(CURSOR_MODELS.keys()), 'default': 'claude-3-7-sonnet'})
 
 
 @app.route('/api/chat', methods=['POST'])
@@ -432,13 +386,11 @@ def chat(user):
     d = request.get_json(silent=True) or {}
     messages = d.get('messages', [])
     model    = d.get('model', 'claude-3-7-sonnet')
-    stream   = d.get('stream', False)
+    do_stream = d.get('stream', False)
 
-    # Validate model
     if model not in CURSOR_MODELS:
         model = 'claude-3-7-sonnet'
 
-    # Filter messages
     clean_msgs = []
     for m in messages:
         role    = m.get('role', 'user')
@@ -454,7 +406,7 @@ def chat(user):
         return jsonify({'error': 'No messages provided'}), 400
 
     try:
-        if stream:
+        if do_stream:
             def generate():
                 try:
                     resp = call_cursor_api(clean_msgs, model, stream=True)
@@ -469,7 +421,6 @@ def chat(user):
                     user.deduct()
                 except Exception as e:
                     yield f"data: {json.dumps({'error': str(e)})}\n\n"
-
             return Response(
                 stream_with_context(generate()),
                 content_type='text/event-stream',
@@ -481,25 +432,25 @@ def chat(user):
                 err_msg = f'Cursor API error {resp.status_code}'
                 try:
                     err_data = resp.json()
-                    err_msg = err_data.get('error', {}).get('message', err_msg) if isinstance(err_data.get('error'), dict) else err_data.get('error', err_msg)
+                    if isinstance(err_data.get('error'), dict):
+                        err_msg = err_data['error'].get('message', err_msg)
+                    else:
+                        err_msg = err_data.get('error', err_msg)
                 except Exception:
                     pass
-                app.logger.warning(f'Cursor error: {resp.status_code} {err_msg}')
                 return jsonify({'error': err_msg}), resp.status_code
-
             result = resp.json()
             user.deduct()
             total = -1 if user.plan == 'ultra' else (user.credits or 0) + (user.bonus_credits or 0)
             result['credits_remaining'] = total
             return jsonify(result)
-
     except requests.Timeout:
         return jsonify({'error': 'AI request timed out. Please try again.'}), 504
     except Exception as e:
         app.logger.error(f'Chat error: {e}')
         return jsonify({'error': str(e)}), 500
 
-# -- User: Update / Delete --
+
 @app.route('/api/user/update', methods=['POST'])
 @login_required
 def update_user(user):
@@ -523,244 +474,6 @@ def delete_user(user):
     return jsonify({'success': True})
 
 
-# -- Plans --
 @app.route('/api/plans')
 def get_plans():
     return jsonify(PLANS)
-
-
-# -- Chat Sessions (operator) --
-@app.route('/api/session/get', methods=['POST'])
-@login_required
-def get_session(user):
-    sess = ChatSession.query.filter_by(user_id=user.id)\
-               .order_by(ChatSession.created_at.desc()).first()
-    if not sess:
-        sess = ChatSession(user_id=user.id)
-        db.session.add(sess)
-        db.session.commit()
-    return jsonify(sess.to_dict(include_messages=True))
-
-
-@app.route('/api/session/message', methods=['POST'])
-@login_required
-def save_message(user):
-    d       = request.get_json(silent=True) or {}
-    content = d.get('content', '').strip()
-    role    = d.get('role', 'user')
-    if not content:
-        return jsonify({'error': 'Empty message'}), 400
-    if role not in ('user', 'ai'):
-        return jsonify({'error': 'Invalid role'}), 400
-
-    sess = ChatSession.query.filter_by(user_id=user.id)\
-               .order_by(ChatSession.created_at.desc()).first()
-    if not sess:
-        sess = ChatSession(user_id=user.id)
-        db.session.add(sess)
-        db.session.flush()
-
-    msg = ChatMessage(session_id=sess.id, role=role, content=content)
-    db.session.add(msg)
-    sess.updated_at = datetime.utcnow()
-    db.session.commit()
-    return jsonify({'ok': True, 'operator_on': sess.operator_on, 'message': msg.to_dict()})
-
-
-@app.route('/api/session/poll')
-@login_required
-def poll_session(user):
-    since_id = int(request.args.get('since', 0))
-    sess = ChatSession.query.filter_by(user_id=user.id)\
-               .order_by(ChatSession.created_at.desc()).first()
-    if not sess:
-        return jsonify({'operator_on': False, 'messages': []})
-    msgs = ChatMessage.query.filter(
-        ChatMessage.session_id == sess.id,
-        ChatMessage.id > since_id
-    ).order_by(ChatMessage.created_at).all()
-    return jsonify({
-        'operator_on': sess.operator_on,
-        'messages': [m.to_dict() for m in msgs],
-        'session_id': sess.id,
-    })
-
-# -- Operator --
-@app.route('/api/operator/sessions')
-@operator_required
-def operator_sessions(user):
-    sessions = ChatSession.query.order_by(ChatSession.updated_at.desc()).limit(100).all()
-    result = []
-    for s in sessions:
-        d = s.to_dict()
-        u = db.session.get(User, s.user_id)
-        d['user'] = {'id': u.id, 'username': u.username, 'email': u.email} if u else None
-        d['messages'] = [m.to_dict() for m in s.messages.order_by(ChatMessage.created_at).limit(1).all()]
-        result.append(d)
-    return jsonify(result)
-
-
-@app.route('/api/operator/session/<int:sid>')
-@operator_required
-def operator_get_session(user, sid):
-    sess = db.session.get(ChatSession, sid)
-    if not sess: return jsonify({'error': 'Not found'}), 404
-    d = sess.to_dict(include_messages=True)
-    u = db.session.get(User, sess.user_id)
-    d['user_id'] = sess.user_id
-    d['user'] = u.to_dict() if u else None
-    return jsonify(d)
-
-
-@app.route('/api/operator/takeover', methods=['POST'])
-@operator_required
-def operator_takeover(user):
-    sid  = (request.get_json(silent=True) or {}).get('session_id')
-    sess = db.session.get(ChatSession, sid)
-    if not sess: return jsonify({'error': 'Not found'}), 404
-    sess.operator_on = True
-    sess.operator_id = user.id
-    db.session.commit()
-    return jsonify({'ok': True})
-
-
-@app.route('/api/operator/release', methods=['POST'])
-@operator_required
-def operator_release(user):
-    sid  = (request.get_json(silent=True) or {}).get('session_id')
-    sess = db.session.get(ChatSession, sid)
-    if not sess: return jsonify({'error': 'Not found'}), 404
-    sess.operator_on = False
-    sess.operator_id = None
-    db.session.commit()
-    return jsonify({'ok': True})
-
-
-@app.route('/api/operator/send', methods=['POST'])
-@operator_required
-def operator_send(user):
-    d       = request.get_json(silent=True) or {}
-    sid     = d.get('session_id')
-    content = d.get('content', '').strip()
-    if not content: return jsonify({'error': 'Empty'}), 400
-    sess = db.session.get(ChatSession, sid)
-    if not sess: return jsonify({'error': 'Not found'}), 404
-    msg = ChatMessage(session_id=sess.id, role='operator', content=content)
-    db.session.add(msg)
-    sess.updated_at = datetime.utcnow()
-    db.session.commit()
-    return jsonify({'ok': True, 'message': msg.to_dict()})
-
-
-@app.route('/api/operator/poll/<int:sid>')
-@operator_required
-def operator_poll(user, sid):
-    since_id = int(request.args.get('since', 0))
-    msgs = ChatMessage.query.filter(
-        ChatMessage.session_id == sid,
-        ChatMessage.id > since_id
-    ).order_by(ChatMessage.created_at).all()
-    return jsonify({'messages': [m.to_dict() for m in msgs]})
-
-
-@app.route('/api/operator/user/<int:uid>/ban', methods=['POST'])
-@operator_required
-def operator_ban_user(user, uid):
-    target = db.session.get(User, uid)
-    if not target: return jsonify({'error': 'User not found'}), 404
-    target.is_banned = True
-    db.session.commit()
-    return jsonify({'ok': True, 'user': target.to_dict()})
-
-
-@app.route('/api/operator/user/<int:uid>/unban', methods=['POST'])
-@operator_required
-def operator_unban_user(user, uid):
-    target = db.session.get(User, uid)
-    if not target: return jsonify({'error': 'User not found'}), 404
-    target.is_banned = False
-    db.session.commit()
-    return jsonify({'ok': True, 'user': target.to_dict()})
-
-
-@app.route('/api/operator/user/<int:uid>/credits', methods=['POST'])
-@operator_required
-def operator_set_credits(user, uid):
-    target = db.session.get(User, uid)
-    if not target: return jsonify({'error': 'User not found'}), 404
-    d = request.get_json(silent=True) or {}
-    amount = int(d.get('amount', 0))
-    mode = d.get('mode', 'add')
-    if mode == 'set':
-        target.credits = max(0, amount)
-    else:
-        target.credits = max(0, (target.credits or 0) + amount)
-    db.session.commit()
-    return jsonify({'ok': True, 'user': target.to_dict()})
-
-
-@app.route('/api/operator/user/<int:uid>', methods=['GET'])
-@operator_required
-def operator_get_user(user, uid):
-    target = db.session.get(User, uid)
-    if not target: return jsonify({'error': 'Not found'}), 404
-    return jsonify(target.to_dict())
-
-# -- Pay --
-@app.route('/api/pay/checkout', methods=['POST'])
-@login_required
-def pay_checkout(user):
-    d = request.get_json(silent=True) or {}
-    plan = d.get('plan', 'pro')
-    credits_map = {'starter': 100, 'pro': 500, 'max': 2000, 'ultra': -1}
-    price_map = {'starter': 99, 'pro': 299, 'max': 999, 'ultra': 1999}
-    if plan not in credits_map:
-        return jsonify({'error': 'Invalid plan'}), 400
-    pay_url = os.environ.get('AICHATPAY_URL', 'https://pay.aichat.ru')
-    return jsonify({
-        'url': f'{pay_url}/checkout?plan={plan}&user_id={user.id}&amount={price_map[plan]}',
-        'plan': plan,
-        'credits': credits_map[plan],
-        'price': price_map[plan]
-    })
-
-
-@app.route('/api/pay/webhook', methods=['POST'])
-def pay_webhook():
-    d = request.get_json(silent=True) or {}
-    secret = os.environ.get('AICHATPAY_SECRET', '')
-    if secret and d.get('secret') != secret:
-        return jsonify({'error': 'Invalid secret'}), 403
-    user_id = d.get('user_id')
-    plan = d.get('plan', 'pro')
-    credits_map = {'starter': 100, 'pro': 500, 'max': 2000, 'ultra': -1}
-    if not user_id: return jsonify({'error': 'No user_id'}), 400
-    user = db.session.get(User, int(user_id))
-    if not user: return jsonify({'error': 'User not found'}), 404
-    if plan == 'ultra':
-        user.plan = 'ultra'
-        user.credits = -1
-    else:
-        user.credits = (user.credits or 0) + credits_map.get(plan, 0)
-        user.plan = plan
-    db.session.commit()
-    return jsonify({'ok': True})
-
-
-# -- Health check --
-@app.route('/api/health')
-def health():
-    cookie = get_cursor_cookie()
-    return jsonify({
-        'status': 'ok',
-        'cursor_api': bool(cookie),
-        'cursor_models': list(CURSOR_MODELS.keys()),
-        'db': 'sqlite' if 'sqlite' in app.config['SQLALCHEMY_DATABASE_URI'] else 'postgres',
-        'timestamp': datetime.utcnow().isoformat(),
-    })
-
-
-# -- Run --
-if __name__ == '__main__':
-    port = int(os.environ.get('PORT', 5000))
-    app.run(host='0.0.0.0', port=port, debug=False)
