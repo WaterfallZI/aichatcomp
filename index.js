@@ -6,7 +6,6 @@
 'use strict';
 
 // ── Constants ──────────────────────────────────────────────────────────
-const GROQ_API_URL = 'https://openrouter.ai/api/v1/chat/completions';
 const MAX_DEMO_HISTORY = 20;
 const DEMO_HISTORY_KEY = 'aichat_demo_history';
 const COLOR_KEY = 'aichat_color';
@@ -25,7 +24,6 @@ const COLORS = [
 ];
 
 // ── State ──────────────────────────────────────────────────────────────
-let groqKey = null;
 let demoHistory = [];
 let demoTyping = false;
 let currentUser = null;
@@ -238,8 +236,8 @@ function initDemoChat() {
 
   if (!input || !sendBtn || !messagesEl) return;
 
-  // Load Groq key
-  loadGroqKey();
+  // Load demo key (not needed for Cursor API)
+  // loadGroqKey();
 
   // Send on button click
   sendBtn.addEventListener('click', () => sendDemoMessage());
@@ -264,17 +262,7 @@ function initDemoChat() {
   renderDemoHistory();
 }
 
-async function loadGroqKey() {
-  try {
-    const res = await fetch('/api/config/groq-key');
-    if (res.ok) {
-      const data = await res.json();
-      groqKey = data.key;
-    }
-  } catch (e) {
-    console.warn('Could not load Groq key:', e);
-  }
-}
+// Cursor API is used via server - no client-side key needed
 
 function loadDemoHistory() {
   try {
@@ -336,20 +324,8 @@ async function sendDemoMessage() {
   try {
     let reply = '';
 
-    if (groqKey) {
-      try {
-        reply = await callGroqStreaming(model, buildDemoMessages(), typingEl);
-      } catch (groqErr) {
-        // Groq failed — fallback to server
-        removeDemoTyping(typingEl);
-        const newTyping = showDemoTyping();
-        reply = await callServerChat(model, buildDemoMessages());
-        removeDemoTyping(newTyping);
-      }
-    } else {
-      // Fallback to server
-      reply = await callServerChat(model, buildDemoMessages());
-    }
+    // Use server (Cursor API proxy)
+    reply = await callServerChat(model, buildDemoMessages());
 
     removeDemoTyping(typingEl);
     appendDemoMessage('ai', reply);
@@ -379,73 +355,12 @@ function buildDemoMessages() {
   return [systemMsg, ...history];
 }
 
-async function callGroqStreaming(model, messages, typingEl) {
-  let res;
-  try {
-    res = await fetch(GROQ_API_URL, {
-      method: 'POST',
-      headers: { 'Authorization': `Bearer ${groqKey}`, 'Content-Type': 'application/json', 'HTTP-Referer': location.origin, 'X-Title': 'AI Chat Company' },
-      body: JSON.stringify({ model, messages, max_tokens: 1024, temperature: 0.8, stream: true })
-    });
-  } catch (e) {
-    throw new Error('groq_network');
-  }
-
-  if (!res.ok) {
-    const err = await res.json().catch(() => ({}));
-    throw new Error(err.error?.message || `Groq error ${res.status}`);
-  }
-
-  const reader = res.body.getReader();
-  const decoder = new TextDecoder();
-  let fullText = '';
-
-  // Replace typing indicator with streaming bubble
-  const messagesEl = document.getElementById('demo-messages');
-  let streamBubble = null;
-
-  if (typingEl && messagesEl) {
-    typingEl.remove();
-    const msgEl = createDemoMsgEl('ai', '');
-    messagesEl.appendChild(msgEl);
-    streamBubble = msgEl.querySelector('.demo-bubble');
-  }
-
-  while (true) {
-    const { done, value } = await reader.read();
-    if (done) break;
-
-    const chunk = decoder.decode(value, { stream: true });
-    const lines = chunk.split('\n');
-
-    for (const line of lines) {
-      if (!line.startsWith('data: ')) continue;
-      const data = line.slice(6).trim();
-      if (data === '[DONE]') break;
-
-      try {
-        const parsed = JSON.parse(data);
-        const delta = parsed.choices?.[0]?.delta?.content || '';
-        if (delta) {
-          fullText += delta;
-          if (streamBubble) {
-            streamBubble.textContent = fullText;
-            scrollDemoToBottom();
-          }
-        }
-      } catch (e) {}
-    }
-  }
-
-  return fullText;
-}
-
 async function callServerChat(model, messages) {
   const res = await fetch('/api/chat', {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     credentials: 'include',
-    body: JSON.stringify({ model, messages })
+    body: JSON.stringify({ model: model || 'claude-3-7-sonnet', messages })
   });
 
   if (!res.ok) {
