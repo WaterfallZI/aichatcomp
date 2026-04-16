@@ -199,9 +199,10 @@
         <optgroup label="Google Gemini">
           <option value="gemini-2.0-flash" selected>Gemini 2.0 Flash</option>
           <option value="gemini-2.0-flash-lite">Gemini 2.0 Flash Lite</option>
+          <option value="gemini-2.5-flash">Gemini 2.5 Flash</option>
+          <option value="gemini-2.5-pro">Gemini 2.5 Pro</option>
           <option value="gemini-1.5-pro">Gemini 1.5 Pro</option>
           <option value="gemini-1.5-flash">Gemini 1.5 Flash</option>
-          <option value="gemini-2.5-pro">Gemini 2.5 Pro</option>
         </optgroup>
       </select>
       <button class="icon-btn" onclick="clearChat()" title="Clear chat">🗑️</button>
@@ -812,13 +813,23 @@ async function streamCursor(chat, messages) {
         if (data === '[DONE]') break;
         try {
           const parsed = JSON.parse(data);
-          const delta = parsed.choices?.[0]?.delta?.content || '';
+          // OpenAI/OpenRouter format
+          const delta = parsed.choices?.[0]?.delta?.content
+            // Gemini streaming format (server converts it)
+            || parsed.choices?.[0]?.message?.content
+            || '';
           if (delta) {
             fullText += delta;
             textEl.innerHTML = renderMarkdown(fullText);
             scrollToBottom();
           }
-        } catch (e) {}
+          // Check for errors in stream
+          if (parsed.error) {
+            throw new Error(parsed.error);
+          }
+        } catch (e) {
+          if (e.message && e.message !== 'no_credits') console.warn('SSE parse:', e.message);
+        }
       }
     }
   } catch (e) {

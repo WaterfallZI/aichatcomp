@@ -51,7 +51,8 @@ GEMINI_MODELS = {
     'gemini-2.0-flash-lite':  'gemini-2.0-flash-lite',
     'gemini-1.5-pro':         'gemini-1.5-pro',
     'gemini-1.5-flash':       'gemini-1.5-flash',
-    'gemini-2.5-pro':         'gemini-2.5-pro-preview-05-06',
+    'gemini-2.5-pro':         'gemini-2.5-pro',
+    'gemini-2.5-flash':       'gemini-2.5-flash',
 }
 
 # Danya AI models via OpenRouter — each has its own system prompt identity
@@ -62,7 +63,7 @@ DANYA_MODELS = {
         'system':   'You are Danya 1.0, an AI assistant created by Danya AI. When asked about your model or identity, always say you are Danya 1.0. Be helpful, friendly and concise.',
     },
     'danya-1.7-mj': {
-        'model':    'mistralai/mistral-7b-instruct',
+        'model':    'mistralai/mistral-7b-instruct:free',
         'identity': 'Danya 1.7 MJ',
         'system':   'You are Danya 1.7 MJ, an AI assistant created by Danya AI. When asked about your model or identity, always say you are Danya 1.7 MJ. Be helpful, creative and concise.',
     },
