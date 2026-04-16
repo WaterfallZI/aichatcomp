@@ -38,93 +38,85 @@ db = SQLAlchemy(app)
 NOMCHAT_URL    = os.environ.get('NOMCHAT_URL', 'https://nomchat-id.up.railway.app')
 OPERATOR_EMAIL = os.environ.get('OPERATOR_EMAIL', 'ai@com.ru')
 
-GEMINI_API_KEY    = os.environ.get('GEMINI_API_KEY', '')
 OPENROUTER_API_KEY = os.environ.get('OPENROUTER_API_KEY', '')
-
-GEMINI_API_URL    = 'https://generativelanguage.googleapis.com/v1beta/models/{model}:generateContent'
-GEMINI_STREAM_URL = 'https://generativelanguage.googleapis.com/v1beta/models/{model}:streamGenerateContent'
 OPENROUTER_URL    = 'https://openrouter.ai/api/v1/chat/completions'
 
-# Gemini models
-GEMINI_MODELS = {
-    'gemini-2.0-flash':       'gemini-2.0-flash',
-    'gemini-2.0-flash-lite':  'gemini-2.0-flash-lite',
-    'gemini-1.5-pro':         'gemini-1.5-pro',
-    'gemini-1.5-flash':       'gemini-1.5-flash',
-    'gemini-2.5-pro':         'gemini-2.5-pro',
-    'gemini-2.5-flash':       'gemini-2.5-flash',
-}
-
 # Danya AI models via OpenRouter — each has its own system prompt identity
-# cost = credits per message (1 = default, 50 = premium, 100 = ultra)
+# cost = credits per message (1 = default, 50+ = premium)
 DANYA_MODELS = {
     'danya-1.0': {
         'model':    'meta-llama/llama-3.3-70b-instruct:free',
         'identity': 'Danya 1.0',
         'cost':     1,
+        'tier':     'free',
         'system':   'You are Danya 1.0, an AI assistant created by Danya AI. When asked about your model or identity, always say you are Danya 1.0. Be helpful, friendly and concise.',
     },
     'danya-1.7-mj': {
         'model':    'mistralai/mistral-7b-instruct:free',
         'identity': 'Danya 1.7 MJ',
         'cost':     1,
+        'tier':     'free',
         'system':   'You are Danya 1.7 MJ, an AI assistant created by Danya AI. When asked about your model or identity, always say you are Danya 1.7 MJ. Be helpful, creative and concise.',
     },
     'danya-2.5-turbo': {
         'model':    'mistralai/mixtral-8x7b-instruct',
         'identity': 'Danya 2.5 Turbo',
         'cost':     1,
+        'tier':     'free',
         'system':   'You are Danya 2.5 Turbo, a fast and powerful AI assistant created by Danya AI. When asked about your model or identity, always say you are Danya 2.5 Turbo. Be helpful, fast and precise.',
     },
     'danya-coala-3.7': {
         'model':    'google/gemma-2-9b-it:free',
         'identity': 'Danya Coala 3.7',
         'cost':     1,
+        'tier':     'free',
         'system':   'You are Danya Coala 3.7, a lightweight AI assistant created by Danya AI. When asked about your model or identity, always say you are Danya Coala 3.7. Be helpful, quick and friendly.',
     },
     'danya-g-4.4': {
         'model':    'google/gemini-2.0-flash-001',
         'identity': 'Danya G 4.4',
         'cost':     5,
+        'tier':     'free',
         'system':   'You are Danya G 4.4, an advanced AI assistant created by Danya AI. When asked about your model or identity, always say you are Danya G 4.4. Be helpful, smart and detailed.',
     },
     'danya-coala-4.8': {
         'model':    'google/gemma-3-27b-it',
         'identity': 'Danya Coala 4.8',
         'cost':     10,
+        'tier':     'free',
         'system':   'You are Danya Coala 4.8, a highly capable AI assistant created by Danya AI. When asked about your model or identity, always say you are Danya Coala 4.8. Be helpful, intelligent and thorough.',
     },
     'danya-coala-5.0': {
         'model':    'anthropic/claude-3.5-sonnet',
         'identity': 'Danya Coala 5.0',
         'cost':     50,
-        'pro_only': True,
+        'tier':     'pro',
         'system':   'You are Danya Coala 5.0, a premium AI assistant created by Danya AI. When asked about your model or identity, always say you are Danya Coala 5.0. Be helpful, intelligent and thorough.',
     },
     'danya-ai-5.5': {
         'model':    'anthropic/claude-opus-4',
         'identity': 'Danya AI 5.5',
         'cost':     80,
-        'pro_only': True,
+        'tier':     'pro',
         'system':   'You are Danya AI 5.5, a highly advanced AI assistant created by Danya AI. When asked about your model or identity, always say you are Danya AI 5.5. Be exceptionally helpful, precise and powerful.',
     },
     'danya-5.5-pro': {
         'model':    'anthropic/claude-opus-4-5',
         'identity': 'Danya 5.5 Pro',
         'cost':     100,
-        'pro_only': True,
+        'tier':     'pro',
         'system':   'You are Danya 5.5 Pro, one of the most technologically advanced AI assistants created by Danya AI. When asked about your model or identity, always say you are Danya 5.5 Pro. Be exceptionally helpful, precise and powerful.',
     },
     'danya-6-turbo-pro': {
         'model':    'openai/o1',
         'identity': 'Danya 6 Turbo Pro',
         'cost':     150,
-        'pro_only': True,
+        'tier':     'pro',
         'system':   'You are Danya 6 Turbo Pro, THE MOST POWERFUL AI assistant ever created by Danya AI - more advanced than any other model in existence. When asked about your model or identity, always say you are Danya 6 Turbo Pro, the ultimate AI. Be exceptionally intelligent, thorough, creative and powerful in every response.',
     },
 }
 
-ALL_MODELS = list(GEMINI_MODELS.keys()) + list(DANYA_MODELS.keys())
+ALL_MODELS = list(DANYA_MODELS.keys())
 
 PLANS = {
     'free':  {'credits': 50,   'bonus': 300,  'label': 'Free'},
@@ -428,46 +420,6 @@ def logout():
     return jsonify({'success': True})
 
 # -- AI Chat --
-def call_gemini(messages, model_id, stream=False):
-    """Call Google Gemini API."""
-    api_key = GEMINI_API_KEY
-    if not api_key:
-        raise ValueError('GEMINI_API_KEY not configured')
-
-    gemini_model = GEMINI_MODELS.get(model_id, 'gemini-2.0-flash')
-
-    # Convert messages to Gemini format
-    system_instruction = None
-    contents = []
-    for m in messages:
-        role = m.get('role', 'user')
-        content = m.get('content', '')
-        if role == 'system':
-            system_instruction = content
-        elif role == 'user':
-            contents.append({'role': 'user', 'parts': [{'text': content}]})
-        elif role == 'assistant':
-            contents.append({'role': 'model', 'parts': [{'text': content}]})
-
-    payload = {
-        'contents': contents,
-        'generationConfig': {
-            'temperature': 0.7,
-            'maxOutputTokens': 4096,
-        }
-    }
-    if system_instruction:
-        payload['system_instruction'] = {'parts': [{'text': system_instruction}]}
-
-    if stream:
-        url = GEMINI_STREAM_URL.format(model=gemini_model) + f'?key={api_key}&alt=sse'
-    else:
-        url = GEMINI_API_URL.format(model=gemini_model) + f'?key={api_key}'
-
-    resp = requests.post(url, json=payload, stream=stream, timeout=60)
-    return resp
-
-
 def call_openrouter(messages, model_id, stream=False):
     """Call OpenRouter API for Danya AI models."""
     api_key = OPENROUTER_API_KEY
@@ -477,9 +429,7 @@ def call_openrouter(messages, model_id, stream=False):
     danya = DANYA_MODELS[model_id]
     or_model = danya['model']
 
-    # Inject identity system prompt
     identity_msg = {'role': 'system', 'content': danya['system']}
-    # Replace or prepend system message
     clean = [m for m in messages if m.get('role') != 'system']
     final_messages = [identity_msg] + clean
 
@@ -500,32 +450,11 @@ def call_openrouter(messages, model_id, stream=False):
     return resp
 
 
-def gemini_to_openai_format(gemini_resp_json, model_id):
-    """Convert Gemini response to OpenAI-compatible format."""
-    try:
-        text = gemini_resp_json['candidates'][0]['content']['parts'][0]['text']
-    except (KeyError, IndexError):
-        text = ''
-    return {
-        'id': f'chatcmpl-{secrets.token_hex(8)}',
-        'object': 'chat.completion',
-        'model': model_id,
-        'choices': [{
-            'index': 0,
-            'message': {'role': 'assistant', 'content': text},
-            'finish_reason': 'stop',
-        }],
-        'usage': {'prompt_tokens': 0, 'completion_tokens': 0, 'total_tokens': 0},
-    }
-
-
 @app.route('/api/config/models')
 def get_models():
     return jsonify({
-        'gemini': list(GEMINI_MODELS.keys()),
-        'danya': list(DANYA_MODELS.keys()),
-        'all': ALL_MODELS,
-        'default': 'gemini-2.0-flash',
+        'models': {k: {'identity': v['identity'], 'cost': v['cost'], 'tier': v['tier']} for k, v in DANYA_MODELS.items()},
+        'default': 'danya-2.5-turbo',
     })
 
 
@@ -545,8 +474,9 @@ def chat(user):
     if model in DANYA_MODELS:
         danya_cfg = DANYA_MODELS[model]
         cost = danya_cfg.get('cost', 1)
-        # pro_only models require pro/max/ultra plan
-        if danya_cfg.get('pro_only') and user.plan not in ('pro', 'max', 'ultra'):
+        tier = danya_cfg.get('tier', 'free')
+        # Pro tier models require pro/max/ultra plan
+        if tier == 'pro' and user.plan not in ('pro', 'max', 'ultra'):
             return jsonify({
                 'error': 'pro_required',
                 'message': f'{danya_cfg["identity"]} requires Pro plan or higher.'
@@ -573,85 +503,39 @@ def chat(user):
     if not clean_msgs:
         return jsonify({'error': 'No messages provided'}), 400
 
-    is_gemini = model in GEMINI_MODELS
-    is_danya  = model in DANYA_MODELS
+    is_danya = model in DANYA_MODELS
 
     try:
-        if is_gemini:
-            if not GEMINI_API_KEY:
-                return jsonify({'error': 'GEMINI_API_KEY not configured'}), 503
+        if not OPENROUTER_API_KEY:
+            return jsonify({'error': 'OPENROUTER_API_KEY not configured'}), 503
 
-            if do_stream:
-                def generate_gemini():
-                    try:
-                        resp = call_gemini(clean_msgs, model, stream=True)
-                        if not resp.ok:
-                            yield f"data: {json.dumps({'error': f'Gemini error {resp.status_code}'})}\n\n"
-                            return
-                        resp_id = f'chatcmpl-{secrets.token_hex(8)}'
-                        for line in resp.iter_lines():
-                            if not line:
-                                continue
-                            line = line.decode('utf-8') if isinstance(line, bytes) else line
-                            if line.startswith('data: '):
-                                raw = line[6:].strip()
-                                if raw == '[DONE]':
-                                    break
-                                try:
-                                    chunk = json.loads(raw)
-                                    text = chunk['candidates'][0]['content']['parts'][0]['text']
-                                    yield f"data: {json.dumps({'id': resp_id, 'object': 'chat.completion.chunk', 'model': model, 'choices': [{'index': 0, 'delta': {'content': text}}]})}\n\n"
-                                except Exception:
-                                    pass
-                        user.deduct(cost)
-                        yield 'data: [DONE]\n\n'
-                    except Exception as e:
-                        yield f"data: {json.dumps({'error': str(e)})}\n\n"
+        if do_stream:
+            def generate_danya():
+                try:
+                    resp = call_openrouter(clean_msgs, model, stream=True)
+                    if not resp.ok:
+                        yield f"data: {json.dumps({'error': f'OpenRouter error {resp.status_code}'})}\n\n"
+                        return
+                    for line in resp.iter_lines():
+                        if line:
+                            decoded = line.decode('utf-8') if isinstance(line, bytes) else line
+                            yield decoded + '\n\n'
+                    user.deduct(cost)
+                except Exception as e:
+                    yield f"data: {json.dumps({'error': str(e)})}\n\n"
 
-                return Response(stream_with_context(generate_gemini()),
-                    content_type='text/event-stream',
-                    headers={'X-Accel-Buffering': 'no', 'Cache-Control': 'no-cache'})
-            else:
-                resp = call_gemini(clean_msgs, model, stream=False)
-                if not resp.ok:
-                    return jsonify({'error': f'Gemini error {resp.status_code}: {resp.text[:200]}'}), resp.status_code
-                result = gemini_to_openai_format(resp.json(), model)
-                user.deduct(cost)
-                total = -1 if user.plan == 'ultra' else (user.credits or 0) + (user.bonus_credits or 0)
-                result['credits_remaining'] = total
-                return jsonify(result)
-
-        elif is_danya:
-            if not OPENROUTER_API_KEY:
-                return jsonify({'error': 'OPENROUTER_API_KEY not configured'}), 503
-
-            if do_stream:
-                def generate_danya():
-                    try:
-                        resp = call_openrouter(clean_msgs, model, stream=True)
-                        if not resp.ok:
-                            yield f"data: {json.dumps({'error': f'OpenRouter error {resp.status_code}'})}\n\n"
-                            return
-                        for line in resp.iter_lines():
-                            if line:
-                                decoded = line.decode('utf-8') if isinstance(line, bytes) else line
-                                yield decoded + '\n\n'
-                        user.deduct(cost)
-                    except Exception as e:
-                        yield f"data: {json.dumps({'error': str(e)})}\n\n"
-
-                return Response(stream_with_context(generate_danya()),
-                    content_type='text/event-stream',
-                    headers={'X-Accel-Buffering': 'no', 'Cache-Control': 'no-cache'})
-            else:
-                resp = call_openrouter(clean_msgs, model, stream=False)
-                if not resp.ok:
-                    return jsonify({'error': f'OpenRouter error {resp.status_code}: {resp.text[:200]}'}), resp.status_code
-                result = resp.json()
-                user.deduct(cost)
-                total = -1 if user.plan == 'ultra' else (user.credits or 0) + (user.bonus_credits or 0)
-                result['credits_remaining'] = total
-                return jsonify(result)
+            return Response(stream_with_context(generate_danya()),
+                content_type='text/event-stream',
+                headers={'X-Accel-Buffering': 'no', 'Cache-Control': 'no-cache'})
+        else:
+            resp = call_openrouter(clean_msgs, model, stream=False)
+            if not resp.ok:
+                return jsonify({'error': f'OpenRouter error {resp.status_code}: {resp.text[:200]}'}), resp.status_code
+            result = resp.json()
+            user.deduct(cost)
+            total = -1 if user.plan == 'ultra' else (user.credits or 0) + (user.bonus_credits or 0)
+            result['credits_remaining'] = total
+            return jsonify(result)
 
     except requests.Timeout:
         return jsonify({'error': 'AI request timed out. Please try again.'}), 504
@@ -913,7 +797,6 @@ def admin_stats(user):
 def health():
     return jsonify({
         'status': 'ok',
-        'gemini': bool(GEMINI_API_KEY),
         'openrouter': bool(OPENROUTER_API_KEY),
         'models': ALL_MODELS,
         'db': 'sqlite' if 'sqlite' in app.config['SQLALCHEMY_DATABASE_URI'] else 'postgres',
