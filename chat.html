@@ -190,14 +190,19 @@
       <span class="topbar-title" id="chat-title">New conversation</span>
       <span class="agent-indicator" id="agent-indicator">🤖 AI Assistant</span>
       <select class="model-sel" id="model-sel" title="Select AI model">
-        <option value="claude-3-7-sonnet">✦ Claude 3.7 Sonnet</option>
-        <option value="claude-3-5-sonnet">Claude 3.5 Sonnet</option>
-        <option value="gpt-4o">GPT-4o</option>
-        <option value="gpt-4o-mini">GPT-4o Mini</option>
-        <option value="o3-mini">o3-mini</option>
-        <option value="gemini-2.0-flash">Gemini 2.0 Flash</option>
-        <option value="deepseek-v3">DeepSeek V3</option>
-        <option value="deepseek-r1">DeepSeek R1</option>
+        <optgroup label="✦ Danya AI">
+          <option value="danya-1.0">Danya 1.0</option>
+          <option value="danya-1.7-mj">Danya 1.7 MJ</option>
+          <option value="danya-2.5-turbo">Danya 2.5 Turbo</option>
+          <option value="danya-coala-5.0">Danya Coala 5.0</option>
+        </optgroup>
+        <optgroup label="Google Gemini">
+          <option value="gemini-2.0-flash" selected>Gemini 2.0 Flash</option>
+          <option value="gemini-2.0-flash-lite">Gemini 2.0 Flash Lite</option>
+          <option value="gemini-1.5-pro">Gemini 1.5 Pro</option>
+          <option value="gemini-1.5-flash">Gemini 1.5 Flash</option>
+          <option value="gemini-2.5-pro">Gemini 2.5 Pro</option>
+        </optgroup>
       </select>
       <button class="icon-btn" onclick="clearChat()" title="Clear chat">🗑️</button>
       <button class="icon-btn" onclick="openPromptModal()" title="Custom prompt" style="font-size:16px">⚙️</button>
@@ -757,7 +762,7 @@ function buildMessages(chat) {
 }
 
 async function streamCursor(chat, messages) {
-  const model = document.getElementById('model-sel')?.value || 'claude-3-7-sonnet';
+  const model = document.getElementById('model-sel')?.value || 'gemini-2.0-flash';
 
   // Create streaming message element
   removeTypingIndicator();
@@ -837,7 +842,7 @@ async function streamCursor(chat, messages) {
 }
 
 async function serverChat(messages) {
-  const model = document.getElementById('model-sel')?.value || 'claude-3-7-sonnet';
+  const model = document.getElementById('model-sel')?.value || 'gemini-2.0-flash';
   const res = await fetch('/api/chat', {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },

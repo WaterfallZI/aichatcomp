@@ -360,7 +360,7 @@ async function callServerChat(model, messages) {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     credentials: 'include',
-    body: JSON.stringify({ model: model || 'claude-3-7-sonnet', messages })
+    body: JSON.stringify({ model: model || 'gemini-2.0-flash', messages })
   });
 
   if (!res.ok) {
