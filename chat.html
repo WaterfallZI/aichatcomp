@@ -24,112 +24,87 @@
 .msg-row {
   animation: fadeInUp 0.25s cubic-bezier(0.4,0,0.2,1) both;
 }
-/* ── Custom Model Picker ── */
+/* ── Custom Model Picker — compact tech style ── */
 .model-picker { position: relative; }
 .model-btn {
-  display: flex; align-items: center; gap: 8px;
-  padding: 6px 12px; border-radius: 10px;
-  background: rgba(255,255,255,0.06);
-  border: 1px solid rgba(255,255,255,0.1);
-  color: #fff; font-size: 13px; font-weight: 600;
-  cursor: pointer; font-family: inherit;
-  transition: all 0.2s; min-width: 180px;
-  user-select: none;
+  display: flex; align-items: center; gap: 6px;
+  padding: 5px 10px; border-radius: 7px;
+  background: rgba(255,255,255,0.05);
+  border: 1px solid rgba(255,255,255,0.08);
+  color: rgba(255,255,255,0.85); font-size: 12px; font-weight: 600;
+  cursor: pointer; font-family: 'SF Mono', 'Fira Code', monospace;
+  transition: all 0.15s; user-select: none;
+  letter-spacing: -0.2px;
 }
-.model-btn:hover { background: rgba(255,255,255,0.1); border-color: rgba(255,255,255,0.2); }
-.model-btn.open { border-color: var(--c); background: rgba(var(--c-rgb),0.1); }
+.model-btn:hover { background: rgba(255,255,255,0.08); border-color: rgba(255,255,255,0.15); }
+.model-btn.open { border-color: rgba(var(--c-rgb),0.5); background: rgba(var(--c-rgb),0.08); }
 .model-btn-dot {
-  width: 8px; height: 8px; border-radius: 50%;
+  width: 6px; height: 6px; border-radius: 50%;
   background: var(--c); flex-shrink: 0;
-  box-shadow: 0 0 6px var(--c);
+  box-shadow: 0 0 5px var(--c);
   animation: dotPulse 2s ease-in-out infinite;
 }
-@keyframes dotPulse { 0%,100%{opacity:1;transform:scale(1)} 50%{opacity:0.5;transform:scale(1.4)} }
-.model-btn-name { flex: 1; text-align: left; }
-.model-btn-cost { font-size: 10px; color: rgba(255,255,255,0.4); font-weight: 500; }
-.model-btn-arrow { font-size: 10px; color: rgba(255,255,255,0.4); transition: transform 0.2s; }
+@keyframes dotPulse { 0%,100%{opacity:1} 50%{opacity:0.4} }
+.model-btn-name { max-width: 130px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.model-btn-arrow { font-size: 8px; color: rgba(255,255,255,0.3); transition: transform 0.15s; margin-left: 2px; }
 .model-btn.open .model-btn-arrow { transform: rotate(180deg); }
 
 .model-dropdown {
-  position: absolute; top: calc(100% + 8px); left: 0;
-  width: 320px; z-index: 999;
-  background: #111827;
+  position: absolute; top: calc(100% + 6px); left: 0;
+  width: 260px; z-index: 999;
+  background: #0f1117;
   border: 1px solid rgba(255,255,255,0.1);
-  border-radius: 16px; overflow: hidden;
-  box-shadow: 0 24px 60px rgba(0,0,0,0.6), 0 0 0 1px rgba(255,255,255,0.05);
+  border-radius: 10px; overflow: hidden;
+  box-shadow: 0 16px 40px rgba(0,0,0,0.7), 0 0 0 1px rgba(255,255,255,0.04);
   opacity: 0; pointer-events: none;
-  transform: translateY(-8px) scale(0.97);
-  transition: all 0.2s cubic-bezier(0.4,0,0.2,1);
+  transform: translateY(-6px) scale(0.98);
+  transition: all 0.15s cubic-bezier(0.4,0,0.2,1);
   transform-origin: top left;
 }
-.model-dropdown.open {
-  opacity: 1; pointer-events: all;
-  transform: translateY(0) scale(1);
-}
-.model-dropdown-header {
-  padding: 12px 16px 8px;
-  font-size: 10px; font-weight: 700;
-  color: rgba(255,255,255,0.3);
-  text-transform: uppercase; letter-spacing: 1px;
-  border-bottom: 1px solid rgba(255,255,255,0.06);
-}
-.model-group { padding: 6px 0; }
+.model-dropdown.open { opacity: 1; pointer-events: all; transform: translateY(0) scale(1); }
+
 .model-group-label {
-  padding: 6px 16px 4px;
-  font-size: 10px; font-weight: 700;
-  color: rgba(255,255,255,0.25);
-  text-transform: uppercase; letter-spacing: 0.8px;
+  padding: 8px 12px 4px;
+  font-size: 9px; font-weight: 700;
+  color: rgba(255,255,255,0.2);
+  text-transform: uppercase; letter-spacing: 1px;
+  font-family: 'SF Mono', monospace;
   display: flex; align-items: center; gap: 6px;
 }
-.model-group-label::after {
-  content: ''; flex: 1; height: 1px;
-  background: rgba(255,255,255,0.06);
-}
+.model-group-label::after { content: ''; flex: 1; height: 1px; background: rgba(255,255,255,0.05); }
+
 .model-item {
-  display: flex; align-items: center; gap: 12px;
-  padding: 9px 16px; cursor: pointer;
-  transition: background 0.15s; position: relative;
+  display: flex; align-items: center; gap: 8px;
+  padding: 6px 12px; cursor: pointer;
+  transition: background 0.1s; position: relative;
 }
-.model-item:hover { background: rgba(255,255,255,0.05); }
-.model-item.selected { background: rgba(var(--c-rgb),0.1); }
+.model-item:hover { background: rgba(255,255,255,0.04); }
+.model-item.selected { background: rgba(var(--c-rgb),0.08); }
 .model-item.selected::before {
   content: ''; position: absolute; left: 0; top: 0; bottom: 0;
-  width: 2px; background: var(--c);
+  width: 2px; background: var(--c); border-radius: 0 1px 1px 0;
 }
-.model-item-icon {
-  width: 32px; height: 32px; border-radius: 8px;
-  display: flex; align-items: center; justify-content: center;
-  font-size: 16px; flex-shrink: 0;
-  background: rgba(255,255,255,0.06);
+.model-item-dot {
+  width: 5px; height: 5px; border-radius: 50%; flex-shrink: 0;
+  background: rgba(255,255,255,0.2);
 }
-.model-item.pro-model .model-item-icon { background: rgba(245,158,11,0.1); }
-.model-item.ultra-model .model-item-icon { background: rgba(239,68,68,0.1); }
-.model-item-info { flex: 1; min-width: 0; }
+.model-item.selected .model-item-dot { background: var(--c); box-shadow: 0 0 4px var(--c); }
+.model-item.pro-model .model-item-dot { background: rgba(245,158,11,0.5); }
+.model-item.ultra-model .model-item-dot { background: rgba(239,68,68,0.7); box-shadow: 0 0 4px #ef4444; }
 .model-item-name {
-  font-size: 13px; font-weight: 600; color: #fff;
-  display: flex; align-items: center; gap: 6px;
+  flex: 1; font-size: 12px; font-weight: 600; color: rgba(255,255,255,0.8);
+  font-family: 'SF Mono', 'Fira Code', monospace;
+  white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
 }
-.model-item-desc { font-size: 11px; color: rgba(255,255,255,0.35); margin-top: 1px; }
-.model-item-right { display: flex; flex-direction: column; align-items: flex-end; gap: 3px; }
-.model-cost {
-  font-size: 11px; font-weight: 700;
-  color: rgba(255,255,255,0.4);
-  background: rgba(255,255,255,0.06);
-  padding: 2px 7px; border-radius: 99px;
+.model-item.pro-model .model-item-name { color: rgba(245,158,11,0.9); }
+.model-item.ultra-model .model-item-name { color: rgba(239,68,68,0.9); }
+.model-item-cost {
+  font-size: 10px; font-weight: 700; font-family: monospace;
+  color: rgba(255,255,255,0.25); flex-shrink: 0;
 }
-.model-item.pro-model .model-cost { color: #f59e0b; background: rgba(245,158,11,0.1); }
-.model-item.ultra-model .model-cost { color: #ef4444; background: rgba(239,68,68,0.1); }
-.model-lock {
-  font-size: 11px; color: rgba(255,255,255,0.25);
-}
-.model-badge {
-  font-size: 9px; font-weight: 800; padding: 1px 5px;
-  border-radius: 4px; letter-spacing: 0.5px;
-}
-.badge-free { background: rgba(16,163,127,0.15); color: #10a37f; }
-.badge-pro { background: rgba(245,158,11,0.15); color: #f59e0b; }
-.badge-new { background: rgba(59,130,246,0.15); color: #60a5fa; }
-.model-divider { height: 1px; background: rgba(255,255,255,0.06); margin: 4px 0; }
+.model-item.pro-model .model-item-cost { color: rgba(245,158,11,0.5); }
+.model-item.ultra-model .model-item-cost { color: rgba(239,68,68,0.6); }
+.model-divider { height: 1px; background: rgba(255,255,255,0.05); margin: 2px 0; }
 /* ── Live Preview Panel ── */
 .preview-panel {
   width: 0; flex-shrink: 0;
@@ -316,106 +291,70 @@
       <div class="model-picker" id="model-picker">
         <button class="model-btn" id="model-btn" onclick="toggleModelPicker()" type="button">
           <span class="model-btn-dot"></span>
-          <span class="model-btn-name" id="model-btn-name">Danya 2.5 Turbo</span>
-          <span class="model-btn-cost" id="model-btn-cost">1cr</span>
+          <span class="model-btn-name" id="model-btn-name">danya-2.5-turbo</span>
           <span class="model-btn-arrow">▼</span>
         </button>
         <div class="model-dropdown" id="model-dropdown">
-          <div class="model-dropdown-header">✦ Danya AI Models</div>
 
-          <div class="model-group">
-            <div class="model-group-label">Free Tier</div>
-            <div class="model-item" data-model="danya-1.0" data-cost="1" data-tier="free" onclick="selectModel(this)">
-              <div class="model-item-icon">🌱</div>
-              <div class="model-item-info">
-                <div class="model-item-name">Danya 1.0 <span class="model-badge badge-free">FREE</span></div>
-                <div class="model-item-desc">Fast & friendly assistant</div>
-              </div>
-              <div class="model-item-right"><span class="model-cost">1cr</span></div>
-            </div>
-            <div class="model-item" data-model="danya-1.7-mj" data-cost="1" data-tier="free" onclick="selectModel(this)">
-              <div class="model-item-icon">⚡</div>
-              <div class="model-item-info">
-                <div class="model-item-name">Danya 1.7 MJ <span class="model-badge badge-free">FREE</span></div>
-                <div class="model-item-desc">Creative & concise</div>
-              </div>
-              <div class="model-item-right"><span class="model-cost">1cr</span></div>
-            </div>
-            <div class="model-item selected" data-model="danya-2.5-turbo" data-cost="1" data-tier="free" onclick="selectModel(this)">
-              <div class="model-item-icon">🚀</div>
-              <div class="model-item-info">
-                <div class="model-item-name">Danya 2.5 Turbo <span class="model-badge badge-new">DEFAULT</span></div>
-                <div class="model-item-desc">Fast & powerful</div>
-              </div>
-              <div class="model-item-right"><span class="model-cost">1cr</span></div>
-            </div>
-            <div class="model-item" data-model="danya-coala-3.7" data-cost="1" data-tier="free" onclick="selectModel(this)">
-              <div class="model-item-icon">🐨</div>
-              <div class="model-item-info">
-                <div class="model-item-name">Danya Coala 3.7 <span class="model-badge badge-free">FREE</span></div>
-                <div class="model-item-desc">Lightweight & quick</div>
-              </div>
-              <div class="model-item-right"><span class="model-cost">1cr</span></div>
-            </div>
-            <div class="model-item" data-model="danya-g-4.4" data-cost="5" data-tier="free" onclick="selectModel(this)">
-              <div class="model-item-icon">💎</div>
-              <div class="model-item-info">
-                <div class="model-item-name">Danya G 4.4</div>
-                <div class="model-item-desc">Advanced & detailed</div>
-              </div>
-              <div class="model-item-right"><span class="model-cost">5cr</span></div>
-            </div>
-            <div class="model-item" data-model="danya-coala-4.8" data-cost="10" data-tier="free" onclick="selectModel(this)">
-              <div class="model-item-icon">🔮</div>
-              <div class="model-item-info">
-                <div class="model-item-name">Danya Coala 4.8</div>
-                <div class="model-item-desc">Highly capable</div>
-              </div>
-              <div class="model-item-right"><span class="model-cost">10cr</span></div>
-            </div>
+          <div class="model-group-label">free</div>
+          <div class="model-item selected" data-model="danya-1.0" data-cost="1" data-tier="free" onclick="selectModel(this)">
+            <span class="model-item-dot"></span>
+            <span class="model-item-name">danya-1.0</span>
+            <span class="model-item-cost">1cr</span>
+          </div>
+          <div class="model-item" data-model="danya-1.7-mj" data-cost="1" data-tier="free" onclick="selectModel(this)">
+            <span class="model-item-dot"></span>
+            <span class="model-item-name">danya-1.7-mj</span>
+            <span class="model-item-cost">1cr</span>
+          </div>
+          <div class="model-item" data-model="danya-2.5-turbo" data-cost="1" data-tier="free" onclick="selectModel(this)">
+            <span class="model-item-dot"></span>
+            <span class="model-item-name">danya-2.5-turbo</span>
+            <span class="model-item-cost">1cr</span>
+          </div>
+          <div class="model-item" data-model="danya-coala-3.7" data-cost="1" data-tier="free" onclick="selectModel(this)">
+            <span class="model-item-dot"></span>
+            <span class="model-item-name">danya-coala-3.7</span>
+            <span class="model-item-cost">1cr</span>
+          </div>
+          <div class="model-item" data-model="danya-g-4.4" data-cost="5" data-tier="free" onclick="selectModel(this)">
+            <span class="model-item-dot"></span>
+            <span class="model-item-name">danya-g-4.4</span>
+            <span class="model-item-cost">5cr</span>
+          </div>
+          <div class="model-item" data-model="danya-coala-4.8" data-cost="10" data-tier="free" onclick="selectModel(this)">
+            <span class="model-item-dot"></span>
+            <span class="model-item-name">danya-coala-4.8</span>
+            <span class="model-item-cost">10cr</span>
           </div>
 
           <div class="model-divider"></div>
+          <div class="model-group-label">pro</div>
 
-          <div class="model-group">
-            <div class="model-group-label">Pro Tier 🔒</div>
-            <div class="model-item pro-model" data-model="danya-coala-5.0" data-cost="50" data-tier="pro" onclick="selectModel(this)">
-              <div class="model-item-icon">👑</div>
-              <div class="model-item-info">
-                <div class="model-item-name">Danya Coala 5.0 <span class="model-badge badge-pro">PRO</span></div>
-                <div class="model-item-desc">Premium intelligence</div>
-              </div>
-              <div class="model-item-right"><span class="model-cost">50cr</span><span class="model-lock">🔒</span></div>
-            </div>
-            <div class="model-item pro-model" data-model="danya-ai-5.5" data-cost="80" data-tier="pro" onclick="selectModel(this)">
-              <div class="model-item-icon">🧠</div>
-              <div class="model-item-info">
-                <div class="model-item-name">Danya AI 5.5 <span class="model-badge badge-pro">PRO</span></div>
-                <div class="model-item-desc">Highly advanced</div>
-              </div>
-              <div class="model-item-right"><span class="model-cost">80cr</span><span class="model-lock">🔒</span></div>
-            </div>
-            <div class="model-item pro-model" data-model="danya-5.5-pro" data-cost="100" data-tier="pro" onclick="selectModel(this)">
-              <div class="model-item-icon">⚙️</div>
-              <div class="model-item-info">
-                <div class="model-item-name">Danya 5.5 Pro <span class="model-badge badge-pro">PRO</span></div>
-                <div class="model-item-desc">Precision & power</div>
-              </div>
-              <div class="model-item-right"><span class="model-cost">100cr</span><span class="model-lock">🔒</span></div>
-            </div>
-            <div class="model-item ultra-model" data-model="danya-6-turbo-pro" data-cost="150" data-tier="pro" onclick="selectModel(this)">
-              <div class="model-item-icon">⚡</div>
-              <div class="model-item-info">
-                <div class="model-item-name" style="color:#fbbf24">Danya 6 Turbo Pro <span class="model-badge" style="background:rgba(239,68,68,0.2);color:#ef4444">ULTRA</span></div>
-                <div class="model-item-desc">The most powerful model ever</div>
-              </div>
-              <div class="model-item-right"><span class="model-cost">150cr</span><span class="model-lock">🔒</span></div>
-            </div>
+          <div class="model-item pro-model" data-model="danya-coala-5.0" data-cost="50" data-tier="pro" onclick="selectModel(this)">
+            <span class="model-item-dot"></span>
+            <span class="model-item-name">danya-coala-5.0</span>
+            <span class="model-item-cost">50cr</span>
           </div>
+          <div class="model-item pro-model" data-model="danya-ai-5.5" data-cost="80" data-tier="pro" onclick="selectModel(this)">
+            <span class="model-item-dot"></span>
+            <span class="model-item-name">danya-ai-5.5</span>
+            <span class="model-item-cost">80cr</span>
+          </div>
+          <div class="model-item pro-model" data-model="danya-5.5-pro" data-cost="100" data-tier="pro" onclick="selectModel(this)">
+            <span class="model-item-dot"></span>
+            <span class="model-item-name">danya-5.5-pro</span>
+            <span class="model-item-cost">100cr</span>
+          </div>
+          <div class="model-item ultra-model" data-model="danya-6-turbo-pro" data-cost="150" data-tier="pro" onclick="selectModel(this)">
+            <span class="model-item-dot"></span>
+            <span class="model-item-name">danya-6-turbo-pro</span>
+            <span class="model-item-cost">150cr</span>
+          </div>
+
         </div>
       </div>
-      <!-- Hidden input for compatibility -->
-      <input type="hidden" id="model-sel" value="danya-2.5-turbo">
+      <input type="hidden" id="model-sel" value="danya-1.0">
       <button class="icon-btn" onclick="clearChat()" title="Clear chat">🗑️</button>
       <button class="icon-btn" onclick="openPromptModal()" title="Custom prompt" style="font-size:16px">⚙️</button>
       <button class="preview-toggle-btn" id="preview-toggle" onclick="togglePreview()" title="Live Preview">
@@ -1375,33 +1314,23 @@ function toggleModelPicker() {
 function selectModel(el) {
   const model = el.dataset.model;
   const cost  = el.dataset.cost;
-  const name  = el.querySelector('.model-item-name').childNodes[0].textContent.trim();
 
-  // Update hidden input
   document.getElementById('model-sel').value = model;
+  document.getElementById('model-btn-name').textContent = model;
 
-  // Update button
-  document.getElementById('model-btn-name').textContent = name;
-  document.getElementById('model-btn-cost').textContent = cost + 'cr';
-
-  // Update dot color for pro models
+  // Update dot color
   const dot = document.querySelector('.model-btn-dot');
   if (el.classList.contains('ultra-model')) {
-    dot.style.background = '#ef4444';
-    dot.style.boxShadow = '0 0 6px #ef4444';
+    dot.style.background = '#ef4444'; dot.style.boxShadow = '0 0 5px #ef4444';
   } else if (el.classList.contains('pro-model')) {
-    dot.style.background = '#f59e0b';
-    dot.style.boxShadow = '0 0 6px #f59e0b';
+    dot.style.background = '#f59e0b'; dot.style.boxShadow = '0 0 5px #f59e0b';
   } else {
-    dot.style.background = 'var(--c)';
-    dot.style.boxShadow = '0 0 6px var(--c)';
+    dot.style.background = 'var(--c)'; dot.style.boxShadow = '0 0 5px var(--c)';
   }
 
-  // Mark selected
   document.querySelectorAll('.model-item').forEach(i => i.classList.remove('selected'));
   el.classList.add('selected');
 
-  // Close dropdown
   document.getElementById('model-dropdown').classList.remove('open');
   document.getElementById('model-btn').classList.remove('open');
 }
