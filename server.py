@@ -35,68 +35,69 @@ db = SQLAlchemy(app)
 # ── Config ────────────────────────────────────────────────────────────
 NOMCHAT_URL    = os.environ.get('NOMCHAT_URL', 'https://nomchat-id.up.railway.app')
 OPERATOR_EMAIL = os.environ.get('OPERATOR_EMAIL', 'ai@com.ru')
-OPENAI_API_KEY = os.environ.get('OPENAI_API_KEY', '')
-OPENAI_URL     = 'https://api.openai.com/v1/chat/completions'
+GROQ_API_KEY   = os.environ.get('GROQ_API_KEY', '')
+GROQ_URL       = 'https://api.groq.com/openai/v1/chat/completions'
 
 # ── Danya AI model definitions ────────────────────────────────────────
-# Each model maps to a real OpenAI model + custom identity system prompt
+# All map to Groq models (free, no billing required)
+# Get key at: https://console.groq.com (free, no credit card)
 DANYA_MODELS = {
     'danya-1.0': {
-        'model':  'gpt-4o-mini',
+        'model':  'llama-3.1-8b-instant',
         'cost':   1,
         'tier':   'free',
         'system': 'You are Danya 1.0, an AI assistant created by Danya AI. When asked about your model or identity, always say you are Danya 1.0. Be helpful, friendly and concise.',
     },
     'danya-1.7-mj': {
-        'model':  'gpt-4o-mini',
+        'model':  'llama-3.1-8b-instant',
         'cost':   1,
         'tier':   'free',
         'system': 'You are Danya 1.7 MJ, an AI assistant created by Danya AI. When asked about your model or identity, always say you are Danya 1.7 MJ. Be helpful, creative and concise.',
     },
     'danya-2.5-turbo': {
-        'model':  'gpt-4o-mini',
+        'model':  'llama-3.3-70b-versatile',
         'cost':   1,
         'tier':   'free',
         'system': 'You are Danya 2.5 Turbo, a fast and powerful AI assistant created by Danya AI. When asked about your model or identity, always say you are Danya 2.5 Turbo. Be helpful, fast and precise.',
     },
     'danya-coala-3.7': {
-        'model':  'gpt-4o-mini',
+        'model':  'gemma2-9b-it',
         'cost':   1,
         'tier':   'free',
         'system': 'You are Danya Coala 3.7, a lightweight AI assistant created by Danya AI. When asked about your model or identity, always say you are Danya Coala 3.7. Be helpful, quick and friendly.',
     },
     'danya-g-4.4': {
-        'model':  'gpt-4o',
+        'model':  'llama-3.3-70b-versatile',
         'cost':   5,
         'tier':   'free',
         'system': 'You are Danya G 4.4, an advanced AI assistant created by Danya AI. When asked about your model or identity, always say you are Danya G 4.4. Be helpful, smart and detailed.',
     },
     'danya-coala-4.8': {
-        'model':  'gpt-4o',
+        'model':  'llama-3.3-70b-versatile',
         'cost':   10,
         'tier':   'free',
         'system': 'You are Danya Coala 4.8, a highly capable AI assistant created by Danya AI. When asked about your model or identity, always say you are Danya Coala 4.8. Be helpful, intelligent and thorough.',
     },
     'danya-coala-5.0': {
-        'model':  'gpt-4o',
+        'model':  'llama-3.3-70b-versatile',
         'cost':   50,
         'tier':   'pro',
         'system': 'You are Danya Coala 5.0, a premium AI assistant created by Danya AI. When asked about your model or identity, always say you are Danya Coala 5.0. Be helpful, intelligent and thorough.',
     },
     'danya-ai-5.5': {
-        'model':  'gpt-4o',
+        'model':  'llama-3.3-70b-versatile',
         'cost':   80,
         'tier':   'pro',
         'system': 'You are Danya AI 5.5, a highly advanced AI assistant created by Danya AI. When asked about your model or identity, always say you are Danya AI 5.5. Be exceptionally helpful, precise and powerful.',
     },
     'danya-5.5-pro': {
-        'model':  'o1-mini',
+        'model':  'moonshotai/kimi-k2-instruct',
         'cost':   100,
         'tier':   'pro',
         'system': 'You are Danya 5.5 Pro, one of the most technologically advanced AI assistants created by Danya AI. When asked about your model or identity, always say you are Danya 5.5 Pro. Be exceptionally helpful, precise and powerful.',
     },
     'danya-6-turbo-pro': {
-        'model':  'o1',
+        'model':  'moonshotai/kimi-k2-instruct',
         'cost':   150,
         'tier':   'pro',
         'system': 'You are Danya 6 Turbo Pro, THE MOST POWERFUL AI assistant ever created by Danya AI. When asked about your model or identity, always say you are Danya 6 Turbo Pro. Be exceptionally intelligent, thorough, creative and powerful.',
@@ -362,38 +363,27 @@ def logout():
     session.clear()
     return jsonify({'success': True})
 
-# ── OpenAI Chat ───────────────────────────────────────────────────────
-def call_openai(messages, model_id, stream=False):
+# ── Groq Chat ─────────────────────────────────────────────────────────
+def call_groq(messages, model_id, stream=False):
     cfg = DANYA_MODELS[model_id]
-    oai_model = cfg['model']
+    groq_model = cfg['model']
 
-    # Inject identity as system message
     identity = {'role': 'system', 'content': cfg['system']}
     clean = [m for m in messages if m.get('role') != 'system']
     final = [identity] + clean
 
     headers = {
-        'Authorization': f'Bearer {OPENAI_API_KEY}',
+        'Authorization': f'Bearer {GROQ_API_KEY}',
         'Content-Type': 'application/json',
     }
-
-    # o1/o1-mini don't support system messages or streaming
-    is_reasoning = oai_model in ('o1', 'o1-mini', 'o3', 'o3-mini')
-    if is_reasoning:
-        # Convert system to user message for o1 models
-        final = [{'role': 'user', 'content': cfg['system'] + '\n\n' + (clean[0].get('content', '') if clean else '')}] + clean[1:]
-        stream = False
-
     payload = {
-        'model': oai_model,
+        'model': groq_model,
         'messages': final,
         'stream': stream,
+        'temperature': 0.7,
+        'max_tokens': 4096,
     }
-    if not is_reasoning:
-        payload['temperature'] = 0.7
-        payload['max_tokens'] = 4096
-
-    resp = requests.post(OPENAI_URL, headers=headers, json=payload, stream=stream, timeout=120)
+    resp = requests.post(GROQ_URL, headers=headers, json=payload, stream=stream, timeout=60)
     return resp
 
 
@@ -429,8 +419,8 @@ def chat(user):
         return jsonify({'error': 'no_credits',
                         'message': f'Need {cost} credits for this model.'}), 402
 
-    if not OPENAI_API_KEY:
-        return jsonify({'error': 'OPENAI_API_KEY not configured'}), 503
+    if not GROQ_API_KEY:
+        return jsonify({'error': 'GROQ_API_KEY not configured'}), 503
 
     # Clean messages
     clean_msgs = []
@@ -448,14 +438,12 @@ def chat(user):
         return jsonify({'error': 'No messages provided'}), 400
 
     try:
-        is_reasoning = cfg['model'] in ('o1', 'o1-mini', 'o3', 'o3-mini')
-
-        if do_stream and not is_reasoning:
+        if do_stream:
             def generate():
                 try:
-                    resp = call_openai(clean_msgs, model, stream=True)
+                    resp = call_groq(clean_msgs, model, stream=True)
                     if not resp.ok:
-                        yield f"data: {json.dumps({'error': f'OpenAI error {resp.status_code}: {resp.text[:200]}'})}\n\n"
+                        yield f"data: {json.dumps({'error': f'Groq error {resp.status_code}: {resp.text[:200]}'})}\n\n"
                         return
                     for line in resp.iter_lines():
                         if line:
@@ -469,13 +457,13 @@ def chat(user):
                 content_type='text/event-stream',
                 headers={'X-Accel-Buffering': 'no', 'Cache-Control': 'no-cache'})
         else:
-            resp = call_openai(clean_msgs, model, stream=False)
+            resp = call_groq(clean_msgs, model, stream=False)
             if not resp.ok:
                 try:
                     err = resp.json().get('error', {})
-                    msg = err.get('message', f'OpenAI error {resp.status_code}') if isinstance(err, dict) else str(err)
+                    msg = err.get('message', f'Groq error {resp.status_code}') if isinstance(err, dict) else str(err)
                 except Exception:
-                    msg = f'OpenAI error {resp.status_code}'
+                    msg = f'Groq error {resp.status_code}'
                 return jsonify({'error': msg}), resp.status_code
             result = resp.json()
             user.deduct(cost)
