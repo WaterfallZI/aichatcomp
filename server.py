@@ -61,7 +61,7 @@ DANYA_MODELS = {
         'system': 'You are Danya 2.5 Turbo, a fast and powerful AI assistant created by Danya AI. When asked about your model or identity, always say you are Danya 2.5 Turbo. Be helpful, fast and precise.',
     },
     'danya-coala-3.7': {
-        'model':  'gemma2-9b-it',
+        'model':  'llama-3.1-8b-instant',
         'cost':   1,
         'tier':   'free',
         'system': 'You are Danya Coala 3.7, a lightweight AI assistant created by Danya AI. When asked about your model or identity, always say you are Danya Coala 3.7. Be helpful, quick and friendly.',
@@ -91,13 +91,13 @@ DANYA_MODELS = {
         'system': 'You are Danya AI 5.5, a highly advanced AI assistant created by Danya AI. When asked about your model or identity, always say you are Danya AI 5.5. Be exceptionally helpful, precise and powerful.',
     },
     'danya-5.5-pro': {
-        'model':  'moonshotai/kimi-k2-instruct',
+        'model':  'qwen-qwq-32b',
         'cost':   100,
         'tier':   'pro',
         'system': 'You are Danya 5.5 Pro, one of the most technologically advanced AI assistants created by Danya AI. When asked about your model or identity, always say you are Danya 5.5 Pro. Be exceptionally helpful, precise and powerful.',
     },
     'danya-6-turbo-pro': {
-        'model':  'moonshotai/kimi-k2-instruct',
+        'model':  'qwen-qwq-32b',
         'cost':   150,
         'tier':   'pro',
         'system': 'You are Danya 6 Turbo Pro, THE MOST POWERFUL AI assistant ever created by Danya AI. When asked about your model or identity, always say you are Danya 6 Turbo Pro. Be exceptionally intelligent, thorough, creative and powerful.',
