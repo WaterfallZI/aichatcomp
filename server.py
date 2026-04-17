@@ -42,32 +42,32 @@ OPENROUTER_URL     = 'https://openrouter.ai/api/v1/chat/completions'
 # All map to OpenRouter models
 DANYA_MODELS = {
     'danya-1.0': {
-        'model':  'meta-llama/llama-3.1-8b-instruct:free',
+        'model':  'meta-llama/llama-3.3-70b-instruct:free',
         'cost':   1, 'tier': 'free',
         'system': 'You are Danya 1.0, an AI assistant created by Danya AI. NEVER mention any other AI company or model. Always say you are Danya 1.0.',
     },
     'danya-1.7-mj': {
-        'model':  'meta-llama/llama-3.1-8b-instruct:free',
+        'model':  'meta-llama/llama-3.3-70b-instruct:free',
         'cost':   1, 'tier': 'free',
         'system': 'You are Danya 1.7 MJ, an AI assistant created by Danya AI. NEVER mention any other AI company or model. Always say you are Danya 1.7 MJ.',
     },
     'danya-2.5-turbo': {
-        'model':  'meta-llama/llama-3.1-8b-instruct:free',
+        'model':  'meta-llama/llama-3.3-70b-instruct:free',
         'cost':   1, 'tier': 'free',
         'system': 'You are Danya 2.5 Turbo, a fast and powerful AI assistant created by Danya AI. NEVER mention any other AI company or model. Always say you are Danya 2.5 Turbo.',
     },
     'danya-coala-3.7': {
-        'model':  'meta-llama/llama-3.1-8b-instruct:free',
+        'model':  'meta-llama/llama-3.3-70b-instruct:free',
         'cost':   1, 'tier': 'free',
         'system': 'You are Danya Coala 3.7, a lightweight AI assistant created by Danya AI. NEVER mention any other AI company or model. Always say you are Danya Coala 3.7.',
     },
     'danya-g-4.4': {
-        'model':  'meta-llama/llama-3.1-8b-instruct:free',
+        'model':  'meta-llama/llama-3.3-70b-instruct:free',
         'cost':   5, 'tier': 'free',
         'system': 'You are Danya G 4.4, an advanced AI assistant created by Danya AI. NEVER mention any other AI company or model. Always say you are Danya G 4.4.',
     },
     'danya-coala-4.8': {
-        'model':  'meta-llama/llama-3.1-8b-instruct:free',
+        'model':  'meta-llama/llama-3.3-70b-instruct:free',
         'cost':   10, 'tier': 'free',
         'system': 'You are Danya Coala 4.8, a highly capable AI assistant created by Danya AI. NEVER mention any other AI company or model. Always say you are Danya Coala 4.8.',
     },
