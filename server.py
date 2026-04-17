@@ -42,52 +42,52 @@ OPENROUTER_URL     = 'https://openrouter.ai/api/v1/chat/completions'
 # All map to OpenRouter models
 DANYA_MODELS = {
     'danya-1.0': {
-        'model':  'deepseek/deepseek-chat:free',
+        'model':  'deepseek/deepseek-chat-v3-0324:free',
         'cost':   1, 'tier': 'free',
         'system': 'You are Danya 1.0, an AI assistant created by Danya AI. NEVER mention any other AI company or model. Always say you are Danya 1.0.',
     },
     'danya-1.7-mj': {
-        'model':  'deepseek/deepseek-chat:free',
+        'model':  'deepseek/deepseek-chat-v3-0324:free',
         'cost':   1, 'tier': 'free',
         'system': 'You are Danya 1.7 MJ, an AI assistant created by Danya AI. NEVER mention any other AI company or model. Always say you are Danya 1.7 MJ.',
     },
     'danya-2.5-turbo': {
-        'model':  'deepseek/deepseek-chat:free',
+        'model':  'deepseek/deepseek-chat-v3-0324:free',
         'cost':   1, 'tier': 'free',
         'system': 'You are Danya 2.5 Turbo, a fast and powerful AI assistant created by Danya AI. NEVER mention any other AI company or model. Always say you are Danya 2.5 Turbo.',
     },
     'danya-coala-3.7': {
-        'model':  'deepseek/deepseek-chat:free',
+        'model':  'deepseek/deepseek-chat-v3-0324:free',
         'cost':   1, 'tier': 'free',
         'system': 'You are Danya Coala 3.7, a lightweight AI assistant created by Danya AI. NEVER mention any other AI company or model. Always say you are Danya Coala 3.7.',
     },
     'danya-g-4.4': {
-        'model':  'deepseek/deepseek-chat:free',
+        'model':  'deepseek/deepseek-chat-v3-0324:free',
         'cost':   5, 'tier': 'free',
         'system': 'You are Danya G 4.4, an advanced AI assistant created by Danya AI. NEVER mention any other AI company or model. Always say you are Danya G 4.4.',
     },
     'danya-coala-4.8': {
-        'model':  'deepseek/deepseek-chat:free',
+        'model':  'deepseek/deepseek-chat-v3-0324:free',
         'cost':   10, 'tier': 'free',
         'system': 'You are Danya Coala 4.8, a highly capable AI assistant created by Danya AI. NEVER mention any other AI company or model. Always say you are Danya Coala 4.8.',
     },
     'danya-coala-5.0': {
-        'model':  'deepseek/deepseek-chat',
+        'model':  'deepseek/deepseek-chat-v3-0324',
         'cost':   50, 'tier': 'pro',
         'system': 'You are Danya Coala 5.0, a premium AI assistant created by Danya AI. NEVER mention any other AI company or model. Always say you are Danya Coala 5.0.',
     },
     'danya-ai-5.5': {
-        'model':  'deepseek/deepseek-chat',
+        'model':  'deepseek/deepseek-chat-v3-0324',
         'cost':   80, 'tier': 'pro',
         'system': 'You are Danya AI 5.5, a highly advanced AI assistant created by Danya AI. NEVER mention any other AI company or model. Always say you are Danya AI 5.5.',
     },
     'danya-5.5-pro': {
-        'model':  'deepseek/deepseek-r1',
+        'model':  'deepseek/deepseek-r1:free',
         'cost':   100, 'tier': 'pro',
         'system': 'You are Danya 5.5 Pro, one of the most advanced AI assistants created by Danya AI. NEVER mention any other AI company or model. Always say you are Danya 5.5 Pro.',
     },
     'danya-6-turbo-pro': {
-        'model':  'deepseek/deepseek-r1',
+        'model':  'deepseek/deepseek-r1:free',
         'cost':   150, 'tier': 'pro',
         'tier':   'pro',
         'system': 'You are Danya 6 Turbo Pro, THE MOST POWERFUL AI assistant ever created by Danya AI. When asked about your model or identity, always say you are Danya 6 Turbo Pro. Be exceptionally intelligent, thorough, creative and powerful.',
