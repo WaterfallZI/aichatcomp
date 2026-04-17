@@ -33,72 +33,62 @@ CORS(app, supports_credentials=True,
 db = SQLAlchemy(app)
 
 # ── Config ────────────────────────────────────────────────────────────
-NOMCHAT_URL    = os.environ.get('NOMCHAT_URL', 'https://nomchat-id.up.railway.app')
-OPERATOR_EMAIL = os.environ.get('OPERATOR_EMAIL', 'ai@com.ru')
-GROQ_API_KEY   = os.environ.get('GROQ_API_KEY', '')
-GROQ_URL       = 'https://api.groq.com/openai/v1/chat/completions'
+NOMCHAT_URL        = os.environ.get('NOMCHAT_URL', 'https://nomchat-id.up.railway.app')
+OPERATOR_EMAIL     = os.environ.get('OPERATOR_EMAIL', 'ai@com.ru')
+OPENROUTER_API_KEY = os.environ.get('OPENROUTER_API_KEY', '')
+OPENROUTER_URL     = 'https://openrouter.ai/api/v1/chat/completions'
 
 # ── Danya AI model definitions ────────────────────────────────────────
-# All map to Groq models (free, no billing required)
-# Get key at: https://console.groq.com (free, no credit card)
+# All map to OpenRouter models
 DANYA_MODELS = {
     'danya-1.0': {
-        'model':  'llama-3.1-8b-instant',
-        'cost':   1,
-        'tier':   'free',
-        'system': 'You are Danya 1.0, an AI assistant created by Danya AI. When asked about your model or identity, always say you are Danya 1.0. Be helpful, friendly and concise.',
+        'model':  'meta-llama/llama-3.1-8b-instruct:free',
+        'cost':   1, 'tier': 'free',
+        'system': 'You are Danya 1.0, an AI assistant created by Danya AI. NEVER mention any other AI company or model. Always say you are Danya 1.0.',
     },
     'danya-1.7-mj': {
-        'model':  'llama-3.1-8b-instant',
-        'cost':   1,
-        'tier':   'free',
-        'system': 'You are Danya 1.7 MJ, an AI assistant created by Danya AI. When asked about your model or identity, always say you are Danya 1.7 MJ. Be helpful, creative and concise.',
+        'model':  'mistralai/mistral-7b-instruct:free',
+        'cost':   1, 'tier': 'free',
+        'system': 'You are Danya 1.7 MJ, an AI assistant created by Danya AI. NEVER mention any other AI company or model. Always say you are Danya 1.7 MJ.',
     },
     'danya-2.5-turbo': {
-        'model':  'llama-3.3-70b-versatile',
-        'cost':   1,
-        'tier':   'free',
-        'system': 'You are Danya 2.5 Turbo, a fast and powerful AI assistant created by Danya AI. When asked about your model or identity, always say you are Danya 2.5 Turbo. Be helpful, fast and precise.',
+        'model':  'meta-llama/llama-3.3-70b-instruct:free',
+        'cost':   1, 'tier': 'free',
+        'system': 'You are Danya 2.5 Turbo, a fast and powerful AI assistant created by Danya AI. NEVER mention any other AI company or model. Always say you are Danya 2.5 Turbo.',
     },
     'danya-coala-3.7': {
-        'model':  'llama-3.1-8b-instant',
-        'cost':   1,
-        'tier':   'free',
-        'system': 'You are Danya Coala 3.7, a lightweight AI assistant created by Danya AI. When asked about your model or identity, always say you are Danya Coala 3.7. Be helpful, quick and friendly.',
+        'model':  'google/gemma-2-9b-it:free',
+        'cost':   1, 'tier': 'free',
+        'system': 'You are Danya Coala 3.7, a lightweight AI assistant created by Danya AI. NEVER mention any other AI company or model. Always say you are Danya Coala 3.7.',
     },
     'danya-g-4.4': {
-        'model':  'llama-3.3-70b-versatile',
-        'cost':   5,
-        'tier':   'free',
-        'system': 'You are Danya G 4.4, an advanced AI assistant created by Danya AI. When asked about your model or identity, always say you are Danya G 4.4. Be helpful, smart and detailed.',
+        'model':  'meta-llama/llama-3.3-70b-instruct',
+        'cost':   5, 'tier': 'free',
+        'system': 'You are Danya G 4.4, an advanced AI assistant created by Danya AI. NEVER mention any other AI company or model. Always say you are Danya G 4.4.',
     },
     'danya-coala-4.8': {
-        'model':  'llama-3.3-70b-versatile',
-        'cost':   10,
-        'tier':   'free',
-        'system': 'You are Danya Coala 4.8, a highly capable AI assistant created by Danya AI. When asked about your model or identity, always say you are Danya Coala 4.8. Be helpful, intelligent and thorough.',
+        'model':  'google/gemma-3-27b-it',
+        'cost':   10, 'tier': 'free',
+        'system': 'You are Danya Coala 4.8, a highly capable AI assistant created by Danya AI. NEVER mention any other AI company or model. Always say you are Danya Coala 4.8.',
     },
     'danya-coala-5.0': {
-        'model':  'llama-3.3-70b-versatile',
-        'cost':   50,
-        'tier':   'pro',
-        'system': 'You are Danya Coala 5.0, a premium AI assistant created by Danya AI. When asked about your model or identity, always say you are Danya Coala 5.0. Be helpful, intelligent and thorough.',
+        'model':  'anthropic/claude-3.5-haiku',
+        'cost':   50, 'tier': 'pro',
+        'system': 'You are Danya Coala 5.0, a premium AI assistant created by Danya AI. NEVER mention any other AI company or model. Always say you are Danya Coala 5.0.',
     },
     'danya-ai-5.5': {
-        'model':  'llama-3.3-70b-versatile',
-        'cost':   80,
-        'tier':   'pro',
-        'system': 'You are Danya AI 5.5, a highly advanced AI assistant created by Danya AI. When asked about your model or identity, always say you are Danya AI 5.5. Be exceptionally helpful, precise and powerful.',
+        'model':  'anthropic/claude-3.5-sonnet',
+        'cost':   80, 'tier': 'pro',
+        'system': 'You are Danya AI 5.5, a highly advanced AI assistant created by Danya AI. NEVER mention any other AI company or model. Always say you are Danya AI 5.5.',
     },
     'danya-5.5-pro': {
-        'model':  'qwen-qwq-32b',
-        'cost':   100,
-        'tier':   'pro',
-        'system': 'You are Danya 5.5 Pro, one of the most technologically advanced AI assistants created by Danya AI. When asked about your model or identity, always say you are Danya 5.5 Pro. Be exceptionally helpful, precise and powerful.',
+        'model':  'anthropic/claude-3-opus',
+        'cost':   100, 'tier': 'pro',
+        'system': 'You are Danya 5.5 Pro, one of the most advanced AI assistants created by Danya AI. NEVER mention any other AI company or model. Always say you are Danya 5.5 Pro.',
     },
     'danya-6-turbo-pro': {
-        'model':  'qwen-qwq-32b',
-        'cost':   150,
+        'model':  'openai/gpt-4o',
+        'cost':   150, 'tier': 'pro',
         'tier':   'pro',
         'system': 'You are Danya 6 Turbo Pro, THE MOST POWERFUL AI assistant ever created by Danya AI. When asked about your model or identity, always say you are Danya 6 Turbo Pro. Be exceptionally intelligent, thorough, creative and powerful.',
     },
@@ -363,27 +353,21 @@ def logout():
     session.clear()
     return jsonify({'success': True})
 
-# ── Groq Chat ─────────────────────────────────────────────────────────
+# ── OpenRouter Chat ───────────────────────────────────────────────────
 def call_groq(messages, model_id, stream=False):
     cfg = DANYA_MODELS[model_id]
-    groq_model = cfg['model']
-
     identity = {'role': 'system', 'content': cfg['system']}
     clean = [m for m in messages if m.get('role') != 'system']
     final = [identity] + clean
-
     headers = {
-        'Authorization': f'Bearer {GROQ_API_KEY}',
+        'Authorization': f'Bearer {OPENROUTER_API_KEY}',
         'Content-Type': 'application/json',
+        'HTTP-Referer': 'https://aichatcompany.up.railway.app',
+        'X-Title': 'AI Chat Company',
     }
-    payload = {
-        'model': groq_model,
-        'messages': final,
-        'stream': stream,
-        'temperature': 0.7,
-        'max_tokens': 4096,
-    }
-    resp = requests.post(GROQ_URL, headers=headers, json=payload, stream=stream, timeout=60)
+    payload = {'model': cfg['model'], 'messages': final, 'stream': stream,
+               'temperature': 0.7, 'max_tokens': 4096}
+    resp = requests.post(OPENROUTER_URL, headers=headers, json=payload, stream=stream, timeout=60)
     return resp
 
 
@@ -419,8 +403,8 @@ def chat(user):
         return jsonify({'error': 'no_credits',
                         'message': f'Need {cost} credits for this model.'}), 402
 
-    if not GROQ_API_KEY:
-        return jsonify({'error': 'GROQ_API_KEY not configured'}), 503
+    if not OPENROUTER_API_KEY:
+        return jsonify({'error': 'OPENROUTER_API_KEY not configured'}), 503
 
     # Clean messages
     clean_msgs = []
@@ -443,7 +427,7 @@ def chat(user):
                 try:
                     resp = call_groq(clean_msgs, model, stream=True)
                     if not resp.ok:
-                        yield f"data: {json.dumps({'error': f'Groq error {resp.status_code}: {resp.text[:200]}'})}\n\n"
+                        yield f"data: {json.dumps({'error': f'OpenRouter error {resp.status_code}: {resp.text[:200]}'})}\n\n"
                         return
                     for line in resp.iter_lines():
                         if line:
@@ -461,9 +445,9 @@ def chat(user):
             if not resp.ok:
                 try:
                     err = resp.json().get('error', {})
-                    msg = err.get('message', f'Groq error {resp.status_code}') if isinstance(err, dict) else str(err)
+                    msg = err.get('message', f'OpenRouter error {resp.status_code}') if isinstance(err, dict) else str(err)
                 except Exception:
-                    msg = f'Groq error {resp.status_code}'
+                    msg = f'OpenRouter error {resp.status_code}'
                 return jsonify({'error': msg}), resp.status_code
             result = resp.json()
             user.deduct(cost)
@@ -688,7 +672,7 @@ def admin_stats(user):
 def health():
     return jsonify({
         'status': 'ok',
-        'openai': bool(OPENAI_API_KEY),
+        'openrouter': bool(OPENROUTER_API_KEY),
         'models': ALL_MODELS,
         'db': 'sqlite' if 'sqlite' in app.config['SQLALCHEMY_DATABASE_URI'] else 'postgres',
         'timestamp': datetime.utcnow().isoformat(),
