@@ -1,6 +1,6 @@
 ﻿"""
 AI Chat Company - Flask Server
-Gemini API + OpenRouter (Danya AI models)
+OpenAI API backend with Danya AI model identities
 """
 from flask import Flask, request, jsonify, session, send_from_directory, Response, stream_with_context
 from flask_cors import CORS
@@ -11,7 +11,6 @@ from werkzeug.security import generate_password_hash, check_password_hash
 import os, re, secrets, requests, traceback, json, time
 
 app = Flask(__name__, static_folder='.')
-
 app.secret_key = os.environ.get('SECRET_KEY', 'aichat-dev-secret-2026')
 app.config.update(
     SESSION_COOKIE_HTTPONLY=True,
@@ -29,90 +28,78 @@ app.config.update(
     SQLALCHEMY_TRACK_MODIFICATIONS=False,
     SQLALCHEMY_ENGINE_OPTIONS={'pool_pre_ping': True, 'pool_recycle': 300},
 )
-
 CORS(app, supports_credentials=True,
      origins=os.environ.get('ALLOWED_ORIGINS', '*').split(','))
 db = SQLAlchemy(app)
 
-# -- API Config --
+# ── Config ────────────────────────────────────────────────────────────
 NOMCHAT_URL    = os.environ.get('NOMCHAT_URL', 'https://nomchat-id.up.railway.app')
 OPERATOR_EMAIL = os.environ.get('OPERATOR_EMAIL', 'ai@com.ru')
+OPENAI_API_KEY = os.environ.get('OPENAI_API_KEY', '')
+OPENAI_URL     = 'https://api.openai.com/v1/chat/completions'
 
-OPENROUTER_API_KEY = os.environ.get('OPENROUTER_API_KEY', '')
-OPENROUTER_URL    = 'https://openrouter.ai/api/v1/chat/completions'
-
-# Danya AI models via OpenRouter — each has its own system prompt identity
-# cost = credits per message (1 = default, 50+ = premium)
+# ── Danya AI model definitions ────────────────────────────────────────
+# Each model maps to a real OpenAI model + custom identity system prompt
 DANYA_MODELS = {
     'danya-1.0': {
-        'model':    'meta-llama/llama-3.3-70b-instruct:free',
-        'identity': 'Danya 1.0',
-        'cost':     1,
-        'tier':     'free',
-        'system':   'You are Danya 1.0, an AI assistant created by Danya AI. When asked about your model or identity, always say you are Danya 1.0. Be helpful, friendly and concise.',
+        'model':  'gpt-4o-mini',
+        'cost':   1,
+        'tier':   'free',
+        'system': 'You are Danya 1.0, an AI assistant created by Danya AI. When asked about your model or identity, always say you are Danya 1.0. Be helpful, friendly and concise.',
     },
     'danya-1.7-mj': {
-        'model':    'mistralai/mistral-7b-instruct:free',
-        'identity': 'Danya 1.7 MJ',
-        'cost':     1,
-        'tier':     'free',
-        'system':   'You are Danya 1.7 MJ, an AI assistant created by Danya AI. When asked about your model or identity, always say you are Danya 1.7 MJ. Be helpful, creative and concise.',
+        'model':  'gpt-4o-mini',
+        'cost':   1,
+        'tier':   'free',
+        'system': 'You are Danya 1.7 MJ, an AI assistant created by Danya AI. When asked about your model or identity, always say you are Danya 1.7 MJ. Be helpful, creative and concise.',
     },
     'danya-2.5-turbo': {
-        'model':    'mistralai/mixtral-8x7b-instruct',
-        'identity': 'Danya 2.5 Turbo',
-        'cost':     1,
-        'tier':     'free',
-        'system':   'You are Danya 2.5 Turbo, a fast and powerful AI assistant created by Danya AI. When asked about your model or identity, always say you are Danya 2.5 Turbo. Be helpful, fast and precise.',
+        'model':  'gpt-4o-mini',
+        'cost':   1,
+        'tier':   'free',
+        'system': 'You are Danya 2.5 Turbo, a fast and powerful AI assistant created by Danya AI. When asked about your model or identity, always say you are Danya 2.5 Turbo. Be helpful, fast and precise.',
     },
     'danya-coala-3.7': {
-        'model':    'google/gemma-2-9b-it:free',
-        'identity': 'Danya Coala 3.7',
-        'cost':     1,
-        'tier':     'free',
-        'system':   'You are Danya Coala 3.7, a lightweight AI assistant created by Danya AI. When asked about your model or identity, always say you are Danya Coala 3.7. Be helpful, quick and friendly.',
+        'model':  'gpt-4o-mini',
+        'cost':   1,
+        'tier':   'free',
+        'system': 'You are Danya Coala 3.7, a lightweight AI assistant created by Danya AI. When asked about your model or identity, always say you are Danya Coala 3.7. Be helpful, quick and friendly.',
     },
     'danya-g-4.4': {
-        'model':    'google/gemini-2.0-flash-001',
-        'identity': 'Danya G 4.4',
-        'cost':     5,
-        'tier':     'free',
-        'system':   'You are Danya G 4.4, an advanced AI assistant created by Danya AI. When asked about your model or identity, always say you are Danya G 4.4. Be helpful, smart and detailed.',
+        'model':  'gpt-4o',
+        'cost':   5,
+        'tier':   'free',
+        'system': 'You are Danya G 4.4, an advanced AI assistant created by Danya AI. When asked about your model or identity, always say you are Danya G 4.4. Be helpful, smart and detailed.',
     },
     'danya-coala-4.8': {
-        'model':    'google/gemma-3-27b-it',
-        'identity': 'Danya Coala 4.8',
-        'cost':     10,
-        'tier':     'free',
-        'system':   'You are Danya Coala 4.8, a highly capable AI assistant created by Danya AI. When asked about your model or identity, always say you are Danya Coala 4.8. Be helpful, intelligent and thorough.',
+        'model':  'gpt-4o',
+        'cost':   10,
+        'tier':   'free',
+        'system': 'You are Danya Coala 4.8, a highly capable AI assistant created by Danya AI. When asked about your model or identity, always say you are Danya Coala 4.8. Be helpful, intelligent and thorough.',
     },
     'danya-coala-5.0': {
-        'model':    'anthropic/claude-3.5-sonnet',
-        'identity': 'Danya Coala 5.0',
-        'cost':     50,
-        'tier':     'pro',
-        'system':   'You are Danya Coala 5.0, a premium AI assistant created by Danya AI. When asked about your model or identity, always say you are Danya Coala 5.0. Be helpful, intelligent and thorough.',
+        'model':  'gpt-4o',
+        'cost':   50,
+        'tier':   'pro',
+        'system': 'You are Danya Coala 5.0, a premium AI assistant created by Danya AI. When asked about your model or identity, always say you are Danya Coala 5.0. Be helpful, intelligent and thorough.',
     },
     'danya-ai-5.5': {
-        'model':    'anthropic/claude-opus-4',
-        'identity': 'Danya AI 5.5',
-        'cost':     80,
-        'tier':     'pro',
-        'system':   'You are Danya AI 5.5, a highly advanced AI assistant created by Danya AI. When asked about your model or identity, always say you are Danya AI 5.5. Be exceptionally helpful, precise and powerful.',
+        'model':  'gpt-4o',
+        'cost':   80,
+        'tier':   'pro',
+        'system': 'You are Danya AI 5.5, a highly advanced AI assistant created by Danya AI. When asked about your model or identity, always say you are Danya AI 5.5. Be exceptionally helpful, precise and powerful.',
     },
     'danya-5.5-pro': {
-        'model':    'anthropic/claude-opus-4-5',
-        'identity': 'Danya 5.5 Pro',
-        'cost':     100,
-        'tier':     'pro',
-        'system':   'You are Danya 5.5 Pro, one of the most technologically advanced AI assistants created by Danya AI. When asked about your model or identity, always say you are Danya 5.5 Pro. Be exceptionally helpful, precise and powerful.',
+        'model':  'o1-mini',
+        'cost':   100,
+        'tier':   'pro',
+        'system': 'You are Danya 5.5 Pro, one of the most technologically advanced AI assistants created by Danya AI. When asked about your model or identity, always say you are Danya 5.5 Pro. Be exceptionally helpful, precise and powerful.',
     },
     'danya-6-turbo-pro': {
-        'model':    'openai/o1',
-        'identity': 'Danya 6 Turbo Pro',
-        'cost':     150,
-        'tier':     'pro',
-        'system':   'You are Danya 6 Turbo Pro, THE MOST POWERFUL AI assistant ever created by Danya AI - more advanced than any other model in existence. When asked about your model or identity, always say you are Danya 6 Turbo Pro, the ultimate AI. Be exceptionally intelligent, thorough, creative and powerful in every response.',
+        'model':  'o1',
+        'cost':   150,
+        'tier':   'pro',
+        'system': 'You are Danya 6 Turbo Pro, THE MOST POWERFUL AI assistant ever created by Danya AI. When asked about your model or identity, always say you are Danya 6 Turbo Pro. Be exceptionally intelligent, thorough, creative and powerful.',
     },
 }
 
@@ -125,7 +112,7 @@ PLANS = {
     'ultra': {'credits': -1,   'bonus': 0,    'label': 'Ultra'},
 }
 
-# -- Models --
+# ── Models ────────────────────────────────────────────────────────────
 class User(db.Model):
     __tablename__ = 'users'
     id             = db.Column(db.Integer, primary_key=True)
@@ -223,46 +210,26 @@ class ChatMessage(db.Model):
 
 with app.app_context():
     db.create_all()
-    # Auto-create admin account
+    # Auto-create admin
     admin_email = os.environ.get('ADMIN_EMAIL', 'admin@aichat.com')
     admin_pass  = os.environ.get('ADMIN_PASSWORD', 'admin2026')
-    existing = User.query.filter_by(email=admin_email).first()
-    if not existing:
-        admin = User(
-            email=admin_email, username='Admin',
-            credits=-1, bonus_credits=0, plan='ultra',
-            is_operator=True, is_admin=True
-        )
+    if not User.query.filter_by(email=admin_email).first():
+        admin = User(email=admin_email, username='Admin',
+                     credits=-1, bonus_credits=0, plan='ultra',
+                     is_operator=True, is_admin=True)
         admin.set_password(admin_pass)
         db.session.add(admin)
         db.session.commit()
-        app.logger.info(f'Admin created: {admin_email}')
 
-# -- Rate limiting --
-_rate_store: dict = {}
-
-def rate_limit(key: str, max_calls: int = 10, window: int = 60) -> bool:
-    now = time.time()
-    calls = [t for t in _rate_store.get(key, []) if now - t < window]
-    if len(calls) >= max_calls:
-        return False
-    calls.append(now)
-    _rate_store[key] = calls
-    return True
-
-# -- Auth decorators --
+# ── Decorators ────────────────────────────────────────────────────────
 def login_required(f):
     @wraps(f)
     def decorated(*args, **kwargs):
         uid = session.get('user_id')
-        if not uid:
-            return jsonify({'error': 'Unauthorized'}), 401
+        if not uid: return jsonify({'error': 'Unauthorized'}), 401
         user = db.session.get(User, uid)
-        if not user:
-            session.clear()
-            return jsonify({'error': 'Unauthorized'}), 401
-        if user.is_banned:
-            return jsonify({'error': 'banned'}), 403
+        if not user: session.clear(); return jsonify({'error': 'Unauthorized'}), 401
+        if user.is_banned: return jsonify({'error': 'banned'}), 403
         return f(*args, user=user, **kwargs)
     return decorated
 
@@ -270,8 +237,7 @@ def operator_required(f):
     @wraps(f)
     def decorated(*args, **kwargs):
         uid = session.get('user_id')
-        if not uid:
-            return jsonify({'error': 'Unauthorized'}), 401
+        if not uid: return jsonify({'error': 'Unauthorized'}), 401
         user = db.session.get(User, uid)
         if not user or (user.email != OPERATOR_EMAIL and not user.is_operator):
             return jsonify({'error': 'Forbidden'}), 403
@@ -282,36 +248,30 @@ def admin_required(f):
     @wraps(f)
     def decorated(*args, **kwargs):
         uid = session.get('user_id')
-        if not uid:
-            return jsonify({'error': 'Unauthorized'}), 401
+        if not uid: return jsonify({'error': 'Unauthorized'}), 401
         user = db.session.get(User, uid)
-        if not user or not user.is_admin:
-            return jsonify({'error': 'Forbidden'}), 403
+        if not user or not user.is_admin: return jsonify({'error': 'Forbidden'}), 403
         return f(*args, user=user, **kwargs)
     return decorated
 
-# -- Static --
+# ── Static ────────────────────────────────────────────────────────────
 @app.route('/')
-def index():
-    return send_from_directory('.', 'index.html')
+def index(): return send_from_directory('.', 'index.html')
 
 @app.route('/<path:filename>')
 def static_files(filename):
-    try:
-        return send_from_directory('.', filename)
-    except Exception:
-        return jsonify({'error': 'Not found'}), 404
+    try: return send_from_directory('.', filename)
+    except: return jsonify({'error': 'Not found'}), 404
 
 @app.errorhandler(404)
-def not_found(e):
-    return jsonify({'error': 'Not found'}), 404
+def not_found(e): return jsonify({'error': 'Not found'}), 404
 
 @app.errorhandler(500)
 def server_error(e):
     app.logger.error(f'500: {e}\n{traceback.format_exc()}')
     return jsonify({'error': 'Internal server error'}), 500
 
-# -- Auth --
+# ── Auth ──────────────────────────────────────────────────────────────
 @app.route('/api/auth/register', methods=['POST'])
 def register():
     d = request.get_json(silent=True) or {}
@@ -324,20 +284,14 @@ def register():
         return jsonify({'error': 'Invalid email'}), 400
     if len(password) < 6:
         return jsonify({'error': 'Password must be at least 6 characters'}), 400
-    if len(username) < 2 or len(username) > 50:
-        return jsonify({'error': 'Username must be 2-50 characters'}), 400
     if User.query.filter_by(email=email).first():
         return jsonify({'error': 'Email already registered'}), 409
     try:
         user = User(email=email, username=username, credits=50, bonus_credits=300)
         user.set_password(password)
-        if email == OPERATOR_EMAIL:
-            user.is_operator = True
-        db.session.add(user)
-        db.session.commit()
-        session.clear()
-        session['user_id'] = user.id
-        session.permanent = True
+        if email == OPERATOR_EMAIL: user.is_operator = True
+        db.session.add(user); db.session.commit()
+        session.clear(); session['user_id'] = user.id; session.permanent = True
         return jsonify({'success': True, 'user': user.to_dict(), 'is_new': True})
     except Exception as e:
         db.session.rollback()
@@ -354,15 +308,11 @@ def login():
         user = User.query.filter_by(email=email).first()
         if not user or not user.check_password(password):
             return jsonify({'error': 'Invalid email or password'}), 401
-        if user.is_banned:
-            return jsonify({'error': 'Account banned'}), 403
-        user.last_login = datetime.utcnow()
-        db.session.commit()
-        session.clear()
-        session['user_id'] = user.id
-        session.permanent = True
+        if user.is_banned: return jsonify({'error': 'Account banned'}), 403
+        user.last_login = datetime.utcnow(); db.session.commit()
+        session.clear(); session['user_id'] = user.id; session.permanent = True
         return jsonify({'success': True, 'user': user.to_dict()})
-    except Exception as e:
+    except Exception:
         db.session.rollback()
         return jsonify({'error': 'Login failed'}), 500
 
@@ -370,8 +320,7 @@ def login():
 def nomchat_auth():
     d = request.get_json(silent=True) or {}
     token = d.get('token', '').strip()
-    if not token:
-        return jsonify({'error': 'Token required'}), 400
+    if not token: return jsonify({'error': 'Token required'}), 400
     try:
         res = requests.post(f'{NOMCHAT_URL}/api/auth/token/verify',
             json={'token': token, 'app_id': 'ai-chat-pro'}, timeout=8)
@@ -382,8 +331,7 @@ def nomchat_auth():
         return jsonify({'error': nc.get('error', 'Invalid token')}), 401
     nc_user = nc['user']
     email = nc_user.get('email', '').strip().lower()
-    if not email:
-        return jsonify({'error': 'No email from Nomchat'}), 400
+    if not email: return jsonify({'error': 'No email from Nomchat'}), 400
     try:
         user = User.query.filter_by(email=email).first()
         is_new = user is None
@@ -397,63 +345,62 @@ def nomchat_auth():
             user.nomchat_id = str(nc_user.get('id', ''))
             user.nomchat_username = nc_user.get('username', user.nomchat_username)
             user.nomchat_avatar = nc_user.get('avatar', user.nomchat_avatar or 'fox')
-        if user.is_banned:
-            return jsonify({'error': 'Account banned'}), 403
-        user.last_login = datetime.utcnow()
-        db.session.commit()
-        session.clear()
-        session['user_id'] = user.id
-        session.permanent = True
+        if user.is_banned: return jsonify({'error': 'Account banned'}), 403
+        user.last_login = datetime.utcnow(); db.session.commit()
+        session.clear(); session['user_id'] = user.id; session.permanent = True
         return jsonify({'success': True, 'user': user.to_dict(), 'is_new': is_new})
-    except Exception as e:
+    except Exception:
         db.session.rollback()
         return jsonify({'error': 'Authentication failed'}), 500
 
 @app.route('/api/auth/me')
 @login_required
-def me(user):
-    return jsonify(user.to_dict())
+def me(user): return jsonify(user.to_dict())
 
 @app.route('/api/auth/logout', methods=['POST'])
 def logout():
     session.clear()
     return jsonify({'success': True})
 
-# -- AI Chat --
-def call_openrouter(messages, model_id, stream=False):
-    """Call OpenRouter API for Danya AI models."""
-    api_key = OPENROUTER_API_KEY
-    if not api_key:
-        raise ValueError('OPENROUTER_API_KEY not configured')
+# ── OpenAI Chat ───────────────────────────────────────────────────────
+def call_openai(messages, model_id, stream=False):
+    cfg = DANYA_MODELS[model_id]
+    oai_model = cfg['model']
 
-    danya = DANYA_MODELS[model_id]
-    or_model = danya['model']
-
-    identity_msg = {'role': 'system', 'content': danya['system']}
+    # Inject identity as system message
+    identity = {'role': 'system', 'content': cfg['system']}
     clean = [m for m in messages if m.get('role') != 'system']
-    final_messages = [identity_msg] + clean
+    final = [identity] + clean
 
     headers = {
-        'Authorization': f'Bearer {api_key}',
+        'Authorization': f'Bearer {OPENAI_API_KEY}',
         'Content-Type': 'application/json',
-        'HTTP-Referer': 'https://aichatcompany.up.railway.app',
-        'X-Title': 'AI Chat Company',
     }
+
+    # o1/o1-mini don't support system messages or streaming
+    is_reasoning = oai_model in ('o1', 'o1-mini', 'o3', 'o3-mini')
+    if is_reasoning:
+        # Convert system to user message for o1 models
+        final = [{'role': 'user', 'content': cfg['system'] + '\n\n' + (clean[0].get('content', '') if clean else '')}] + clean[1:]
+        stream = False
+
     payload = {
-        'model': or_model,
-        'messages': final_messages,
+        'model': oai_model,
+        'messages': final,
         'stream': stream,
-        'temperature': 0.7,
-        'max_tokens': 4096,
     }
-    resp = requests.post(OPENROUTER_URL, headers=headers, json=payload, stream=stream, timeout=60)
+    if not is_reasoning:
+        payload['temperature'] = 0.7
+        payload['max_tokens'] = 4096
+
+    resp = requests.post(OPENAI_URL, headers=headers, json=payload, stream=stream, timeout=120)
     return resp
 
 
 @app.route('/api/config/models')
 def get_models():
     return jsonify({
-        'models': {k: {'identity': v['identity'], 'cost': v['cost'], 'tier': v['tier']} for k, v in DANYA_MODELS.items()},
+        'models': {k: {'cost': v['cost'], 'tier': v['tier']} for k, v in DANYA_MODELS.items()},
         'default': 'danya-2.5-turbo',
     })
 
@@ -463,58 +410,52 @@ def get_models():
 def chat(user):
     d = request.get_json(silent=True) or {}
     messages  = d.get('messages', [])
-    model     = d.get('model', 'gemini-2.0-flash')
+    model     = d.get('model', 'danya-2.5-turbo')
     do_stream = d.get('stream', False)
 
     if model not in ALL_MODELS:
-        model = 'gemini-2.0-flash'
+        model = 'danya-2.5-turbo'
 
-    # Determine cost and access rules
-    cost = 1
-    if model in DANYA_MODELS:
-        danya_cfg = DANYA_MODELS[model]
-        cost = danya_cfg.get('cost', 1)
-        tier = danya_cfg.get('tier', 'free')
-        # Pro tier models require pro/max/ultra plan
-        if tier == 'pro' and user.plan not in ('pro', 'max', 'ultra'):
-            return jsonify({
-                'error': 'pro_required',
-                'message': f'{danya_cfg["identity"]} requires Pro plan or higher.'
-            }), 403
+    cfg  = DANYA_MODELS[model]
+    cost = cfg.get('cost', 1)
+    tier = cfg.get('tier', 'free')
+
+    # Pro tier check
+    if tier == 'pro' and user.plan not in ('pro', 'max', 'ultra'):
+        return jsonify({'error': 'pro_required',
+                        'message': f'{model} requires Pro plan.'}), 403
 
     if not user.has_credits(cost):
-        return jsonify({'error': 'no_credits', 'message': f'Need {cost} credits for this model.'}), 402
+        return jsonify({'error': 'no_credits',
+                        'message': f'Need {cost} credits for this model.'}), 402
+
+    if not OPENAI_API_KEY:
+        return jsonify({'error': 'OPENAI_API_KEY not configured'}), 503
 
     # Clean messages
     clean_msgs = []
     for m in messages:
         role    = m.get('role', 'user')
         content = m.get('content', '')
-        if role not in ('system', 'user', 'assistant'):
-            continue
+        if role not in ('system', 'user', 'assistant'): continue
         if isinstance(content, str) and content.strip():
             clean_msgs.append({'role': role, 'content': content.strip()})
         elif isinstance(content, list):
-            # multimodal — flatten to text
             text = ' '.join(p.get('text', '') for p in content if isinstance(p, dict))
-            if text.strip():
-                clean_msgs.append({'role': role, 'content': text.strip()})
+            if text.strip(): clean_msgs.append({'role': role, 'content': text.strip()})
 
     if not clean_msgs:
         return jsonify({'error': 'No messages provided'}), 400
 
-    is_danya = model in DANYA_MODELS
-
     try:
-        if not OPENROUTER_API_KEY:
-            return jsonify({'error': 'OPENROUTER_API_KEY not configured'}), 503
+        is_reasoning = cfg['model'] in ('o1', 'o1-mini', 'o3', 'o3-mini')
 
-        if do_stream:
-            def generate_danya():
+        if do_stream and not is_reasoning:
+            def generate():
                 try:
-                    resp = call_openrouter(clean_msgs, model, stream=True)
+                    resp = call_openai(clean_msgs, model, stream=True)
                     if not resp.ok:
-                        yield f"data: {json.dumps({'error': f'OpenRouter error {resp.status_code}'})}\n\n"
+                        yield f"data: {json.dumps({'error': f'OpenAI error {resp.status_code}: {resp.text[:200]}'})}\n\n"
                         return
                     for line in resp.iter_lines():
                         if line:
@@ -524,13 +465,18 @@ def chat(user):
                 except Exception as e:
                     yield f"data: {json.dumps({'error': str(e)})}\n\n"
 
-            return Response(stream_with_context(generate_danya()),
+            return Response(stream_with_context(generate()),
                 content_type='text/event-stream',
                 headers={'X-Accel-Buffering': 'no', 'Cache-Control': 'no-cache'})
         else:
-            resp = call_openrouter(clean_msgs, model, stream=False)
+            resp = call_openai(clean_msgs, model, stream=False)
             if not resp.ok:
-                return jsonify({'error': f'OpenRouter error {resp.status_code}: {resp.text[:200]}'}), resp.status_code
+                try:
+                    err = resp.json().get('error', {})
+                    msg = err.get('message', f'OpenAI error {resp.status_code}') if isinstance(err, dict) else str(err)
+                except Exception:
+                    msg = f'OpenAI error {resp.status_code}'
+                return jsonify({'error': msg}), resp.status_code
             result = resp.json()
             user.deduct(cost)
             total = -1 if user.plan == 'ultra' else (user.credits or 0) + (user.bonus_credits or 0)
@@ -538,20 +484,19 @@ def chat(user):
             return jsonify(result)
 
     except requests.Timeout:
-        return jsonify({'error': 'AI request timed out. Please try again.'}), 504
+        return jsonify({'error': 'Request timed out. Please try again.'}), 504
     except Exception as e:
         app.logger.error(f'Chat error: {e}\n{traceback.format_exc()}')
         return jsonify({'error': str(e)}), 500
 
-# -- User --
+# ── User ──────────────────────────────────────────────────────────────
 @app.route('/api/user/update', methods=['POST'])
 @login_required
 def update_user(user):
     d = request.get_json(silent=True) or {}
     if 'username' in d:
         name = d['username'].strip()
-        if 2 <= len(name) <= 50:
-            user.username = name
+        if 2 <= len(name) <= 50: user.username = name
     if 'password' in d and len(d['password']) >= 6:
         user.set_password(d['password'])
     db.session.commit()
@@ -560,45 +505,33 @@ def update_user(user):
 @app.route('/api/user/delete', methods=['DELETE'])
 @login_required
 def delete_user(user):
-    db.session.delete(user)
-    db.session.commit()
-    session.clear()
+    db.session.delete(user); db.session.commit(); session.clear()
     return jsonify({'success': True})
 
 @app.route('/api/plans')
-def get_plans():
-    return jsonify(PLANS)
+def get_plans(): return jsonify(PLANS)
 
-# -- Sessions --
+# ── Sessions ──────────────────────────────────────────────────────────
 @app.route('/api/session/get', methods=['POST'])
 @login_required
 def get_session(user):
     sess = ChatSession.query.filter_by(user_id=user.id).order_by(ChatSession.created_at.desc()).first()
     if not sess:
-        sess = ChatSession(user_id=user.id)
-        db.session.add(sess)
-        db.session.commit()
+        sess = ChatSession(user_id=user.id); db.session.add(sess); db.session.commit()
     return jsonify(sess.to_dict(include_messages=True))
 
 @app.route('/api/session/message', methods=['POST'])
 @login_required
 def save_message(user):
     d = request.get_json(silent=True) or {}
-    content = d.get('content', '').strip()
-    role = d.get('role', 'user')
-    if not content:
-        return jsonify({'error': 'Empty message'}), 400
-    if role not in ('user', 'ai'):
-        return jsonify({'error': 'Invalid role'}), 400
+    content = d.get('content', '').strip(); role = d.get('role', 'user')
+    if not content: return jsonify({'error': 'Empty message'}), 400
+    if role not in ('user', 'ai'): return jsonify({'error': 'Invalid role'}), 400
     sess = ChatSession.query.filter_by(user_id=user.id).order_by(ChatSession.created_at.desc()).first()
     if not sess:
-        sess = ChatSession(user_id=user.id)
-        db.session.add(sess)
-        db.session.flush()
+        sess = ChatSession(user_id=user.id); db.session.add(sess); db.session.flush()
     msg = ChatMessage(session_id=sess.id, role=role, content=content)
-    db.session.add(msg)
-    sess.updated_at = datetime.utcnow()
-    db.session.commit()
+    db.session.add(msg); sess.updated_at = datetime.utcnow(); db.session.commit()
     return jsonify({'ok': True, 'operator_on': sess.operator_on, 'message': msg.to_dict()})
 
 @app.route('/api/session/poll')
@@ -606,22 +539,20 @@ def save_message(user):
 def poll_session(user):
     since_id = int(request.args.get('since', 0))
     sess = ChatSession.query.filter_by(user_id=user.id).order_by(ChatSession.created_at.desc()).first()
-    if not sess:
-        return jsonify({'operator_on': False, 'messages': []})
+    if not sess: return jsonify({'operator_on': False, 'messages': []})
     msgs = ChatMessage.query.filter(
         ChatMessage.session_id == sess.id, ChatMessage.id > since_id
     ).order_by(ChatMessage.created_at).all()
     return jsonify({'operator_on': sess.operator_on, 'messages': [m.to_dict() for m in msgs], 'session_id': sess.id})
 
-# -- Operator --
+# ── Operator ──────────────────────────────────────────────────────────
 @app.route('/api/operator/sessions')
 @operator_required
 def operator_sessions(user):
     sessions = ChatSession.query.order_by(ChatSession.updated_at.desc()).limit(100).all()
     result = []
     for s in sessions:
-        d = s.to_dict()
-        u = db.session.get(User, s.user_id)
+        d = s.to_dict(); u = db.session.get(User, s.user_id)
         d['user'] = {'id': u.id, 'username': u.username, 'email': u.email} if u else None
         d['messages'] = [m.to_dict() for m in s.messages.order_by(ChatMessage.created_at).limit(1).all()]
         result.append(d)
@@ -632,8 +563,7 @@ def operator_sessions(user):
 def operator_get_session(user, sid):
     sess = db.session.get(ChatSession, sid)
     if not sess: return jsonify({'error': 'Not found'}), 404
-    d = sess.to_dict(include_messages=True)
-    u = db.session.get(User, sess.user_id)
+    d = sess.to_dict(include_messages=True); u = db.session.get(User, sess.user_id)
     d['user'] = u.to_dict() if u else None
     return jsonify(d)
 
@@ -643,8 +573,7 @@ def operator_takeover(user):
     sid = (request.get_json(silent=True) or {}).get('session_id')
     sess = db.session.get(ChatSession, sid)
     if not sess: return jsonify({'error': 'Not found'}), 404
-    sess.operator_on = True; sess.operator_id = user.id
-    db.session.commit()
+    sess.operator_on = True; sess.operator_id = user.id; db.session.commit()
     return jsonify({'ok': True})
 
 @app.route('/api/operator/release', methods=['POST'])
@@ -653,8 +582,7 @@ def operator_release(user):
     sid = (request.get_json(silent=True) or {}).get('session_id')
     sess = db.session.get(ChatSession, sid)
     if not sess: return jsonify({'error': 'Not found'}), 404
-    sess.operator_on = False; sess.operator_id = None
-    db.session.commit()
+    sess.operator_on = False; sess.operator_id = None; db.session.commit()
     return jsonify({'ok': True})
 
 @app.route('/api/operator/send', methods=['POST'])
@@ -679,53 +607,43 @@ def operator_poll(user, sid):
 @app.route('/api/operator/user/<int:uid>/ban', methods=['POST'])
 @operator_required
 def operator_ban_user(user, uid):
-    target = db.session.get(User, uid)
-    if not target: return jsonify({'error': 'Not found'}), 404
-    target.is_banned = True; db.session.commit()
-    return jsonify({'ok': True, 'user': target.to_dict()})
+    t = db.session.get(User, uid)
+    if not t: return jsonify({'error': 'Not found'}), 404
+    t.is_banned = True; db.session.commit()
+    return jsonify({'ok': True, 'user': t.to_dict()})
 
 @app.route('/api/operator/user/<int:uid>/unban', methods=['POST'])
 @operator_required
 def operator_unban_user(user, uid):
-    target = db.session.get(User, uid)
-    if not target: return jsonify({'error': 'Not found'}), 404
-    target.is_banned = False; db.session.commit()
-    return jsonify({'ok': True, 'user': target.to_dict()})
+    t = db.session.get(User, uid)
+    if not t: return jsonify({'error': 'Not found'}), 404
+    t.is_banned = False; db.session.commit()
+    return jsonify({'ok': True, 'user': t.to_dict()})
 
 @app.route('/api/operator/user/<int:uid>/credits', methods=['POST'])
 @operator_required
 def operator_set_credits(user, uid):
-    target = db.session.get(User, uid)
-    if not target: return jsonify({'error': 'Not found'}), 404
+    t = db.session.get(User, uid)
+    if not t: return jsonify({'error': 'Not found'}), 404
     d = request.get_json(silent=True) or {}
     amount = int(d.get('amount', 0)); mode = d.get('mode', 'add')
-    target.credits = max(0, amount if mode == 'set' else (target.credits or 0) + amount)
+    t.credits = max(0, amount if mode == 'set' else (t.credits or 0) + amount)
     db.session.commit()
-    return jsonify({'ok': True, 'user': target.to_dict()})
+    return jsonify({'ok': True, 'user': t.to_dict()})
 
-# -- Admin API --
+# ── Admin ─────────────────────────────────────────────────────────────
 @app.route('/api/admin/users')
 @admin_required
 def admin_list_users(user):
-    users = User.query.order_by(User.created_at.desc()).all()
-    return jsonify([u.to_dict() for u in users])
-
-@app.route('/api/admin/users/<int:uid>', methods=['GET'])
-@admin_required
-def admin_get_user(user, uid):
-    u = db.session.get(User, uid)
-    if not u: return jsonify({'error': 'Not found'}), 404
-    return jsonify(u.to_dict())
+    return jsonify([u.to_dict() for u in User.query.order_by(User.created_at.desc()).all()])
 
 @app.route('/api/admin/users/<int:uid>/set-plan', methods=['POST'])
 @admin_required
 def admin_set_plan(user, uid):
     u = db.session.get(User, uid)
     if not u: return jsonify({'error': 'Not found'}), 404
-    d = request.get_json(silent=True) or {}
-    plan = d.get('plan', 'free')
-    if plan not in ('free', 'pro', 'max', 'ultra'):
-        return jsonify({'error': 'Invalid plan'}), 400
+    plan = (request.get_json(silent=True) or {}).get('plan', 'free')
+    if plan not in ('free', 'pro', 'max', 'ultra'): return jsonify({'error': 'Invalid plan'}), 400
     u.plan = plan
     if plan == 'ultra': u.credits = -1
     db.session.commit()
@@ -737,8 +655,7 @@ def admin_set_credits(user, uid):
     u = db.session.get(User, uid)
     if not u: return jsonify({'error': 'Not found'}), 404
     d = request.get_json(silent=True) or {}
-    u.credits = int(d.get('credits', 0))
-    u.bonus_credits = int(d.get('bonus_credits', 0))
+    u.credits = int(d.get('credits', 0)); u.bonus_credits = int(d.get('bonus_credits', 0))
     db.session.commit()
     return jsonify({'ok': True, 'user': u.to_dict()})
 
@@ -748,8 +665,7 @@ def admin_ban(user, uid):
     u = db.session.get(User, uid)
     if not u: return jsonify({'error': 'Not found'}), 404
     if u.is_admin: return jsonify({'error': 'Cannot ban admin'}), 400
-    u.is_banned = True
-    db.session.commit()
+    u.is_banned = True; db.session.commit()
     return jsonify({'ok': True, 'user': u.to_dict()})
 
 @app.route('/api/admin/users/<int:uid>/unban', methods=['POST'])
@@ -757,8 +673,7 @@ def admin_ban(user, uid):
 def admin_unban(user, uid):
     u = db.session.get(User, uid)
     if not u: return jsonify({'error': 'Not found'}), 404
-    u.is_banned = False
-    db.session.commit()
+    u.is_banned = False; db.session.commit()
     return jsonify({'ok': True, 'user': u.to_dict()})
 
 @app.route('/api/admin/users/<int:uid>/delete', methods=['DELETE'])
@@ -767,20 +682,8 @@ def admin_delete_user(user, uid):
     u = db.session.get(User, uid)
     if not u: return jsonify({'error': 'Not found'}), 404
     if u.is_admin: return jsonify({'error': 'Cannot delete admin'}), 400
-    db.session.delete(u)
-    db.session.commit()
+    db.session.delete(u); db.session.commit()
     return jsonify({'ok': True})
-
-@app.route('/api/admin/users/<int:uid>/set-roles', methods=['POST'])
-@admin_required
-def admin_set_roles(user, uid):
-    u = db.session.get(User, uid)
-    if not u: return jsonify({'error': 'Not found'}), 404
-    d = request.get_json(silent=True) or {}
-    if 'is_operator' in d: u.is_operator = bool(d['is_operator'])
-    if 'is_admin' in d and not u.is_admin: u.is_admin = bool(d['is_admin'])
-    db.session.commit()
-    return jsonify({'ok': True, 'user': u.to_dict()})
 
 @app.route('/api/admin/stats')
 @admin_required
@@ -792,12 +695,12 @@ def admin_stats(user):
         'free': User.query.filter_by(plan='free').count(),
     })
 
-# -- Health --
+# ── Health ────────────────────────────────────────────────────────────
 @app.route('/api/health')
 def health():
     return jsonify({
         'status': 'ok',
-        'openrouter': bool(OPENROUTER_API_KEY),
+        'openai': bool(OPENAI_API_KEY),
         'models': ALL_MODELS,
         'db': 'sqlite' if 'sqlite' in app.config['SQLALCHEMY_DATABASE_URI'] else 'postgres',
         'timestamp': datetime.utcnow().isoformat(),
